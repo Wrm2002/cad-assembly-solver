@@ -150,10 +150,11 @@ def _stop_plane_from_planar(features, feat_idx):
     return (p["position"], p["normal"])
 
 
-def _insert_mating_point(features, match):
+def _insert_mating_point(features, match, use_plus_end=False):
     """Compute the insert part's mating point — the point that contacts the stop plane.
 
     For clearance/coaxial: the bore entrance at the -axis end of the insert cylinder.
+      use_plus_end=True: use the +axis end instead (for reversed flanges).
     For pocket_mate: the face of the insert that bottoms out in the receiver pocket.
     For planar: the face position.
     """
@@ -173,8 +174,10 @@ def _insert_mating_point(features, match):
                     for z in (lo[2], hi[2]):
                         p = _sub([x,y,z], origin)
                         proj.append(_dot(p, axis))
-            # The bore entrance is at the -axis end (flange enters shaft from end)
-            return _add(origin, _scale(axis, min(proj)))
+            if use_plus_end:
+                return _add(origin, _scale(axis, max(proj)))
+            else:
+                return _add(origin, _scale(axis, min(proj)))
         return [0,0,0]
 
     if ctype == "pocket_mate":
@@ -378,20 +381,21 @@ def solve_stop_plane(
                 continue
             stop_origin, stop_normal = stop
 
-            # Mate point on insert
-            mate_pt = _insert_mating_point(features[insert], match)
-
-            # Axis alignment (same as coordinate_solver)
+            # Axis alignment — ensure flange bore is parallel to shaft
             from coordinate_solver import _global_vector
             ref_axis = _global_vector(
                 features[receiver]["cylinders"][0]["axis"], placements[receiver]
             )
+            # Determine which stop end this insert goes to
+            axis_key = tuple(round(v, 2) for v in ref_axis)
+            ends_used = len(used_ends.get(axis_key, []))
+
             tgt_cyls = features[insert].get("cylinders", [])
             if tgt_cyls:
-                tgt_axis = max(tgt_cyls, key=lambda c: c["radius"])["axis"]
-                # Align axes
-                dot = abs(_dot(tgt_axis, ref_axis))
-                if dot < 0.999:
+                tgt_cyl = max(tgt_cyls, key=lambda c: c["radius"])
+                tgt_axis = tgt_cyl["axis"]
+                tgt_origin = tgt_cyl["origin"]
+                if abs(_dot(tgt_axis, ref_axis)) < 0.999:
                     from coordinate_solver import _axis_angle_to_rotation
                     rot_axis, rot_angle = _axis_angle_to_rotation(tgt_axis, ref_axis)
                     rot_seq = [{'axis_angle': [rot_axis[0], rot_axis[1], rot_axis[2],
@@ -400,10 +404,34 @@ def solve_stop_plane(
                     rot_seq = []
             else:
                 rot_seq = []
+                tgt_origin = [0,0,0]
+
+            # Determine body direction: bbox center - bore origin, then rotated
+            ibbox = features[insert].get("bbox", {})
+            ilo = ibbox.get("min", [0,0,0])
+            ihi = ibbox.get("max", [0,0,0])
+            insert_center = [(ilo[i]+ihi[i])/2 for i in range(3)]
+            body_dir_raw = _sub(insert_center, tgt_origin)
+            from coordinate_solver import _apply_rotation_to_vector
+            body_dir = _apply_rotation_to_vector(body_dir_raw, rot_seq) if rot_seq else list(body_dir_raw)
+            body_dot = _dot(body_dir, ref_axis)
+
+            # Body should extend AWAY from shaft center.
+            # +axis end: body in +ref_axis direction → no flip
+            # -axis end: body in -ref_axis direction → no flip
+            # If wrong, use the OTHER end of the bore as mate point.
+            if ends_used == 0:
+                flip_mate = body_dot < 0
+            else:
+                flip_mate = body_dot > 0
+
+            if flip_mate:
+                print(f"  [flip mate] +end (body_dir.axis={body_dot:.2f})")
+
+            # Mate point on insert — use correct end of the bore
+            mate_pt = _insert_mating_point(features[insert], match, use_plus_end=flip_mate)
 
             # Find which stop end to use based on used_ends
-            axis_key = tuple(round(v, 2) for v in ref_axis)
-            ends_used = len(used_ends.get(axis_key, []))
             if ends_used == 0:
                 # First insert: use +axis end
                 target = stop_origin
