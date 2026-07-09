@@ -198,6 +198,34 @@ def convert_step_to_brep(step_path, output_dir, grid_size=10):
     edge_count = len(edge_data)
     print(f"  {edge_count} edges")
 
+    # ── Build face-edge adjacency ──
+    from OCC.Core.TopExp import topexp
+    face_map = TopTools_IndexedMapOfShape()
+    topexp.MapShapes(shape, TopAbs_FACE, face_map)
+    edge_map = TopTools_IndexedMapOfShape()
+    topexp.MapShapes(shape, TopAbs_EDGE, edge_map)
+    nf_map = face_map.Size()
+    ne_map = edge_map.Size()
+
+    links = []
+    for ei in range(1, ne_map + 1):
+        edge = topods.Edge(edge_map.FindKey(ei))
+        adj = []
+        for fi in range(1, nf_map + 1):
+            face = topods.Face(face_map.FindKey(fi))
+            fexp = TopExp_Explorer(face, TopAbs_EDGE)
+            while fexp.More():
+                fe = topods.Edge(fexp.Current())
+                if fe.IsEqual(edge):
+                    adj.append(fi - 1)
+                    break
+                fexp.Next()
+        edge_node_idx = nf_map + ei - 1
+        for fi in adj:
+            links.append({"source": fi, "target": edge_node_idx})
+            links.append({"source": edge_node_idx, "target": fi})
+    print(f"  {len(links)//2} adjacency pairs")
+
     # ── Overall bbox ──
     bbox = Bnd_Box()
     brepbndlib.Add(shape, bbox)
@@ -334,7 +362,7 @@ def convert_step_to_brep(step_path, output_dir, grid_size=10):
         "multigraph": False,
         "graph": {},
         "nodes": nodes,
-        "links": [],
+        "links": links,
         "properties": {
             "face_count": face_count,
             "edge_count": edge_count,
