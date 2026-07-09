@@ -63,9 +63,9 @@ def _is_shaft_like(features):
 def _stop_plane_from_cylinder(features, placement):
     """Return (origin, normal) of the stop plane for a cylinder feature.
 
-    For shaft-like parts: uses the cylinder extent (end face of the shaft).
-    For small holes (screw holes): uses the nearest bbox face perpendicular
-    to the cylinder axis as the stop plane (the face the hole is drilled into).
+    For shaft-like parts: finds the largest planar face perpendicular
+    to the cylinder axis — this is the shaft end face / shoulder.
+    For small holes: uses the nearest bbox face perpendicular to axis.
     """
     cyls = features.get("cylinders", [])
     if not cyls:
@@ -75,52 +75,53 @@ def _stop_plane_from_cylinder(features, placement):
     origin = cyl["origin"]
     radius = cyl["radius"]
 
+    # Find planar faces perpendicular to the cylinder axis
+    planes = features.get("planes", [])
+    perpendicular_faces = []
+    for i, p in enumerate(planes):
+        dot = abs(_dot(p["normal"], axis))
+        if dot > 0.8:
+            proj = _dot(p["position"], axis)
+            area = p.get("area", 0) or 0
+            perpendicular_faces.append({
+                "index": i,
+                "position": list(p["position"]),
+                "normal": list(p["normal"]),
+                "area": area,
+                "proj": proj,
+            })
+
+    if perpendicular_faces:
+        # For shaft-like: use the largest area perpendicular face
+        # at each end of the shaft
+        if _is_shaft_like(features):
+            # Sort by projection along axis
+            perpendicular_faces.sort(key=lambda f: f["proj"])
+            # Find large faces at each end (area > 100 or largest in that half)
+            mid_proj = (perpendicular_faces[0]["proj"] + perpendicular_faces[-1]["proj"]) / 2
+            faces_minus = [f for f in perpendicular_faces if f["proj"] < mid_proj]
+            faces_plus = [f for f in perpendicular_faces if f["proj"] >= mid_proj]
+
+            # Pick the largest area face at each end
+            face_minus = max(faces_minus, key=lambda f: f["area"]) if faces_minus else perpendicular_faces[0]
+            face_plus = max(faces_plus, key=lambda f: f["area"]) if faces_plus else perpendicular_faces[-1]
+
+            # Return both as a dict for the caller to pick
+            return {
+                "type": "shaft_faces",
+                "face_minus": face_minus,  # stop face at -axis end
+                "face_plus": face_plus,    # stop face at +axis end
+                "axis": axis,
+            }
+
+        # For small holes: use the face whose normal best aligns with axis
+        best = max(perpendicular_faces, key=lambda f: f["area"])
+        return (best["position"], best["normal"])
+
+    # Fallback: bbox-based (legacy)
     bbox = features.get("bbox", {})
     lo = bbox.get("min", [0,0,0])
     hi = bbox.get("max", [0,0,0])
-
-    if _is_shaft_like(features):
-        # Shaft: stop plane at the +axis end of the cylinder extent
-        proj = []
-        for x in (lo[0], hi[0]):
-            for y in (lo[1], hi[1]):
-                for z in (lo[2], hi[2]):
-                    p = _sub([x,y,z], origin)
-                    proj.append(_dot(p, axis))
-        t_max = max(proj)
-        stop_origin = _add(origin, _scale(axis, t_max))
-        return (stop_origin, axis)
-
-    # Small hole (e.g. screw hole): find the nearest bbox face
-    # that is perpendicular to the cylinder axis
-    bbox_faces = [
-        (lo, [-1, 0, 0]),   # -X face
-        (hi, [1, 0, 0]),    # +X face
-        (lo, [0, -1, 0]),   # -Y face
-        (hi, [0, 1, 0]),    # +Y face
-        (lo, [0, 0, -1]),   # -Z face
-        (hi, [0, 0, 1]),    # +Z face
-    ]
-    best_face = None
-    best_dot = -1.0
-    for corner, normal in bbox_faces:
-        d = abs(_dot(normal, axis))
-        if d > best_dot:
-            best_dot = d
-            # Compute the face center
-            face_center = list(corner)
-            # The face's full position needs to be computed properly
-            # For a face at lo with normal [-1,0,0], the plane is at x=lo[0]
-            best_face = (list(corner), list(normal))
-
-    if best_face and best_dot > 0.7:
-        face_corner, face_normal = best_face
-        # Project cylinder origin onto the face plane
-        dist_to_face = _dot(_sub(origin, face_corner), face_normal)
-        stop_origin = _sub(origin, _scale(face_normal, dist_to_face))
-        return (stop_origin, face_normal)
-
-    # Fallback: just use the +axis end
     proj = []
     for x in (lo[0], hi[0]):
         for y in (lo[1], hi[1]):
@@ -128,8 +129,7 @@ def _stop_plane_from_cylinder(features, placement):
                 p = _sub([x,y,z], origin)
                 proj.append(_dot(p, axis))
     t_max = max(proj)
-    stop_origin = _add(origin, _scale(axis, t_max))
-    return (stop_origin, axis)
+    return (_add(origin, _scale(axis, t_max)), axis)
 
 
 def _stop_plane_from_pocket(pocket):
@@ -165,6 +165,34 @@ def _insert_mating_point(features, match, use_plus_end=False):
         if cyls:
             cyl = max(cyls, key=lambda c: c["radius"])
             axis = _norm(cyl["axis"])
+
+            # Find the largest planar face perpendicular to bore axis
+            # This is the flange's disc face that contacts the shaft shoulder
+            planes = features.get("planes", [])
+            disc_faces = []
+            for p in planes:
+                dot = abs(_dot(p["normal"], axis))
+                if dot > 0.8:
+                    area = p.get("area", 0) or 0
+                    proj = _dot(p["position"], axis)
+                    disc_faces.append({
+                        "position": list(p["position"]),
+                        "normal": list(p["normal"]),
+                        "area": area,
+                        "proj": proj,
+                    })
+            if disc_faces:
+                # Pick the face based on use_plus_end
+                disc_faces.sort(key=lambda f: f["proj"])
+                if use_plus_end:
+                    # Use the face at the +axis end (pipe side)
+                    mate_face = disc_faces[-1]
+                else:
+                    # Use the face at the -axis end (disc side — contacts shaft)
+                    mate_face = disc_faces[0]
+                return mate_face["position"]
+
+            # Fallback: bore entrance
             origin = cyl["origin"]
             bbox = features.get("bbox", {})
             lo, hi = bbox.get("min", [0,0,0]), bbox.get("max", [0,0,0])
@@ -379,14 +407,23 @@ def solve_stop_plane(
             stop = _stop_plane_from_cylinder(features[receiver], placements[receiver])
             if not stop:
                 continue
-            stop_origin, stop_normal = stop
 
-            # Axis alignment — ensure flange bore is parallel to shaft
+            # Handle new shaft_faces format
+            if isinstance(stop, dict) and stop.get("type") == "shaft_faces":
+                face_minus = stop["face_minus"]
+                face_plus = stop["face_plus"]
+                shaft_axis = stop["axis"]
+            else:
+                # Legacy tuple format
+                face_plus = {"position": stop[0], "normal": stop[1]}
+                face_minus = face_plus
+                shaft_axis = stop[1]
+
+            # Axis alignment
             from coordinate_solver import _global_vector
             ref_axis = _global_vector(
                 features[receiver]["cylinders"][0]["axis"], placements[receiver]
             )
-            # Determine which stop end this insert goes to
             axis_key = tuple(round(v, 2) for v in ref_axis)
             ends_used = len(used_ends.get(axis_key, []))
 
@@ -396,25 +433,18 @@ def solve_stop_plane(
                 tgt_axis = tgt_cyl["axis"]
                 tgt_origin = tgt_cyl["origin"]
 
-                # Determine body direction in original coords first
                 ibbox = features[insert].get("bbox", {})
                 ilo = ibbox.get("min", [0,0,0])
                 ihi = ibbox.get("max", [0,0,0])
                 insert_center = [(ilo[i]+ihi[i])/2 for i in range(3)]
                 body_dir_raw = _sub(insert_center, tgt_origin)
-
-                # Determine if body goes wrong way BEFORE rotation
-                # +axis end: body should go in same direction as bore axis (outward from bore toward pipe)
-                # -axis end: body should go opposite to bore axis direction
-                # We check: after aligning bore to shaft, which way does body go?
                 body_dot_raw = _dot(body_dir_raw, tgt_axis)
-                # After alignment to ref_axis, body_dot_raw sign tells us if body goes with or against ref_axis
-                if ends_used == 0:
-                    need_reverse = body_dot_raw < 0  # body points opposite bore → after align points opposite ref
-                else:
-                    need_reverse = body_dot_raw > 0  # body points with bore → after align points with ref
 
-                # Choose alignment target
+                if ends_used == 0:
+                    need_reverse = body_dot_raw < 0
+                else:
+                    need_reverse = body_dot_raw > 0
+
                 if need_reverse:
                     target_align_axis = _scale(ref_axis, -1.0)
                 else:
@@ -432,34 +462,18 @@ def solve_stop_plane(
                     print(f"  [reverse align] bore→-ref (body_dot_raw={body_dot_raw:.2f})")
             else:
                 rot_seq = []
-                tgt_origin = [0,0,0]
                 need_reverse = False
 
-            # Mate point: always -end of the bore after alignment
+            # Mate point: flange disc face (face-to-face contact with shaft end)
             mate_pt = _insert_mating_point(features[insert], match, use_plus_end=False)
 
-            # Find which stop end to use based on used_ends
+            # Target: shaft end face
             if ends_used == 0:
-                # First insert: use +axis end
-                target = stop_origin
+                target = face_plus["position"]
             else:
-                # Second+ insert: use -axis end
-                bbox = features[receiver].get("bbox", {})
-                lo, hi = bbox.get("min", [0,0,0]), bbox.get("max", [0,0,0])
-                cyl = features[receiver]["cylinders"][0]
-                origin = cyl["origin"]
-                axis = _norm(cyl["axis"])
-                proj = []
-                for x in (lo[0], hi[0]):
-                    for y in (lo[1], hi[1]):
-                        for z in (lo[2], hi[2]):
-                            p = _sub([x,y,z], origin)
-                            proj.append(_dot(p, axis))
-                t_min = min(proj)
-                target = _add(origin, _scale(axis, t_min))
+                target = face_minus["position"]
 
-            # Compute translation: mate_pt → target
-            # Apply rotation first
+            # Compute translation
             from coordinate_solver import _apply_rotation_to_vector
             rotated_mate = _apply_rotation_to_vector(mate_pt, rot_seq)
             translate = _sub(target, rotated_mate)
