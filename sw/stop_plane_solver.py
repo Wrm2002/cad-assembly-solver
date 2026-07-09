@@ -395,11 +395,51 @@ def solve_stop_plane(
     inserts = list(insert_best_match.items())
     print(f"Inserts to place: {[(Path(k).stem, v['type']) for k,v in inserts]}")
 
+    # ── Detect face-to-face stacks: inserts that have planar_mate with each other ──
+    # These should be placed on the SAME shaft end, stacked face-to-face.
+    insert_names = [k for k, v in inserts]
+    flange_mates = {}  # insert_name → mate_insert_name
+    for match in raw_matches:
+        if match["type"] != "planar_mate":
+            continue
+        p0, p1 = match["parts"]
+        if p0 in insert_names and p1 in insert_names:
+            flange_mates[p0] = p1
+            flange_mates[p1] = p0
+            print(f"  [stack] {Path(p0).stem} <-> {Path(p1).stem} planar_mate detected")
+
+    # Build stack groups
+    visited = set()
+    stacks = []
+    for ins in insert_names:
+        if ins in visited:
+            continue
+        stack = [ins]
+        visited.add(ins)
+        # Follow mates
+        cur = ins
+        while cur in flange_mates:
+            nxt = flange_mates[cur]
+            if nxt not in visited:
+                stack.append(nxt)
+                visited.add(nxt)
+                cur = nxt
+            else:
+                break
+        if len(stack) > 1:
+            stacks.append(stack)
+            print(f"  Stack group: {[Path(s).stem for s in stack]}")
+
     # Place receiver at origin
     placements = {receiver: {"translate": [0.0, 0.0, 0.0]}}
     used_ends: dict[str, list[str]] = defaultdict(list)  # axis_key → list of placed inserts
+    placed_in_stack: set = set()  # track which inserts are handled by stack logic
 
     for insert, match in inserts:
+        # Skip if already placed as part of a stack
+        if insert in placed_in_stack:
+            continue
+
         print(f"\nPlacing {Path(insert).stem} (type={match['type']})...")
 
         # Get stop plane from receiver
@@ -483,6 +523,79 @@ def solve_stop_plane(
                 placement["rotate_sequence"] = rot_seq
             placements[insert] = placement
             used_ends[axis_key].append(insert)
+
+            # ── Stack mate: if this flange has a planar_mate with another insert,
+            #     place the mate on the SAME shaft end, face-to-face ──
+            if insert in flange_mates:
+                mate_name = flange_mates[insert]
+                if mate_name not in placements:
+                    print(f"\nPlacing {Path(mate_name).stem} (stacked on {Path(insert).stem})...")
+                    mate_match = insert_best_match.get(mate_name)
+                    if mate_match:
+                        # Same axis alignment as the first flange (no need_reverse for stacked)
+                        mate_tgt_cyls = features[mate_name].get("cylinders", [])
+                        if mate_tgt_cyls:
+                            mate_tgt_cyl = max(mate_tgt_cyls, key=lambda c: c["radius"])
+                            mate_tgt_axis = mate_tgt_cyl["axis"]
+                            mate_tgt_origin = mate_tgt_cyl["origin"]
+
+                            # Body direction check for mate
+                            mibbox = features[mate_name].get("bbox", {})
+                            milo = mibbox.get("min", [0,0,0])
+                            mihi = mibbox.get("max", [0,0,0])
+                            mate_center = [(milo[i]+mihi[i])/2 for i in range(3)]
+                            mate_body_raw = _sub(mate_center, mate_tgt_origin)
+                            mate_body_dot = _dot(mate_body_raw, mate_tgt_axis)
+
+                            # For a stacked flange (same end as first), body should
+                            # also point away from shaft. Use same reverse logic.
+                            if ends_used == 0:
+                                mate_reverse = mate_body_dot < 0
+                            else:
+                                mate_reverse = mate_body_dot > 0
+
+                            if mate_reverse:
+                                mate_target_axis = _scale(ref_axis, -1.0)
+                            else:
+                                mate_target_axis = ref_axis
+
+                            if abs(_dot(mate_tgt_axis, mate_target_axis)) < 0.999:
+                                from coordinate_solver import _axis_angle_to_rotation
+                                m_rot_axis, m_rot_angle = _axis_angle_to_rotation(mate_tgt_axis, mate_target_axis)
+                                mate_rot_seq = [{'axis_angle': [m_rot_axis[0], m_rot_axis[1], m_rot_axis[2],
+                                                               math.degrees(m_rot_angle)]}] if m_rot_axis else []
+                            else:
+                                mate_rot_seq = []
+
+                            if mate_reverse:
+                                print(f"  [reverse align] stacked mate bore→-ref (body_dot={mate_body_dot:.2f})")
+                        else:
+                            mate_rot_seq = []
+
+                        # Mate point: mate flange's disc face
+                        mate_pt2 = _insert_mating_point(features[mate_name], mate_match, use_plus_end=False)
+
+                        # Target: the placed flange's disc face (the face on the pipe side)
+                        # The placed flange's pipe-side face is where the second flange mates
+                        # Use the placed flange's +axis face (pipe side = opposite of the disc face)
+                        placed_disc_face = _insert_mating_point(features[insert], match, use_plus_end=True)
+                        from coordinate_solver import _apply_rotation_to_vector
+                        placed_disc_rotated = _apply_rotation_to_vector(placed_disc_face, rot_seq)
+                        placed_disc_world = _add(translate, placed_disc_rotated)
+
+                        # Target is the placed flange's pipe-side face
+                        target2 = placed_disc_world
+
+                        mate_pt2_rotated = _apply_rotation_to_vector(mate_pt2, mate_rot_seq)
+                        translate2 = _sub(target2, mate_pt2_rotated)
+
+                        placement2 = {"translate": translate2}
+                        if mate_rot_seq:
+                            placement2["rotate_sequence"] = mate_rot_seq
+                        placements[mate_name] = placement2
+                        placed_in_stack.add(mate_name)
+                        used_ends[axis_key].append(mate_name)
+                        print(f"  -> translate={[round(v,1) for v in translate2]}")
 
         elif match["type"] == "pocket_mate":
             pkt_a = match.get("pocket_a", {})
