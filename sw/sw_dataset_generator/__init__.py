@@ -1,0 +1,1 @@
+"""Programmatic SolidWorks dataset generation."""
