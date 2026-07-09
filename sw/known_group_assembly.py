@@ -2370,13 +2370,33 @@ def run_known_group_assembly(
     )
     components = _portable_components(selected_pose["components"])
     placements = selected_pose["placements"]
-    # ── SearchSimplex pose refinement ──
-    # Use Nelder-Mead optimization to find correct offset/rotation/flip
-    # for each clearance pair, guided by overlap/contact cost.
-    placements = _refine_with_searchsimplex(
-        placements, features, selected_pairs, solver_matches, case_dir
-    )
-    # ───────────────────────────────────
+    # ── Cylinder axial stop ──
+    from coordinate_solver import _cylinder_extent_along_axis, _part_bbox_interval_along_axis, _global_vector, _vec_norm
+    result = dict(placements)
+    for m in solver_matches:
+        if m.get("type") != "clearance": continue
+        if canonical_pair(m["parts"]) not in selected_pairs: continue
+        a, b = m["parts"]
+        pa = result.get(a,{}).get("translate",[0,0,0]); pb = result.get(b,{}).get("translate",[0,0,0])
+        ref = a if sum(v*v for v in pa) <= sum(v*v for v in pb) else b
+        tgt = b if ref == a else a
+        rf = features.get(ref); tf = features.get(tgt)
+        if not rf or not tf or not rf.get("cylinders"): continue
+        rc = rf["cylinders"][0]
+        ax = _global_vector(rc["axis"], result.get(ref,{})); au = _vec_norm(ax)
+        re = _cylinder_extent_along_axis(rf, rc)
+        if not re: continue
+        rmin, rmax = re
+        tp = result.get(tgt,{})
+        ti = _part_bbox_interval_along_axis(tf, tp, ax)
+        if not ti: continue
+        tmin, tmax = ti
+        cur = list(tp.get("translate",[0,0,0])); G = 1.0
+        sl = (rmin - tmax - G) if abs(tmax-rmin) < abs(tmin-rmax) else (rmax - tmin + G)
+        nt = dict(tp); nt["translate"] = [cur[i] + sl*au[i] for i in range(3)]
+        result[tgt] = nt
+    placements = result
+    # ──────────────────────────
     selected_pose["placements"] = placements
     # Update component placements from the corrected placements dict
     for comp in selected_pose.get("components", []):

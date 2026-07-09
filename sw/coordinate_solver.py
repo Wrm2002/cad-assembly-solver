@@ -201,6 +201,62 @@ def _apply_axial_contact(
     ]
     return new_placement
 
+
+def _cylinder_extent_along_axis(part_features, cyl_dict):
+    """Return [t_min, t_max] of the cylinder surface along its own axis."""
+    bbox = part_features.get("bbox")
+    if not bbox:
+        return None
+    axis = _vec_norm(cyl_dict["axis"])
+    origin = cyl_dict["origin"]
+    low, high = bbox["min"], bbox["max"]
+    values = []
+    for x in (low[0], high[0]):
+        for y in (low[1], high[1]):
+            for z in (low[2], high[2]):
+                p = [x - origin[i] for i in range(3)]
+                values.append(_vec_dot(p, axis))
+    return [min(values), max(values)]
+
+
+def _cylinder_axial_stop(
+    placement, ref_part, target_part, parts_features,
+    ref_placement, shared_axis,
+    ref_cyl=None, tgt_cyl=None,
+):
+    """Slide target so bore entrance meets the shaft end (cylinder extents)."""
+    ref_feats = parts_features.get(ref_part)
+    tgt_feats = parts_features.get(target_part)
+    if not ref_feats or not tgt_feats:
+        return placement
+
+    ref_ext = _cylinder_extent_along_axis(ref_feats, ref_cyl) if ref_cyl else None
+    if not ref_ext:
+        return placement
+
+    axis_u = _vec_norm(shared_axis)
+    ref_min, ref_max = ref_ext
+
+    # Compute target bbox along axis at current position
+    tgt_placement = dict(placement)
+    tgt_iv = _part_bbox_interval_along_axis(tgt_feats, tgt_placement, shared_axis)
+    if not tgt_iv:
+        return placement
+
+    tgt_min, tgt_max = tgt_iv
+    current = list(placement.get('translate', [0.0, 0.0, 0.0]))
+    GAP = 0.5
+
+    # Slide to nearest shaft end
+    to_min = abs(tgt_max - ref_min)
+    to_max = abs(tgt_min - ref_max)
+    slide = (ref_min - tgt_max - GAP) if to_min < to_max else (ref_max - tgt_min + GAP)
+
+    new_p = dict(placement)
+    new_p['translate'] = [current[i] + slide * axis_u[i] for i in range(3)]
+    return new_p
+
+
 def _compute_placement_from_match(match, ref_part, target_part,
                                    parts_features, ref_placement):
     """
@@ -278,14 +334,11 @@ def _compute_placement_from_match(match, ref_part, target_part,
         plac['translate'] = [
             ref_origin[i] - rotated_origin[i] for i in range(3)
         ]
-        # ── Axial contact positioning ──
-        # After coaxial alignment, slide the target part along the shared axis
-        # so the two bounding boxes touch (no gap, no overlap).  This replaces
-        # the missing planar-mate constraint when the shaft shoulder and flange
-        # face are not parallel in their local coordinate frames.
-        plac = _apply_axial_contact(
+        # ── Axial stop from cylinder extents ──
+        plac = _cylinder_axial_stop(
             plac, ref_part, target_part, parts_features,
             ref_placement, to_dir,
+            ref_cyl=ref_feat, tgt_cyl=target_feat,
         )
         return plac
 
