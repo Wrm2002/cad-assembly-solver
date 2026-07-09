@@ -395,41 +395,48 @@ def solve_stop_plane(
                 tgt_cyl = max(tgt_cyls, key=lambda c: c["radius"])
                 tgt_axis = tgt_cyl["axis"]
                 tgt_origin = tgt_cyl["origin"]
-                if abs(_dot(tgt_axis, ref_axis)) < 0.999:
+
+                # Determine body direction in original coords first
+                ibbox = features[insert].get("bbox", {})
+                ilo = ibbox.get("min", [0,0,0])
+                ihi = ibbox.get("max", [0,0,0])
+                insert_center = [(ilo[i]+ihi[i])/2 for i in range(3)]
+                body_dir_raw = _sub(insert_center, tgt_origin)
+
+                # Determine if body goes wrong way BEFORE rotation
+                # +axis end: body should go in same direction as bore axis (outward from bore toward pipe)
+                # -axis end: body should go opposite to bore axis direction
+                # We check: after aligning bore to shaft, which way does body go?
+                body_dot_raw = _dot(body_dir_raw, tgt_axis)
+                # After alignment to ref_axis, body_dot_raw sign tells us if body goes with or against ref_axis
+                if ends_used == 0:
+                    need_reverse = body_dot_raw < 0  # body points opposite bore → after align points opposite ref
+                else:
+                    need_reverse = body_dot_raw > 0  # body points with bore → after align points with ref
+
+                # Choose alignment target
+                if need_reverse:
+                    target_align_axis = _scale(ref_axis, -1.0)
+                else:
+                    target_align_axis = ref_axis
+
+                if abs(_dot(tgt_axis, target_align_axis)) < 0.999:
                     from coordinate_solver import _axis_angle_to_rotation
-                    rot_axis, rot_angle = _axis_angle_to_rotation(tgt_axis, ref_axis)
+                    rot_axis, rot_angle = _axis_angle_to_rotation(tgt_axis, target_align_axis)
                     rot_seq = [{'axis_angle': [rot_axis[0], rot_axis[1], rot_axis[2],
                                                math.degrees(rot_angle)]}] if rot_axis else []
                 else:
                     rot_seq = []
+
+                if need_reverse:
+                    print(f"  [reverse align] bore→-ref (body_dot_raw={body_dot_raw:.2f})")
             else:
                 rot_seq = []
                 tgt_origin = [0,0,0]
+                need_reverse = False
 
-            # Determine body direction: bbox center - bore origin, then rotated
-            ibbox = features[insert].get("bbox", {})
-            ilo = ibbox.get("min", [0,0,0])
-            ihi = ibbox.get("max", [0,0,0])
-            insert_center = [(ilo[i]+ihi[i])/2 for i in range(3)]
-            body_dir_raw = _sub(insert_center, tgt_origin)
-            from coordinate_solver import _apply_rotation_to_vector
-            body_dir = _apply_rotation_to_vector(body_dir_raw, rot_seq) if rot_seq else list(body_dir_raw)
-            body_dot = _dot(body_dir, ref_axis)
-
-            # Body should extend AWAY from shaft center.
-            # +axis end: body in +ref_axis direction → no flip
-            # -axis end: body in -ref_axis direction → no flip
-            # If wrong, use the OTHER end of the bore as mate point.
-            if ends_used == 0:
-                flip_mate = body_dot < 0
-            else:
-                flip_mate = body_dot > 0
-
-            if flip_mate:
-                print(f"  [flip mate] +end (body_dir.axis={body_dot:.2f})")
-
-            # Mate point on insert — use correct end of the bore
-            mate_pt = _insert_mating_point(features[insert], match, use_plus_end=flip_mate)
+            # Mate point: always -end of the bore after alignment
+            mate_pt = _insert_mating_point(features[insert], match, use_plus_end=False)
 
             # Find which stop end to use based on used_ends
             if ends_used == 0:
