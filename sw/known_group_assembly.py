@@ -2147,6 +2147,164 @@ def _apply_axial_contact_to_clearance_pairs(
     return result
 
 
+def _refine_with_searchsimplex(
+    placements: dict[str, Any],
+    features: dict[str, Any],
+    selected_pairs: set[tuple[str, str]],
+    matches: list[dict[str, Any]],
+    case_dir: Path,
+) -> dict[str, Any]:
+    """Refine clearance pair placements using SearchSimplex Nelder-Mead.
+
+    Exports STL meshes, extracts joint axes, and runs SearchSimplex
+    for each clearance pair. Falls back to original placement on failure.
+    """
+    try:
+        from search_simplex import SearchSimplex
+    except ImportError:
+        return placements
+
+    result = dict(placements)
+
+    # Export STL files for all parts (do this once)
+    stl_dir = case_dir / "_tmp_stl"
+    stl_dir.mkdir(exist_ok=True)
+    stl_cache = {}
+    for part_name in features:
+        stl_path = stl_dir / f"{Path(part_name).stem}.stl"
+        if not stl_path.exists():
+            _export_part_stl(part_name, stl_path)
+        if stl_path.exists():
+            stl_cache[part_name] = stl_path
+
+    for match in matches:
+        if match.get("type") != "clearance":
+            continue
+        pair = canonical_pair(match["parts"])
+        if pair not in selected_pairs:
+            continue
+        a, b = match["parts"]
+        pa = result.get(a, {}).get("translate", [0.0, 0.0, 0.0])
+        pb = result.get(b, {}).get("translate", [0.0, 0.0, 0.0])
+        ref = a if sum(v*v for v in pa) <= sum(v*v for v in pb) else b
+        tgt = b if ref == a else a
+
+        ref_stl = stl_cache.get(ref)
+        tgt_stl = stl_cache.get(tgt)
+        if not ref_stl or not tgt_stl:
+            continue
+
+        # Get joint axis from the reference cylinder
+        ref_cyls = features.get(ref, {}).get("cylinders", [])
+        if not ref_cyls:
+            continue
+        axis_origin = list(ref_cyls[0].get("origin", [0, 0, 0]))
+        axis_dir = list(ref_cyls[0].get("axis", [0, 0, 1]))
+
+        try:
+            ss = SearchSimplex(
+                ref_stl, tgt_stl,
+                axis_origin, axis_dir,
+                num_surface_samples=500, budget=30,
+            )
+            opt = ss.search()
+            offset = opt.get("offset", 0.0)
+            rotation = opt.get("rotation_deg", 0.0)
+            flip = opt.get("flip", False)
+            overlap = opt.get("overlap", 1.0)
+            print(f"  SearchSimplex {Path(ref).stem}+{Path(tgt).stem}: "
+                  f"offset={offset:.1f} rot={rotation:.1f}deg flip={flip} "
+                  f"overlap={overlap:.3f}", flush=True)
+
+            # Only apply if significantly better (low overlap)
+            if overlap < 0.1:
+                # Build placement from optimized params
+                from coordinate_solver import _global_vector, _vec_norm
+                import math as _math
+                d = _vec_norm(axis_dir)
+                # Rotation around joint axis
+                angle = _math.radians(rotation)
+                c = _math.cos(angle); s = _math.sin(angle)
+                x, y, z = d
+                R = [
+                    [c+x*x*(1-c), x*y*(1-c)-z*s, x*z*(1-c)+y*s],
+                    [y*x*(1-c)+z*s, c+y*y*(1-c), y*z*(1-c)-x*s],
+                    [z*x*(1-c)-y*s, z*y*(1-c)+x*s, c+z*z*(1-c)],
+                ]
+                # Convert rotation matrix to axis-angle for placement
+                trace = R[0][0] + R[1][1] + R[2][2]
+                rot_angle = _math.degrees(_math.acos(max(-1, min(1, (trace-1)/2))))
+                if rot_angle > 0.1:
+                    rx = R[2][1] - R[1][2]
+                    ry = R[0][2] - R[2][0]
+                    rz = R[1][0] - R[0][1]
+                    rnorm = _math.sqrt(rx*rx + ry*ry + rz*rz)
+                    if rnorm > 1e-9:
+                        rot_seq = [{'axis_angle': [rx/rnorm, ry/rnorm, rz/rnorm, rot_angle]}]
+                    else:
+                        rot_seq = []
+                else:
+                    rot_seq = []
+
+                current = list(result.get(tgt, {}).get("translate", [0, 0, 0]))
+                slide = [offset * d[i] for i in range(3)]
+                new_tgt = dict(result.get(tgt, {}))
+                new_tgt["translate"] = [current[i] + slide[i] for i in range(3)]
+                if rot_seq:
+                    existing_rot = list(new_tgt.get("rotate_sequence", []))
+                    new_tgt["rotate_sequence"] = existing_rot + rot_seq
+                if flip:
+                    # Add 180° flip around direction
+                    new_tgt_rot = list(new_tgt.get("rotate_sequence", []))
+                    new_tgt_rot.append({'axis_angle': [d[0], d[1], d[2], 180.0]})
+                    new_tgt["rotate_sequence"] = new_tgt_rot
+                result[tgt] = new_tgt
+        except Exception as e:
+            print(f"  SearchSimplex failed for {ref}+{tgt}: {e}", flush=True)
+
+    return result
+
+
+def _export_part_stl(part_name: str, stl_path: Path) -> None:
+    """Export a STEP part to STL using OCCT."""
+    try:
+        from OCC.Core.STEPControl import STEPControl_Reader
+        from OCC.Core.IFSelect import IFSelect_RetDone
+        from OCC.Core.TopExp import TopExp_Explorer
+        from OCC.Core.TopAbs import TopAbs_SOLID
+        from OCC.Core.BRepMesh import BRepMesh_IncrementalMesh
+        from OCC.Core.StlAPI import StlAPI_Writer
+
+        step_path = Path("sw") / Path(part_name).parent / part_name if "/" in part_name or "\\" in part_name else None
+        if step_path and step_path.exists():
+            pass
+        else:
+            # part_name is just a filename — look in known locations
+            for search_dir in [Path("sw/1"), Path("sw/2"), Path("sw/3"), Path("sw/4_lightweight"), Path("sw/5_lightweight")]:
+                candidate = search_dir / part_name
+                if candidate.exists():
+                    step_path = candidate
+                    break
+        if not step_path or not step_path.exists():
+            return
+
+        reader = STEPControl_Reader()
+        if reader.ReadFile(str(step_path)) != IFSelect_RetDone:
+            return
+        reader.TransferRoots()
+        shape = reader.OneShape()
+        solids = []
+        exp = TopExp_Explorer(shape, TopAbs_SOLID)
+        while exp.More():
+            solids.append(exp.Current())
+            exp.Next()
+        if solids:
+            BRepMesh_IncrementalMesh(solids[0], 0.5, True, 0.5).Perform()
+            StlAPI_Writer().Write(solids[0], str(stl_path))
+    except Exception:
+        pass
+
+
 def run_known_group_assembly(
     case_dir: str | Path,
     *,
@@ -2212,13 +2370,13 @@ def run_known_group_assembly(
     )
     components = _portable_components(selected_pose["components"])
     placements = selected_pose["placements"]
-    # ── Axial contact correction ──
-    # For every clearance pair, slide the target part along the shared axis
-    # until bounding boxes touch.  This fixes the missing planar-mate when
-    # shaft shoulder and flange face are not parallel in local coords.
-    placements = _apply_axial_contact_to_clearance_pairs(
-        placements, features, selected_pairs, solver_matches
+    # ── SearchSimplex pose refinement ──
+    # Use Nelder-Mead optimization to find correct offset/rotation/flip
+    # for each clearance pair, guided by overlap/contact cost.
+    placements = _refine_with_searchsimplex(
+        placements, features, selected_pairs, solver_matches, case_dir
     )
+    # ───────────────────────────────────
     selected_pose["placements"] = placements
     # Update component placements from the corrected placements dict
     for comp in selected_pose.get("components", []):

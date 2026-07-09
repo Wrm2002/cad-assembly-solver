@@ -96,52 +96,40 @@ def _mesh_distance_kdtree(
     points: np.ndarray,
     mesh_vertices: np.ndarray,
     mesh_faces: np.ndarray,
-    kd_tree=None,
-) -> tuple[np.ndarray, object]:
+) -> np.ndarray:
     """Fast approximate signed distance using KD-tree of face centers.
     
-    Returns (distances, kd_tree).  Positive = outside, negative = inside.
+    Returns signed distances.  Positive = outside, negative = inside.
     """
     from scipy.spatial import cKDTree
     
-    # Build KD-tree of face centers
-    if kd_tree is None:
-        face_centers = np.mean(mesh_vertices[mesh_faces], axis=1)
-        face_normals = np.cross(
-            mesh_vertices[mesh_faces[:, 1]] - mesh_vertices[mesh_faces[:, 0]],
-            mesh_vertices[mesh_faces[:, 2]] - mesh_vertices[mesh_faces[:, 0]],
-        )
-        n_len = np.linalg.norm(face_normals, axis=1, keepdims=True)
-        n_len[n_len < 1e-12] = 1.0
-        face_normals = face_normals / n_len
-        kd_tree = cKDTree(face_centers)
-        _kd_data = (face_centers, face_normals, mesh_vertices, mesh_faces)
-        setattr(kd_tree, '_mesh_data', _kd_data)
+    face_centers = np.mean(mesh_vertices[mesh_faces], axis=1)
+    face_normals = np.cross(
+        mesh_vertices[mesh_faces[:, 1]] - mesh_vertices[mesh_faces[:, 0]],
+        mesh_vertices[mesh_faces[:, 2]] - mesh_vertices[mesh_faces[:, 0]],
+    )
+    n_len = np.linalg.norm(face_normals, axis=1, keepdims=True)
+    n_len[n_len < 1e-12] = 1.0
+    face_normals = face_normals / n_len
     
-    face_centers, face_normals, mv, mf = kd_tree._mesh_data
-    
-    # For each point, find nearest face center (k=3 for robustness)
+    tree = cKDTree(face_centers)
     k = min(3, len(face_centers))
-    dists, idxs = kd_tree.query(points, k=k)
+    dists, idxs = tree.query(points, k=k)
     
     if k == 1:
         idxs = idxs[:, None]
-        dists = dists[:, None]
     
-    # Compute signed distance using the nearest face's normal
     result = np.full(len(points), np.inf)
     for i in range(len(points)):
         best_dist = np.inf
         for j in range(k):
             fi = idxs[i, j]
-            center = face_centers[fi]
-            normal = face_normals[fi]
-            signed = np.dot(points[i] - center, normal)
+            signed = np.dot(points[i] - face_centers[fi], face_normals[fi])
             if abs(signed) < abs(best_dist):
                 best_dist = signed
         result[i] = best_dist
     
-    return result, kd_tree
+    return result
 
 
 def load_stl_mesh(stl_path: str | Path) -> tuple[np.ndarray, np.ndarray]:
@@ -188,10 +176,22 @@ class SearchSimplex:
         self.overlap_weight = overlap_weight
         
         # Sample surface points on body 1 (reference)
-        self._sample_surface_points()
+        try:
+            self._sample_surface_points()
+        except Exception:
+            self.sample_points = self.verts1[:min(len(self.verts1), self.num_samples)]
         
         # Compute offset limit from bounding boxes
-        self._compute_offset_limit()
+        try:
+            self._compute_offset_limit()
+        except Exception:
+            self.offset_limit = 100.0
+        
+        # Final safety: ensure critical attributes exist
+        if not hasattr(self, 'offset_limit'):
+            self.offset_limit = 100.0
+        if not hasattr(self, 'sample_points'):
+            self.sample_points = self.verts1[:min(len(self.verts1), 500)]
     
     def _sample_surface_points(self):
         """Randomly sample points on the surface of body 1."""
@@ -231,7 +231,7 @@ class SearchSimplex:
         
         len1 = abs(r1_max - r1_min)
         len2 = abs(r2_max - r2_min)
-        self.offset_limit = float(len1 + len2)
+        self._kd_cache: dict | None = None
     
     def cost_function(self, x: np.ndarray) -> float:
         offset = x[0] * self.offset_limit * 1500.0
@@ -243,9 +243,8 @@ class SearchSimplex:
             offset, rotation, flip,
         )
         
-        distances, self._kd_tree = _mesh_distance_kdtree(
+        distances = _mesh_distance_kdtree(
             self.sample_points, transformed, self.faces2,
-            kd_tree=getattr(self, '_kd_tree', None),
         )
         
         overlap_mask = distances < -0.5
@@ -253,10 +252,16 @@ class SearchSimplex:
         contact_mask = (np.abs(distances) < 1.0) & (~overlap_mask)
         contact_ratio = contact_mask.sum() / self.num_samples
         
+        # Mean absolute distance (gap penalty when no contact)
+        mean_gap = float(np.mean(np.abs(distances)))
+        
         if overlap_ratio > 0.01:
-            cost = self.overlap_weight * overlap_ratio
-        else:
+            cost = self.overlap_weight * overlap_ratio + 0.1 * mean_gap
+        elif contact_ratio > 0.001:
             cost = -self.contact_weight * contact_ratio
+        else:
+            # No overlap, no contact → penalize distance
+            cost = 0.5 + 0.01 * mean_gap
         
         return float(cost)
     
@@ -281,16 +286,18 @@ class SearchSimplex:
                     self.verts2, self.origin, self.direction,
                     offset, rotation, try_flip,
                 )
-                distances, _ = _mesh_distance_kdtree(
+                distances = _mesh_distance_kdtree(
                     self.sample_points, transformed, self.faces2,
                 )
                 overlap = (distances < -0.5).sum() / self.num_samples
                 contact = (np.abs(distances) < 1.0).sum() / self.num_samples
+                mean_gap = float(np.mean(np.abs(distances)))
                 
                 best_result = {
                     'evaluation': float(result.fun),
                     'offset': float(offset), 'rotation_deg': float(rotation),
-                    'flip': try_flip, 'overlap': float(overlap), 'contact': float(contact),
+                    'flip': try_flip, 'overlap': float(overlap),
+                    'contact': float(contact), 'mean_gap': float(mean_gap),
                 }
         
         return best_result
@@ -303,18 +310,20 @@ class SearchSimplex:
             self.verts2, self.origin, self.direction,
             offset, rotation, flip,
         )
-        distances, self._kd_tree = _mesh_distance_kdtree(
+        distances = _mesh_distance_kdtree(
             self.sample_points, transformed, self.faces2,
-            kd_tree=getattr(self, '_kd_tree', None),
         )
         overlap_mask = distances < -0.5
         overlap_ratio = overlap_mask.sum() / self.num_samples
         contact_mask = (np.abs(distances) < 1.0) & (~overlap_mask)
         contact_ratio = contact_mask.sum() / self.num_samples
+        mean_gap = float(np.mean(np.abs(distances)))
         
         if overlap_ratio > 0.01:
-            return float(self.overlap_weight * overlap_ratio)
-        return float(-self.contact_weight * contact_ratio)
+            return float(self.overlap_weight * overlap_ratio + 0.1 * mean_gap)
+        elif contact_ratio > 0.001:
+            return float(-self.contact_weight * contact_ratio)
+        return float(0.5 + 0.01 * mean_gap)
 
 
 def searchsimplex_for_pair(
