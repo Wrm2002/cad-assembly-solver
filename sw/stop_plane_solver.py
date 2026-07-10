@@ -324,6 +324,7 @@ def _check_face_contact(placements, features, receiver, case_dir, raw_matches, s
             pair_matches,
             plac_a=placements[receiver],
             plac_b=plac,
+            name_a=receiver, name_b=insert_name,
             threshold=0.5,
         )
 
