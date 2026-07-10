@@ -163,3 +163,137 @@ def compute_pair_contact(features_a, features_b, matches, plac_a, plac_b,
         results.append({"type": mtype, "distance": float(dist), "contact": contact,
                        "info": info})
     return results
+
+
+# ═══════════════════════════════════════════════════════════════
+# Axial contact optimizer — slide along axis to minimize face gap
+# ═══════════════════════════════════════════════════════════════
+
+def _collision_free(insert_path, receiver_path, aff_insert):
+    """Check if insert at given transform has no collision with receiver."""
+    from OCC.Core.STEPControl import STEPControl_Reader
+    from OCC.Core.IFSelect import IFSelect_RetDone
+    from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common
+    from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
+    from OCC.Core.gp import gp_Trsf
+    from OCC.Core.GProp import GProp_GProps
+    from OCC.Core.BRepGProp import brepgprop
+
+    # Read receiver
+    rr = STEPControl_Reader()
+    if rr.ReadFile(str(receiver_path)) != IFSelect_RetDone:
+        return True  # can't check
+    rr.TransferRoots()
+    receiver_shape = rr.OneShape()
+
+    # Read insert and transform
+    ri = STEPControl_Reader()
+    if ri.ReadFile(str(insert_path)) != IFSelect_RetDone:
+        return True
+    ri.TransferRoots()
+    insert_shape = ri.OneShape()
+
+    # Apply transform
+    trsf = gp_Trsf()
+    trsf.SetValues(
+        aff_insert[0,0], aff_insert[0,1], aff_insert[0,2], aff_insert[0,3],
+        aff_insert[1,0], aff_insert[1,1], aff_insert[1,2], aff_insert[1,3],
+        aff_insert[2,0], aff_insert[2,1], aff_insert[2,2], aff_insert[2,3],
+    )
+    transformer = BRepBuilderAPI_Transform(insert_shape, trsf, True)
+    transformed = transformer.Shape()
+
+    # Check collision
+    common = BRepAlgoAPI_Common(receiver_shape, transformed)
+    common.Build()
+    if common.IsDone():
+        props = GProp_GProps()
+        try:
+            brepgprop.VolumeProperties(common.Shape(), props)
+            return props.Mass() < 0.01  # < 0.01mm³ = no collision
+        except Exception:
+            return True
+    return True
+
+
+def optimize_axial_position(step_a, step_b, features_a, features_b,
+                             matches, plac_a, plac_b, name_a, name_b,
+                             axis_origin, axis_direction,
+                             search_range=(-50, 50), budget=30):
+    """Slide insert along joint axis to minimize face gap without collision.
+
+    Cost = sum of face distances for all matched pairs.
+    Constraint: no OCCT collision.
+
+    Returns: (best_offset_mm, best_placement_dict, cost)
+    """
+    import scipy.optimize
+
+    origin = np.array(axis_origin, dtype=float)
+    direction = np.array(axis_direction, dtype=float)
+    direction = direction / (np.linalg.norm(direction) + 1e-12)
+
+    # Build base transform
+    aff_base = placement_to_4x4(plac_b)
+
+    def _cost(offset):
+        aff = np.eye(4)
+        aff[:3, 3] = direction * offset
+        full_aff = aff @ aff_base
+
+        tmp_plac = {"translate": full_aff[:3, 3].tolist()}
+        if "rotate_sequence" in plac_b:
+            tmp_plac["rotate_sequence"] = plac_b["rotate_sequence"]
+
+        if not _collision_free(step_b, step_a, full_aff):
+            return 1e6
+
+        results = compute_pair_contact(
+            features_a, features_b, matches,
+            plac_a, tmp_plac, name_a, name_b, threshold=0.5,
+        )
+
+        # Also penalize axial distance: face pairs perpendicular to axis
+        # (flange disc to shaft end). Find min distance between perpendicular faces.
+        ax_penalty = 0.0
+        aff_b = full_aff
+        aff_a = placement_to_4x4(plac_a)
+        perp_faces_a = []
+        perp_faces_b = []
+        for feat, aff, lst in [(features_a, aff_a, perp_faces_a),
+                                (features_b, aff_b, perp_faces_b)]:
+            for p in feat.get("planes", []):
+                n_raw = p.get("normal")
+                if n_raw:
+                    n_w = _transform_direction(n_raw, aff)
+                    if abs(_dot(_norm(n_w), direction)) > 0.95:
+                        lst.append(_transform_point(p["position"], aff))
+        # Pair closest perpendicular faces
+        for pa in perp_faces_a:
+            for pb in perp_faces_b:
+                d = abs(_dot(_sub(pb, pa), direction))
+                ax_penalty += d * 0.1
+
+        total_dist = sum(r["distance"] for r in results) + ax_penalty
+        return total_dist
+
+    res = scipy.optimize.minimize_scalar(
+        _cost,
+        bounds=search_range,
+        method="bounded",
+        options={"maxiter": budget, "xatol": 0.1},
+    )
+
+    best_offset = float(res.x)
+    best_cost = float(res.fun)
+
+    # Build final placement
+    aff_best = np.eye(4)
+    aff_best[:3, 3] = direction * best_offset
+    final_aff = aff_best @ aff_base
+
+    best_plac = {"translate": final_aff[:3, 3].tolist()}
+    if "rotate_sequence" in plac_b:
+        best_plac["rotate_sequence"] = plac_b["rotate_sequence"]
+
+    return best_offset, best_plac, best_cost

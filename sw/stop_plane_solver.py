@@ -299,9 +299,9 @@ def _insert_mating_point(features, match, use_plus_end=False):
     return [0,0,0]
 
 
-def _check_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges):
-    """Verify face-to-face contact using geometric distance (no SDF needed)."""
-    from face_contact import compute_pair_contact
+def _check_and_optimize_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges):
+    """Verify face contact + optimize axial position for max contact."""
+    from face_contact import compute_pair_contact, optimize_axial_position
     from direct_assembly_graph import canonical_pair
 
     print("\n=== Face Contact Check ===")
@@ -331,6 +331,43 @@ def _check_face_contact(placements, features, receiver, case_dir, raw_matches, s
         for r in results:
             icon = "[OK]" if r["contact"] else "[--]"
             print(f"  {icon} {Path(insert_name).stem:20s} {r['type']:15s}: {r['info']}")
+
+        # ── Axial optimization: slide along joint axis for max contact ──
+        is_clearance = any(m["type"] in ("coaxial", "clearance") for m in pair_matches)
+        if is_clearance:
+            cyls = features[receiver].get("cylinders", [])
+            if cyls:
+                ref_cyl = max(cyls, key=lambda c: c["radius"])
+                axis_origin = ref_cyl["origin"]
+                axis_direction = ref_cyl["axis"]
+
+                best_offset, best_plac, cost = optimize_axial_position(
+                    str(case_dir / receiver),
+                    str(case_dir / insert_name),
+                    features[receiver], features[insert_name],
+                    pair_matches,
+                    placements[receiver], plac,
+                    receiver, insert_name,
+                    axis_origin, axis_direction,
+                    search_range=(-200, 200),
+                    budget=30,
+                )
+
+                if abs(best_offset) > 0.5:
+                    print(f"    → axial optimize: offset={best_offset:.1f}mm")
+                    placements[insert_name] = best_plac
+                    # Re-check
+                    results2 = compute_pair_contact(
+                        features[receiver], features[insert_name],
+                        pair_matches,
+                        plac_a=placements[receiver],
+                        plac_b=best_plac,
+                        name_a=receiver, name_b=insert_name,
+                        threshold=0.5,
+                    )
+                    for r in results2:
+                        icon = "[OK]" if r["contact"] else "[--]"
+                        print(f"      {icon} {r['type']:15s}: {r['info']}")
 
 
 def solve_stop_plane(
@@ -616,8 +653,8 @@ def solve_stop_plane(
 
         print(f"  → translate={[round(v,1) for v in placements[insert].get('translate',[0,0,0])]}")
 
-    # ── Face contact check ──
-    _check_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges)
+    # ── Face contact check + axial optimization ──
+    _check_and_optimize_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges)
 
     # Build output
     components = []
