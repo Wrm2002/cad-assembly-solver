@@ -56,7 +56,7 @@ def _transform_direction(d, aff):
     return [r[0], r[1], r[2]]
 
 
-def face_distance(face_a, face_b, threshold=0.1):
+def face_distance(face_a, face_b, threshold=0.05):
     """Compute signed distance between two faces in world coordinates."""
     pos_a = face_a.get("position", [0, 0, 0])
     pos_b = face_b.get("position", [0, 0, 0])
@@ -241,41 +241,36 @@ def optimize_axial_position(step_a, step_b, features_a, features_b,
         aff[:3, 3] = direction * offset
         full_aff = aff @ aff_base
 
-        tmp_plac = {"translate": full_aff[:3, 3].tolist()}
-        if "rotate_sequence" in plac_b:
-            tmp_plac["rotate_sequence"] = plac_b["rotate_sequence"]
-
-        if not _collision_free(step_b, step_a, full_aff):
-            return 1e6
-
-        results = compute_pair_contact(
-            features_a, features_b, matches,
-            plac_a, tmp_plac, name_a, name_b, threshold=0.5,
-        )
-
-        # Also penalize axial distance: face pairs perpendicular to axis
-        # (flange disc to shaft end). Find min distance between perpendicular faces.
-        ax_penalty = 0.0
-        aff_b = full_aff
+        # Find perpendicular face pairs and compute axial gap
         aff_a = placement_to_4x4(plac_a)
-        perp_faces_a = []
-        perp_faces_b = []
-        for feat, aff, lst in [(features_a, aff_a, perp_faces_a),
-                                (features_b, aff_b, perp_faces_b)]:
+        aff_b = full_aff
+        perp_a = []  # (proj_along_axis, normal_world)
+        perp_b = []
+        for feat, aff, lst in [(features_a, aff_a, perp_a),
+                                (features_b, aff_b, perp_b)]:
             for p in feat.get("planes", []):
                 n_raw = p.get("normal")
                 if n_raw:
                     n_w = _transform_direction(n_raw, aff)
                     if abs(_dot(_norm(n_w), direction)) > 0.95:
-                        lst.append(_transform_point(p["position"], aff))
-        # Pair closest perpendicular faces
-        for pa in perp_faces_a:
-            for pb in perp_faces_b:
-                d = abs(_dot(_sub(pb, pa), direction))
-                ax_penalty += d * 0.1
+                        p_w = _transform_point(p["position"], aff)
+                        proj = _dot(p_w, direction)
+                        lst.append((proj, _norm(n_w)))
 
-        total_dist = sum(r["distance"] for r in results) + ax_penalty
-        return total_dist
+        # Find closest pair of mating faces (normals anti-parallel)
+        min_gap = float('inf')
+        for proj_a, na in perp_a:
+            for proj_b, nb in perp_b:
+                if _dot(na, nb) > 0:
+                    continue  # not mating (same direction)
+                gap = abs(proj_b - proj_a)
+                if gap < min_gap:
+                    min_gap = gap
+
+        if min_gap == float('inf'):
+            return 1.0  # no perpendicular faces → stay put
+
+        return min_gap  # minimize axial gap
 
     res = scipy.optimize.minimize_scalar(
         _cost,

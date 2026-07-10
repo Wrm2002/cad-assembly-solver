@@ -325,7 +325,7 @@ def _check_and_optimize_face_contact(placements, features, receiver, case_dir, r
             plac_a=placements[receiver],
             plac_b=plac,
             name_a=receiver, name_b=insert_name,
-            threshold=0.5,
+            threshold=0.1,
         )
 
         for r in results:
@@ -349,7 +349,7 @@ def _check_and_optimize_face_contact(placements, features, receiver, case_dir, r
                     placements[receiver], plac,
                     receiver, insert_name,
                     axis_origin, axis_direction,
-                    search_range=(-200, 200),
+                    search_range=(-50, 50),
                     budget=30,
                 )
 
@@ -363,7 +363,7 @@ def _check_and_optimize_face_contact(placements, features, receiver, case_dir, r
                         plac_a=placements[receiver],
                         plac_b=best_plac,
                         name_a=receiver, name_b=insert_name,
-                        threshold=0.5,
+                        threshold=0.1,
                     )
                     for r in results2:
                         icon = "[OK]" if r["contact"] else "[--]"
