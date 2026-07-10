@@ -473,11 +473,26 @@ def solve_stop_plane(
     inserts = list(insert_best_match.items())
     print(f"Inserts to place: {[(Path(k).stem, v['type']) for k,v in inserts]}")
 
+    # ── Detect face-to-face mates: inserts that should stack on same end ──
+    insert_names = [k for k, v in inserts]
+    flange_mates = {}
+    for m in raw_matches:
+        if m["type"] != "planar_mate":
+            continue
+        p0, p1 = m["parts"]
+        if p0 in insert_names and p1 in insert_names:
+            flange_mates[p0] = p1
+            flange_mates[p1] = p0
+            print(f"  [stack] {Path(p0).stem} <-> {Path(p1).stem} face-to-face")
+
     # Place receiver at origin
     placements = {receiver: {"translate": [0.0, 0.0, 0.0]}}
-    used_ends: dict[str, list[str]] = defaultdict(list)  # axis_key → list of placed inserts
+    used_ends: dict[str, list[str]] = defaultdict(list)
+    placed_in_stack: set = set()
 
     for insert, match in inserts:
+        if insert in placed_in_stack:
+            continue  # already handled by mate's placement
         print(f"\nPlacing {Path(insert).stem} (type={match['type']})...")
 
         # Get stop plane from receiver
@@ -561,6 +576,46 @@ def solve_stop_plane(
                 placement["rotate_sequence"] = rot_seq
             placements[insert] = placement
             used_ends[axis_key].append(insert)
+
+            # Stack mate on same end if face-to-face
+            if insert in flange_mates:
+                mate_name = flange_mates[insert]
+                if mate_name not in placements and mate_name not in placed_in_stack:
+                    print(f"  [stack] placing {Path(mate_name).stem} face-to-face...")
+                    mate_match = insert_best_match.get(mate_name)
+                    if mate_match and mate_match["type"] in ("coaxial", "clearance"):
+                        mate_cyls = features[mate_name].get("cylinders", [])
+                        if mate_cyls:
+                            mc = max(mate_cyls, key=lambda c: c["radius"])
+                            m_axis, m_origin = mc["axis"], mc["origin"]
+                            mibbox = features[mate_name].get("bbox", {})
+                            milo, mihi = mibbox.get("min",[0,0,0]), mibbox.get("max",[0,0,0])
+                            mc_c = [(milo[i]+mihi[i])/2 for i in range(3)]
+                            m_bd = _dot(_sub(mc_c, m_origin), m_axis)
+                            if ends_used: m_rev = m_bd > 0
+                            else: m_rev = m_bd < 0
+                            m_ta = _scale(ref_axis, -1.0) if m_rev else ref_axis
+                            if abs(_dot(m_axis, m_ta)) < 0.999:
+                                from coordinate_solver import _axis_angle_to_rotation
+                                ax, an = _axis_angle_to_rotation(m_axis, m_ta)
+                                m_rs = [{'axis_angle': [ax[0],ax[1],ax[2],math.degrees(an)]}] if ax else []
+                            else: m_rs = []
+                            mp2 = _insert_mating_point(features[mate_name], mate_match, False)
+                            fp_outer = _insert_mating_point(features[insert], match, True)
+                            from coordinate_solver import _apply_rotation_to_vector
+                            fow = _apply_rotation_to_vector(fp_outer, rot_seq)
+                            t2 = _add(translate, fow)
+                            mp2r = _apply_rotation_to_vector(mp2, m_rs)
+                            t2_final = _sub(t2, mp2r)
+                            p2 = {"translate": t2_final}
+                            if m_rs: p2["rotate_sequence"] = m_rs
+                            placements[mate_name] = p2
+                            placed_in_stack.add(mate_name)
+                            used_ends[axis_key].append(mate_name)
+                            print(f"    -> translate={[round(v,1) for v in t2_final]}")
+                        else:
+                            placements[mate_name] = dict(placement)
+                            placed_in_stack.add(mate_name)
 
         elif match["type"] == "pocket_mate":
             pkt_a = match.get("pocket_a", {})
