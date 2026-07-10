@@ -321,7 +321,10 @@ def _check_face_contact(placements, features, receiver, case_dir, raw_matches, s
 
         results = compute_pair_contact(
             features[receiver], features[insert_name],
-            pair_matches, placements, threshold=0.5,
+            pair_matches,
+            plac_a=placements[receiver],
+            plac_b=plac,
+            threshold=0.5,
         )
 
         for r in results:
