@@ -299,80 +299,41 @@ def _insert_mating_point(features, match, use_plus_end=False):
     return [0,0,0]
 
 
-def _apply_contact_maximization(placements, features, receiver, case_dir, selected_edges, raw_matches):
-    """Post-process: verify placements with SDF overlap check.
-    
-    For clearance fits, the stop-plane position is geometrically optimal
-    (disc face at shaft end). SDF contact metric is inherently 0 for
-    clearance fits (intentional gap). We only use SDF to detect overlap.
-    """
-    import numpy as np
-    import sys as _sys
-    _sys.path.insert(0, str(Path(__file__).parent))
-    try:
-        from joinable_pose_solver import step_to_mesh, validate_placement
-    except ImportError:
-        return
+def _check_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges):
+    """Verify face-to-face contact using geometric distance (no SDF needed)."""
+    from face_contact import compute_pair_contact
+    from direct_assembly_graph import canonical_pair
 
-    cyls = features[receiver].get("cylinders", [])
-    if not cyls:
-        return
-
-    receiver_path = case_dir / receiver
-    try:
-        receiver_mesh = step_to_mesh(str(receiver_path))
-    except Exception:
-        return
-
-    # Skip if mesh too coarse for SDF
-    if len(receiver_mesh.vertices) < 300:
-        return
-
-    # Skip if mesh too coarse
-    if len(receiver_mesh.vertices) < 300:
-        return
-
+    print("\n=== Face Contact Check ===")
     for insert_name, plac in placements.items():
         if insert_name == receiver:
             continue
 
-        is_clearance = any(
-            receiver in m["parts"] and insert_name in m["parts"] and m["type"] in ("coaxial", "clearance")
-            for m in raw_matches
+        pair_matches = []
+        for m in raw_matches:
+            if receiver in m["parts"] and insert_name in m["parts"]:
+                pair = canonical_pair(m["parts"])
+                if pair in {canonical_pair(e) for e in selected_edges}:
+                    pair_matches.append(m)
+
+        if not pair_matches:
+            continue
+
+        results = compute_pair_contact(
+            features[receiver], features[insert_name],
+            pair_matches, placements, threshold=0.5,
         )
-        if not is_clearance:
-            continue
 
-        insert_path = case_dir / insert_name
-        try:
-            insert_mesh = step_to_mesh(str(insert_path))
-        except Exception:
-            continue
+        for r in results:
+            icon = "[OK]" if r["contact"] else "[--]"
+            print(f"  {icon} {Path(insert_name).stem:20s} {r['type']:15s}: {r['info']}")
 
-        translate = plac.get("translate", [0, 0, 0])
-        rot_seq = plac.get("rotate_sequence", [])
-        aff = np.eye(4)
-        aff[:3, 3] = np.array(translate, dtype=float)
-        for rot in reversed(rot_seq):
-            aa = rot["axis_angle"]
-            axis = np.array(aa[:3], dtype=float) / (np.linalg.norm(aa[:3]) + 1e-12)
-            rad = np.deg2rad(aa[3])
-            x, y, z = axis
-            c = math.cos(rad); s = math.sin(rad); C = 1 - c
-            R = np.array([
-                [x*x*C+c, x*y*C-z*s, x*z*C+y*s],
-                [x*y*C+z*s, y*y*C+c, y*z*C-x*s],
-                [x*z*C-y*s, y*z*C+x*s, z*z*C+c],
-            ])
-            aff[:3, :3] = R @ aff[:3, :3]
 
-        val = validate_placement(insert_mesh, receiver_mesh, aff, num_samples=4096)
-        status = val["status"]
-        if status == "overlap":
-            print(f"  [SDF] {Path(insert_name).stem}: OVERLAP={val['overlap']:.3f} — NEEDS FIX")
-        elif status == "good":
-            print(f"  [SDF] {Path(insert_name).stem}: contact={val['contact']:.3f} OK")
-        # clearance / no_contact is expected for shaft fits
+def solve_stop_plane(
+    case_dir: str | Path,
+) -> dict[str, Any]:
+    """Compute placements for all parts using stop-plane alignment."""
+    case_dir = Path(case_dir)
 
 
 def solve_stop_plane(
@@ -651,8 +612,8 @@ def solve_stop_plane(
 
         print(f"  → translate={[round(v,1) for v in placements[insert].get('translate',[0,0,0])]}")
 
-    # ── Contact maximization: slide inserts along axis for max face contact ──
-    _apply_contact_maximization(placements, features, receiver, case_dir, selected_edges, raw_matches)
+    # ── Face contact check ──
+    _check_face_contact(placements, features, receiver, case_dir, raw_matches, selected_edges)
 
     # Build output
     components = []
