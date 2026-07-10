@@ -200,6 +200,105 @@ def refine_rotation(insert_mesh, receiver_mesh, joint_axis,
 
 
 # ═══════════════════════════════════════════════════════════════
+# Axial contact maximization — "拧紧瓶盖"
+# ═══════════════════════════════════════════════════════════════
+
+def maximize_contact_along_axis(
+    insert_mesh, receiver_mesh,
+    initial_transform_4x4,
+    axis_origin, axis_direction,
+    search_range=(-500, 500),
+    num_samples=4096,
+    budget=50,
+):
+    """Slide insert along axis to maximize contact without collision.
+
+    Like screwing a bottle cap — start from initial placement,
+    then push further along the joint axis until maximum contact
+    is achieved, stopping before any collision.
+
+    Args:
+        insert_mesh: trimesh of the moving part
+        receiver_mesh: trimesh of the fixed part
+        initial_transform_4x4: starting 4x4 transform
+        axis_origin: point on the joint axis (on receiver)
+        axis_direction: unit direction of the joint axis
+        search_range: (min_offset, max_offset) in mm to search
+        num_samples: SDF sample count
+        budget: max optimizer iterations
+
+    Returns:
+        (best_offset, final_transform, overlap, contact)
+    """
+    origin = np.array(axis_origin, dtype=float)
+    direction = np.array(axis_direction, dtype=float)
+    direction = direction / (np.linalg.norm(direction) + 1e-12)
+
+    # Sample points once
+    np.random.seed(42)
+    if insert_mesh.is_watertight:
+        try:
+            vol_pts = trimesh.sample.volume_mesh(insert_mesh, num_samples)
+        except Exception:
+            vol_pts = _sample_volume(insert_mesh, num_samples)
+    else:
+        vol_pts = _sample_volume(insert_mesh, num_samples)
+    surf_pts, _ = trimesh.sample.sample_surface(insert_mesh, num_samples)
+
+    sdf = SDF(receiver_mesh.vertices, receiver_mesh.faces)
+
+    def _cost(offset):
+        """Cost = -contact if no overlap, else big penalty.
+        We want to MINIMIZE cost → maximize contact at 0 overlap."""
+        # Translation along axis
+        aff = np.eye(4)
+        aff[:3, 3] = direction * offset
+        # Compose: first apply initial transform, then slide
+        full_aff = aff @ initial_transform_4x4
+
+        v = _transform_pts(vol_pts, full_aff)
+        s = _transform_pts(surf_pts, full_aff)
+        sv = sdf(v[:, :3])
+        ss = sdf(s[:, :3])
+
+        ov = float((sv > 0.01).sum() / num_samples)
+        ct = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
+        ct = min(ct, 1.0)
+
+        if ov > 0.01:
+            # Heavy penalty for any overlap
+            return 10.0 + ov * 100.0
+        # Reward contact
+        return -ct
+
+    # Search: start from 0, look in positive direction (push further in)
+    lo, hi = search_range
+    res = scipy.optimize.minimize_scalar(
+        _cost,
+        bounds=(max(0, lo), hi),  # Search forward from current position
+        method="bounded",
+        options={"maxiter": budget, "xatol": 0.1},
+    )
+
+    best_offset = float(res.x)
+    # Compute final transform
+    aff_best = np.eye(4)
+    aff_best[:3, 3] = direction * best_offset
+    final_aff = aff_best @ initial_transform_4x4
+
+    # Final evaluation
+    v = _transform_pts(vol_pts, final_aff)
+    s = _transform_pts(surf_pts, final_aff)
+    sv = sdf(v[:, :3])
+    ss = sdf(s[:, :3])
+    ov = float((sv > 0.01).sum() / num_samples)
+    ct = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
+    ct = min(ct, 1.0)
+
+    return best_offset, final_aff, ov, ct
+
+
+# ═══════════════════════════════════════════════════════════════
 # Integrated solver: stop_plane + JoinABLe validation
 # ═══════════════════════════════════════════════════════════════
 

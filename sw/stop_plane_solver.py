@@ -299,6 +299,90 @@ def _insert_mating_point(features, match, use_plus_end=False):
     return [0,0,0]
 
 
+def _apply_contact_maximization(placements, features, receiver, case_dir, selected_edges, raw_matches):
+    """Post-process: slide inserts along joint axis to maximize face contact.
+    
+    Uses JoinABLe SDF cost function. Skipped when mesh quality is insufficient
+    (< 500 vertices for receiver). The stop-plane placement is geometrically
+    optimal for simple shaft+flange cases.
+    """
+    import numpy as np
+    try:
+        from joinable_pose_solver import step_to_mesh, maximize_contact_along_axis
+    except ImportError:
+        return
+
+    cyls = features[receiver].get("cylinders", [])
+    if not cyls:
+        return
+    ref_cyl = max(cyls, key=lambda c: c["radius"])
+    ref_axis = _norm(ref_cyl["axis"])
+    ref_origin = ref_cyl["origin"]
+
+    receiver_path = case_dir / receiver
+    try:
+        receiver_mesh = step_to_mesh(str(receiver_path))
+    except Exception:
+        return
+
+    # Skip if mesh too coarse for SDF contact
+    if len(receiver_mesh.vertices) < 500:
+        return
+
+    for insert_name, plac in placements.items():
+        if insert_name == receiver:
+            continue
+
+        is_clearance = any(
+            receiver in m["parts"] and insert_name in m["parts"] and m["type"] in ("coaxial", "clearance")
+            for m in raw_matches
+        )
+        if not is_clearance:
+            continue
+
+        insert_path = case_dir / insert_name
+        try:
+            insert_mesh = step_to_mesh(str(insert_path))
+        except Exception:
+            continue
+
+        translate = plac.get("translate", [0, 0, 0])
+        rot_seq = plac.get("rotate_sequence", [])
+        aff = np.eye(4)
+        aff[:3, 3] = np.array(translate, dtype=float)
+        for rot in reversed(rot_seq):
+            aa = rot["axis_angle"]
+            axis = np.array(aa[:3], dtype=float) / (np.linalg.norm(aa[:3]) + 1e-12)
+            rad = np.deg2rad(aa[3])
+            x, y, z = axis
+            c = math.cos(rad); s = math.sin(rad); C = 1 - c
+            R = np.array([
+                [x*x*C+c, x*y*C-z*s, x*z*C+y*s],
+                [x*y*C+z*s, y*y*C+c, y*z*C-x*s],
+                [x*z*C-y*s, y*z*C+x*s, z*z*C+c],
+            ])
+            aff[:3, :3] = R @ aff[:3, :3]
+
+        # Search direction toward shaft center
+        cyl_origin = np.array(ref_origin)
+        cyl_axis = np.array(ref_axis)
+        flange_proj = np.dot(np.array(translate), cyl_axis)
+        shaft_center_proj = np.dot(cyl_origin, cyl_axis)
+        toward_center = -cyl_axis if flange_proj > shaft_center_proj else cyl_axis
+
+        best_offset, final_aff, ov, ct = maximize_contact_along_axis(
+            insert_mesh, receiver_mesh,
+            aff, ref_origin, toward_center,
+            search_range=(0, 200),
+            num_samples=4096, budget=20,
+        )
+
+        if abs(best_offset) > 0.5 and ov < 0.01:
+            plac["translate"] = final_aff[:3, 3].tolist()
+            print(f"  [max contact] {Path(insert_name).stem}: +{best_offset:.1f}mm"
+                  f" (contact={ct:.3f})")
+
+
 def solve_stop_plane(
     case_dir: str | Path,
 ) -> dict[str, Any]:
@@ -574,6 +658,9 @@ def solve_stop_plane(
                 placements[insert] = placement
 
         print(f"  → translate={[round(v,1) for v in placements[insert].get('translate',[0,0,0])]}")
+
+    # ── Contact maximization: slide inserts along axis for max face contact ──
+    _apply_contact_maximization(placements, features, receiver, case_dir, selected_edges, raw_matches)
 
     # Build output
     components = []
