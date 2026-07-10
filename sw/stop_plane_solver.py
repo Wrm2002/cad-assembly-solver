@@ -300,24 +300,23 @@ def _insert_mating_point(features, match, use_plus_end=False):
 
 
 def _apply_contact_maximization(placements, features, receiver, case_dir, selected_edges, raw_matches):
-    """Post-process: slide inserts along joint axis to maximize face contact.
+    """Post-process: verify placements with SDF overlap check.
     
-    Uses JoinABLe SDF cost function. Skipped when mesh quality is insufficient
-    (< 500 vertices for receiver). The stop-plane placement is geometrically
-    optimal for simple shaft+flange cases.
+    For clearance fits, the stop-plane position is geometrically optimal
+    (disc face at shaft end). SDF contact metric is inherently 0 for
+    clearance fits (intentional gap). We only use SDF to detect overlap.
     """
     import numpy as np
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).parent))
     try:
-        from joinable_pose_solver import step_to_mesh, maximize_contact_along_axis
+        from joinable_pose_solver import step_to_mesh, validate_placement
     except ImportError:
         return
 
     cyls = features[receiver].get("cylinders", [])
     if not cyls:
         return
-    ref_cyl = max(cyls, key=lambda c: c["radius"])
-    ref_axis = _norm(ref_cyl["axis"])
-    ref_origin = ref_cyl["origin"]
 
     receiver_path = case_dir / receiver
     try:
@@ -325,8 +324,12 @@ def _apply_contact_maximization(placements, features, receiver, case_dir, select
     except Exception:
         return
 
-    # Skip if mesh too coarse for SDF contact
-    if len(receiver_mesh.vertices) < 500:
+    # Skip if mesh too coarse for SDF
+    if len(receiver_mesh.vertices) < 300:
+        return
+
+    # Skip if mesh too coarse
+    if len(receiver_mesh.vertices) < 300:
         return
 
     for insert_name, plac in placements.items():
@@ -363,24 +366,13 @@ def _apply_contact_maximization(placements, features, receiver, case_dir, select
             ])
             aff[:3, :3] = R @ aff[:3, :3]
 
-        # Search direction toward shaft center
-        cyl_origin = np.array(ref_origin)
-        cyl_axis = np.array(ref_axis)
-        flange_proj = np.dot(np.array(translate), cyl_axis)
-        shaft_center_proj = np.dot(cyl_origin, cyl_axis)
-        toward_center = -cyl_axis if flange_proj > shaft_center_proj else cyl_axis
-
-        best_offset, final_aff, ov, ct = maximize_contact_along_axis(
-            insert_mesh, receiver_mesh,
-            aff, ref_origin, toward_center,
-            search_range=(0, 200),
-            num_samples=4096, budget=20,
-        )
-
-        if abs(best_offset) > 0.5 and ov < 0.01:
-            plac["translate"] = final_aff[:3, 3].tolist()
-            print(f"  [max contact] {Path(insert_name).stem}: +{best_offset:.1f}mm"
-                  f" (contact={ct:.3f})")
+        val = validate_placement(insert_mesh, receiver_mesh, aff, num_samples=4096)
+        status = val["status"]
+        if status == "overlap":
+            print(f"  [SDF] {Path(insert_name).stem}: OVERLAP={val['overlap']:.3f} — NEEDS FIX")
+        elif status == "good":
+            print(f"  [SDF] {Path(insert_name).stem}: contact={val['contact']:.3f} OK")
+        # clearance / no_contact is expected for shaft fits
 
 
 def solve_stop_plane(

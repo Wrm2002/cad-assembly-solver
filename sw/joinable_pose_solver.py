@@ -81,7 +81,7 @@ def step_to_mesh(step_path):
     reader.TransferRoots()
     shape = reader.OneShape()
 
-    mesh = BRepMesh_IncrementalMesh(shape, 0.1, False, 0.5)
+    mesh = BRepMesh_IncrementalMesh(shape, 0.001, False, 0.5)
     mesh.Perform()
 
     with tempfile.NamedTemporaryFile(suffix=".stl", delete=False) as tmp:
