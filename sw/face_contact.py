@@ -292,3 +292,65 @@ def optimize_axial_position(step_a, step_b, features_a, features_b,
         best_plac["rotate_sequence"] = plac_b["rotate_sequence"]
 
     return best_offset, best_plac, best_cost
+
+def solve_pose_simplex(features_a, features_b, plac_a, plac_b,
+                       name_a, name_b,
+                       axis_origin, axis_direction,
+                       search_offset=(-200, 200), search_rotation=(0, 360),
+                       budget=50):
+    import scipy.optimize, math, numpy as np
+    origin = np.array(axis_origin, dtype=float)
+    direction = np.array(axis_direction, dtype=float) / (np.linalg.norm(axis_direction) + 1e-12)
+    aff_base = placement_to_4x4(plac_b)
+    aff_a = placement_to_4x4(plac_a)
+
+    def _rot_mat(deg):
+        rad = np.deg2rad(deg); x,y,z = direction
+        c=math.cos(rad); s=math.sin(rad); C=1-c
+        R=np.array([[x*x*C+c,x*y*C-z*s,x*z*C+y*s],[x*y*C+z*s,y*y*C+c,y*z*C-x*s],[x*z*C-y*s,y*z*C+x*s,z*z*C+c]])
+        aff=np.eye(4); aff[:3,:3]=R; aff[:3,3]=origin-R@origin
+        return aff
+
+    def _gap(off, rot_deg, flip):
+        aff_off=np.eye(4); aff_off[:3,3]=direction*off
+        aff_rot=_rot_mat(rot_deg)
+        if flip:
+            dn=direction; aff_flip=np.eye(4)
+            aff_flip[:3,:3]=np.eye(3)-2*np.outer(dn,dn); aff_flip[:3,3]=(2.0*np.dot(origin,dn))*dn
+            full=aff_off@aff_flip@aff_rot@aff_base
+        else:
+            full=aff_off@aff_rot@aff_base
+        perp_a,perp_b=[],[]
+        for feat,aff,lst in [(features_a,aff_a,perp_a),(features_b,full,perp_b)]:
+            for p in feat.get('planes',[]):
+                n_raw=p.get('normal')
+                if n_raw:
+                    n_w=_transform_direction(n_raw,aff)
+                    if abs(_dot(_norm(n_w),direction))>0.95:
+                        lst.append((_dot(_transform_point(p['position'],aff),direction),_norm(n_w)))
+        if not perp_a or not perp_b: return 1.0
+        mg=float('inf')
+        for pa,na in perp_a:
+            for pb,nb in perp_b:
+                if _dot(na,nb)>0: continue
+                mg=min(mg,abs(pb-pa))
+        return mg if mg!=float('inf') else 1.0
+
+    best=float('inf'); bp=None
+    for flip in (False,True):
+        x0=np.array([0.0,0.0])
+        bd=scipy.optimize.Bounds([search_offset[0],search_rotation[0]],[search_offset[1],search_rotation[1]])
+        r=scipy.optimize.minimize(lambda x:_gap(x[0],x[1] if len(x)>1 else 0,flip),x0,method='Nelder-Mead',bounds=bd,options={'maxiter':budget,'xatol':0.1,'fatol':0.001})
+        if r.fun<best: best=r.fun; bp=(r.x[0],r.x[1] if len(r.x)>1 else 0,flip)
+
+    bo,br,bf=bp
+    aff_off=np.eye(4); aff_off[:3,3]=direction*bo
+    if bf:
+        dn=direction; aff_flip=np.eye(4)
+        aff_flip[:3,:3]=np.eye(3)-2*np.outer(dn,dn); aff_flip[:3,3]=(2.0*np.dot(origin,dn))*dn
+        final=aff_off@aff_flip@_rot_mat(br)@aff_base
+    else:
+        final=aff_off@_rot_mat(br)@aff_base
+    best_plac={'translate':final[:3,3].tolist()}
+    if 'rotate_sequence' in plac_b: best_plac['rotate_sequence']=plac_b['rotate_sequence']
+    return bo,br,bf,best_plac,best
