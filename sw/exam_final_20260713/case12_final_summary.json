@@ -1,0 +1,76 @@
+{
+  "schema_version": "case12_precision_delivery.v1",
+  "status": "partial_success_conservative",
+  "case1": {
+    "final_pose_status": "valid",
+    "accepted": true,
+    "hypothesis_count": 10,
+    "exact_valid_count": 7,
+    "precision_valid_count": 6,
+    "selected_hypothesis_index": 1,
+    "axis_distance_mm": 0.00004826347180067664,
+    "axis_angle_degrees": 0.00027951160535872764,
+    "plane_gap_mm": 0.02,
+    "hole_pattern_rms_mm": 2.929814352886316e-13,
+    "occt_common_volume_mm3": 0.0,
+    "independent_evidence_count": 3,
+    "render": "final/case1_precision/precision_pose_render.png",
+    "summary": "final/case1_precision/exam_summary.json"
+  },
+  "case2": {
+    "final_pose_status": "review",
+    "accepted": false,
+    "review_required": true,
+    "hypothesis_count": 96,
+    "exact_valid_count": 5,
+    "precision_valid_count": 0,
+    "precision_review_count": 5,
+    "selected_hypothesis_index": 4,
+    "axis_distance_mm": 0.06487061919947831,
+    "axis_angle_degrees": 0.0451013077783677,
+    "plane_gap_mm": 0.02,
+    "hole_pattern_rms_mm": 2.162414334608587e-12,
+    "occt_common_volume_mm3": 0.0,
+    "insertion_depth_mm": null,
+    "independent_evidence_count": 4,
+    "review_reasons": [
+      "occt_valid_but_contact_support_missing",
+      "prismatic_insertion_depth_not_verified",
+      "unresolved_manifold_dofs"
+    ],
+    "render": "final/case2/precision_pose_render.png",
+    "summary": "final/case2/exam_summary.json"
+  },
+  "frozen_12_pool": {
+    "candidate_count": 9668,
+    "accepted_group_count": 0,
+    "auto_accept_precision": null,
+    "precision_status": "not_estimable_no_auto_accepts",
+    "false_positive_count": 0,
+    "review_group_count": 9162,
+    "review_frontier_group_count": 288,
+    "deferred_review_group_count": 8874,
+    "rejected_group_count": 506,
+    "unresolved_parts_count": 110,
+    "legacy_false_positive_count": 39,
+    "false_positive_reduction": 39,
+    "semantic_reranking_enabled": false,
+    "metrics": "../data/results_20260713_final/conservative_metrics.json"
+  },
+  "functional_dataset": {
+    "case_count": 9,
+    "families": ["cover_base", "shaft_hub_key", "bearing_housing"],
+    "generic_geometry_stack_positive_count": 0,
+    "source_id_used_as_production_truth": false,
+    "status": "pass"
+  },
+  "validation": {
+    "unit_tests_passed": 62,
+    "final_merged_regression_tests_passed": 54,
+    "final_merged_regression_status": "pass",
+    "semantic_gate_artifacts_complete": true,
+    "legacy_false_positive_routes_audited": 39,
+    "remote_training_run": false,
+    "remote_training_reason": "The measured blocker is deterministic multi-interface and insertion-depth validation, not network capacity."
+  }
+}

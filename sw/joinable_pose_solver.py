@@ -1,378 +1,186 @@
-"""
-joinable_pose_solver.py — JoinABLe SDF validation + rotation refinement.
+"""Compatibility utilities backed by the canonical JoinABLe pose core.
 
-Uses JoinABLe's SDF overlap/contact cost function (CVPR 2022) to:
-  1. Validate placements from stop_plane_solver
-  2. Refine rotation around joint axis via bounded scalar search
-  3. Report overlap, contact, and quality metrics
-
-Primary placement (axial position) is handled by stop_plane_solver.
-JoinABLe components adapted from:
-  search/search_simplex.py — simplex optimization
-  joint/joint_environment.py — SDF cost function
-  utils/util.py — point transform helpers
+Use :mod:`joinable_e2e` for released-checkpoint top-k pose proposals and
+``known_group_assembly.py`` for multi-part closure/exact validation.  This file
+retains the earlier helper API so existing notebooks and scripts do not keep a
+second, inconsistent SDF implementation.
 """
+
 from __future__ import annotations
 
-import math, sys, json
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import scipy.optimize
 import trimesh
-from pysdf import SDF
+
+from pose_search import JointAxisSeed, JoinablePoseSearch, placement_to_matrix
+from pose_search.transforms import (
+    rotation_about_axis_matrix,
+    transform_points,
+    translation_along_axis_matrix,
+)
 
 
-# ═══════════════════════════════════════════════════════════════
-# Util helpers (from JoinABLe utils/util.py)
-# ═══════════════════════════════════════════════════════════════
+def step_to_mesh(step_path: str | Path) -> trimesh.Trimesh:
+    from joinable_e2e import step_to_stl
 
-def _pad_pts(pts):
-    return np.pad(pts, ((0, 0), (0, 1)), mode="constant", constant_values=1)
+    step_path = Path(step_path).resolve()
+    stl = step_to_stl(step_path, step_path.parent / ".joinable_mesh_cache")
+    mesh = trimesh.load(str(stl), force="mesh", process=False)
+    if isinstance(mesh, trimesh.Scene):
+        mesh = trimesh.util.concatenate(tuple(mesh.geometry.values()))
+    return mesh
 
-def _transform_pts(pts, matrix):
-    if pts.shape[1] == 3:
-        v = _pad_pts(pts).T
+
+def validate_placement(
+    insert_mesh: trimesh.Trimesh,
+    receiver_mesh: trimesh.Trimesh,
+    transform_4x4: np.ndarray,
+    num_samples: int = 4096,
+    seed: int = 42,
+) -> dict[str, Any]:
+    searcher = JoinablePoseSearch(
+        receiver_mesh,
+        insert_mesh,
+        sample_count=num_samples,
+        budget=1,
+        seed=seed,
+    )
+    evaluation = searcher.evaluate(np.asarray(transform_4x4, dtype=float))
+    if evaluation.overlap > 0.1:
+        status = "overlap"
+    elif evaluation.contact > 0.0:
+        status = "good"
+    elif evaluation.closest_distance <= 2.0 * searcher.contact_tolerance:
+        status = "clearance"
     else:
-        v = pts.T
-    v = matrix @ v
-    return v.T[:, :3]
+        status = "no_contact"
+    return {
+        "overlap": evaluation.overlap,
+        "contact": evaluation.contact,
+        "cost": evaluation.cost,
+        "closest_distance": evaluation.closest_distance,
+        "status": status,
+        "method": "canonical_joinable_sdf_objective",
+    }
 
 
-# ═══════════════════════════════════════════════════════════════
-# SDF-based validation (from JoinABLe joint_environment.py)
-# ═══════════════════════════════════════════════════════════════
-
-def _sample_volume(mesh, num_samples, seed=42):
-    """Sample points inside mesh volume."""
-    np.random.seed(seed)
-    if mesh.is_watertight:
-        try:
-            return trimesh.sample.volume_mesh(mesh, num_samples)
-        except Exception:
-            pass
-    lo, hi = mesh.bounds
-    pts = np.random.uniform(lo, hi, (num_samples * 10, 3))
-    try:
-        import igl
-        wns = igl.fast_winding_number_for_meshes(mesh.vertices, mesh.faces, pts)
-        inside = pts[wns > 0.5]
-        if len(inside) >= num_samples:
-            return inside[:num_samples]
-    except ImportError:
-        pass
-    verts = mesh.vertices
-    idx = np.random.choice(len(verts), num_samples)
-    return verts[idx] + np.random.randn(num_samples, 3) * 0.1
-
-
-def step_to_mesh(step_path):
-    """Convert STEP file to trimesh via OCCT STL export."""
-    from OCC.Core.STEPControl import STEPControl_Reader
-    from OCC.Core.IFSelect import IFSelect_RetDone
-    from OCC.Core.BRepMesh import BRepMesh_IncrementalMesh
-    from OCC.Core.StlAPI import StlAPI_Writer
-    import tempfile, os
-
-    reader = STEPControl_Reader()
-    if reader.ReadFile(str(step_path)) != IFSelect_RetDone:
-        raise RuntimeError(f"Failed to read {step_path}")
-    reader.TransferRoots()
-    shape = reader.OneShape()
-
-    mesh = BRepMesh_IncrementalMesh(shape, 0.001, False, 0.5)
-    mesh.Perform()
-
-    with tempfile.NamedTemporaryFile(suffix=".stl", delete=False) as tmp:
-        tmp_path = tmp.name
-    try:
-        writer = StlAPI_Writer()
-        writer.Write(shape, tmp_path)
-        return trimesh.load(tmp_path)
-    finally:
-        try:
-            os.unlink(tmp_path)
-        except Exception:
-            pass
-
-
-def validate_placement(insert_mesh, receiver_mesh, transform_4x4,
-                       num_samples=4096, seed=42):
-    """Validate a placement using JoinABLe SDF overlap + contact.
-
-    Returns: {overlap, contact, cost, status}
-      status: 'good' | 'overlap' | 'clearance' | 'no_contact'
-    """
-    np.random.seed(seed)
-    vol_pts = _sample_volume(insert_mesh, num_samples, seed)
-    surf_pts, _ = trimesh.sample.sample_surface(insert_mesh, num_samples)
-
-    vol_t = _transform_pts(vol_pts, transform_4x4)
-    surf_t = _transform_pts(surf_pts, transform_4x4)
-
-    sdf = SDF(receiver_mesh.vertices, receiver_mesh.faces)
-
-    sv = sdf(vol_t[:, :3])
-    overlap = float((sv > 0.01).sum() / num_samples)
-
-    ss = sdf(surf_t[:, :3])
-    contact = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
-    contact = min(contact, 1.0)
-
-    if overlap > 0.05:
-        cost, status = overlap, "overlap"
-    elif contact > 0.02:
-        cost, status = -contact, "good"
-    elif contact > 0.001:
-        cost, status = 0.0, "clearance"
-    else:
-        cost, status = 0.0, "no_contact"
-
-    return {"overlap": overlap, "contact": contact, "cost": cost, "status": status}
-
-
-# ═══════════════════════════════════════════════════════════════
-# Rotation refinement (from JoinABLe search approach)
-# ═══════════════════════════════════════════════════════════════
-
-def _rotation_matrix_about_axis(origin, direction, angle_deg):
-    """4x4 affine matrix for rotation about axis through origin."""
-    rad = np.deg2rad(angle_deg)
-    d = np.array(direction, dtype=float)
-    d = d / (np.linalg.norm(d) + 1e-12)
-    o = np.array(origin, dtype=float)
-    x, y, z = d
-    c = math.cos(rad); s = math.sin(rad); C = 1 - c
-    R = np.array([
-        [x*x*C+c,  x*y*C-z*s, x*z*C+y*s],
-        [x*y*C+z*s, y*y*C+c,  y*z*C-x*s],
-        [x*z*C-y*s, y*z*C+x*s, z*z*C+c],
-    ])
-    aff = np.eye(4)
-    aff[:3, :3] = R
-    aff[:3, 3] = o - R @ o
-    return aff
-
-
-def refine_rotation(insert_mesh, receiver_mesh, joint_axis,
-                    num_samples=4096, budget=50):
-    """Refine rotation around joint axis to maximize contact (JoinABLe style).
-
-    Returns: (best_angle_deg, overlap, contact, cost)
-    """
+def refine_rotation(
+    insert_mesh: trimesh.Trimesh,
+    receiver_mesh: trimesh.Trimesh,
+    joint_axis: tuple[list[float], list[float]],
+    num_samples: int = 4096,
+    budget: int = 50,
+) -> tuple[float, float, float, float]:
     origin, direction = joint_axis
-
-    np.random.seed(42)
-    vol_pts = _sample_volume(insert_mesh, num_samples)
-    surf_pts, _ = trimesh.sample.sample_surface(insert_mesh, num_samples)
-    sdf = SDF(receiver_mesh.vertices, receiver_mesh.faces)
-
-    def _cost(angle_deg):
-        aff = _rotation_matrix_about_axis(origin, direction, angle_deg)
-        v = _transform_pts(vol_pts, aff)
-        s = _transform_pts(surf_pts, aff)
-        sv = sdf(v[:, :3])
-        ss = sdf(s[:, :3])
-        ov = (sv > 0.01).sum() / num_samples
-        ct = (np.abs(ss) < 0.05).sum() / (num_samples * 0.1)
-        ct = min(ct, 1.0)
-        if ov > 0.05:
-            return ov * 10.0
-        return -ct
-
-    res = scipy.optimize.minimize_scalar(
-        _cost, bounds=(-180, 180), method="bounded",
-        options={"maxiter": budget, "xatol": 0.5},
+    seed = JointAxisSeed(
+        moving_origin=tuple(origin),
+        moving_direction=tuple(direction),
+        fixed_origin=tuple(origin),
+        fixed_direction=tuple(direction),
+    )
+    result = JoinablePoseSearch(
+        receiver_mesh,
+        insert_mesh,
+        sample_count=num_samples,
+        budget=budget,
+    ).search([seed], top_k=1)[0]
+    return (
+        result.rotation_degrees,
+        result.evaluation.overlap,
+        result.evaluation.contact,
+        result.evaluation.cost,
     )
 
-    best_angle = float(res.x)
-    aff = _rotation_matrix_about_axis(origin, direction, best_angle)
-    v = _transform_pts(vol_pts, aff)
-    s = _transform_pts(surf_pts, aff)
-    sv = sdf(v[:, :3])
-    ss = sdf(s[:, :3])
-    ov = float((sv > 0.01).sum() / num_samples)
-    ct = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
-    ct = min(ct, 1.0)
-
-    return best_angle, ov, ct, float(res.fun)
-
-
-# ═══════════════════════════════════════════════════════════════
-# Axial contact maximization — "拧紧瓶盖"
-# ═══════════════════════════════════════════════════════════════
 
 def maximize_contact_along_axis(
-    insert_mesh, receiver_mesh,
-    initial_transform_4x4,
-    axis_origin, axis_direction,
-    search_range=(-500, 500),
-    num_samples=4096,
-    budget=50,
-):
-    """Slide insert along axis to maximize contact without collision.
+    insert_mesh: trimesh.Trimesh,
+    receiver_mesh: trimesh.Trimesh,
+    initial_transform_4x4: np.ndarray,
+    axis_origin: list[float],
+    axis_direction: list[float],
+    search_range: tuple[float, float] = (-500.0, 500.0),
+    num_samples: int = 4096,
+    budget: int = 50,
+) -> tuple[float, np.ndarray, float, float]:
+    searcher = JoinablePoseSearch(
+        receiver_mesh,
+        insert_mesh,
+        sample_count=num_samples,
+        budget=budget,
+    )
+    initial = np.asarray(initial_transform_4x4, dtype=float)
 
-    Like screwing a bottle cap — start from initial placement,
-    then push further along the joint axis until maximum contact
-    is achieved, stopping before any collision.
+    def transform(offset: float) -> np.ndarray:
+        return translation_along_axis_matrix(
+            axis_direction, float(offset)
+        ) @ initial
 
-    Args:
-        insert_mesh: trimesh of the moving part
-        receiver_mesh: trimesh of the fixed part
-        initial_transform_4x4: starting 4x4 transform
-        axis_origin: point on the joint axis (on receiver)
-        axis_direction: unit direction of the joint axis
-        search_range: (min_offset, max_offset) in mm to search
-        num_samples: SDF sample count
-        budget: max optimizer iterations
-
-    Returns:
-        (best_offset, final_transform, overlap, contact)
-    """
-    origin = np.array(axis_origin, dtype=float)
-    direction = np.array(axis_direction, dtype=float)
-    direction = direction / (np.linalg.norm(direction) + 1e-12)
-
-    # Sample points once
-    np.random.seed(42)
-    if insert_mesh.is_watertight:
-        try:
-            vol_pts = trimesh.sample.volume_mesh(insert_mesh, num_samples)
-        except Exception:
-            vol_pts = _sample_volume(insert_mesh, num_samples)
-    else:
-        vol_pts = _sample_volume(insert_mesh, num_samples)
-    surf_pts, _ = trimesh.sample.sample_surface(insert_mesh, num_samples)
-
-    sdf = SDF(receiver_mesh.vertices, receiver_mesh.faces)
-
-    def _cost(offset):
-        """Cost = -contact if no overlap, else big penalty.
-        We want to MINIMIZE cost → maximize contact at 0 overlap."""
-        # Translation along axis
-        aff = np.eye(4)
-        aff[:3, 3] = direction * offset
-        # Compose: first apply initial transform, then slide
-        full_aff = aff @ initial_transform_4x4
-
-        v = _transform_pts(vol_pts, full_aff)
-        s = _transform_pts(surf_pts, full_aff)
-        sv = sdf(v[:, :3])
-        ss = sdf(s[:, :3])
-
-        ov = float((sv > 0.01).sum() / num_samples)
-        ct = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
-        ct = min(ct, 1.0)
-
-        if ov > 0.01:
-            # Heavy penalty for any overlap
-            return 10.0 + ov * 100.0
-        # Reward contact
-        return -ct
-
-    # Search: start from 0, look in positive direction (push further in)
-    lo, hi = search_range
-    res = scipy.optimize.minimize_scalar(
-        _cost,
-        bounds=(max(0, lo), hi),  # Search forward from current position
+    result = scipy.optimize.minimize_scalar(
+        lambda value: searcher.evaluate(transform(float(value))).cost,
+        bounds=(float(search_range[0]), float(search_range[1])),
         method="bounded",
-        options={"maxiter": budget, "xatol": 0.1},
+        options={"maxiter": budget, "xatol": 0.05},
+    )
+    final = transform(float(result.x))
+    evaluation = searcher.evaluate(final)
+    return (
+        float(result.x),
+        final,
+        evaluation.overlap,
+        evaluation.contact,
     )
 
-    best_offset = float(res.x)
-    # Compute final transform
-    aff_best = np.eye(4)
-    aff_best[:3, 3] = direction * best_offset
-    final_aff = aff_best @ initial_transform_4x4
-
-    # Final evaluation
-    v = _transform_pts(vol_pts, final_aff)
-    s = _transform_pts(surf_pts, final_aff)
-    sv = sdf(v[:, :3])
-    ss = sdf(s[:, :3])
-    ov = float((sv > 0.01).sum() / num_samples)
-    ct = float((np.abs(ss) < 0.05).sum() / (num_samples * 0.1))
-    ct = min(ct, 1.0)
-
-    return best_offset, final_aff, ov, ct
-
-
-# ═══════════════════════════════════════════════════════════════
-# Integrated solver: stop_plane + JoinABLe validation
-# ═══════════════════════════════════════════════════════════════
 
 def solve_with_joinable_validation(
     case_dir: str | Path,
     refine: bool = True,
     num_samples: int = 4096,
 ) -> dict[str, Any]:
-    """Run stop_plane_solver then validate/refine with JoinABLe SDF.
+    """Validate legacy stop-plane placements against its reference part.
 
-    Returns stop_plane result plus 'validation' dict.
+    This remains a diagnostic compatibility path.  It cannot replace group
+    collision validation because it does not test insert-to-insert collisions.
     """
-    case_dir = Path(case_dir)
 
     from stop_plane_solver import solve_stop_plane
+
+    case_dir = Path(case_dir).resolve()
     result = solve_stop_plane(case_dir)
     placements = result["placements"]
     receiver = result["receiver"]
-
-    print("\n=== JoinABLe SDF Validation ===")
-    step_files = sorted(
-        p for p in case_dir.iterdir()
-        if p.suffix.lower() in {".step", ".stp"}
-        and not p.name.lower().startswith("assembly")
-    )
-
-    meshes = {}
-    for p in step_files:
-        try:
-            meshes[p.name] = step_to_mesh(str(p))
-            print(f"  mesh {p.stem}: {len(meshes[p.name].vertices)}v {len(meshes[p.name].faces)}f")
-        except Exception as e:
-            print(f"  mesh {p.stem}: FAILED ({e})")
-            meshes[p.name] = None
-
-    receiver_mesh = meshes.get(receiver)
-    if receiver_mesh is None:
-        print("Receiver mesh failed — skip")
-        return result
-
+    meshes = {
+        path.name: step_to_mesh(path)
+        for path in case_dir.iterdir()
+        if path.suffix.lower() in {".step", ".stp"}
+        and not path.name.lower().startswith("assembly")
+    }
+    receiver_mesh = meshes[receiver]
     validation = {}
-    for insert_name, plac in placements.items():
-        if insert_name == receiver:
+    for part_name, placement in placements.items():
+        if part_name == receiver or part_name not in meshes:
             continue
-        insert_mesh = meshes.get(insert_name)
-        if insert_mesh is None:
-            continue
-
-        # Build 4x4 transform
-        translate = plac.get("translate", [0, 0, 0])
-        rot_seq = plac.get("rotate_sequence", [])
-        aff = np.eye(4)
-        aff[:3, 3] = np.array(translate, dtype=float)
-        for rot in reversed(rot_seq):
-            aa = rot["axis_angle"]
-            axis = np.array(aa[:3], dtype=float)
-            axis = axis / (np.linalg.norm(axis) + 1e-12)
-            rad = np.deg2rad(aa[3])
-            x, y, z = axis
-            c = math.cos(rad); s = math.sin(rad); C = 1 - c
-            R = np.array([
-                [x*x*C+c, x*y*C-z*s, x*z*C+y*s],
-                [x*y*C+z*s, y*y*C+c, y*z*C-x*s],
-                [x*z*C-y*s, y*z*C+x*s, z*z*C+c],
-            ])
-            aff[:3, :3] = R @ aff[:3, :3]
-
-        # Validate
-        val = validate_placement(insert_mesh, receiver_mesh, aff, num_samples=num_samples)
-        icon = {"good": "[OK]", "overlap": "[!!]", "clearance": "[~~]", "no_contact": "[--]"}.get(val["status"], "[??]")
-        print(f"  {icon} {Path(insert_name).stem:30s} overlap={val['overlap']:.3f}"
-              f" contact={val['contact']:.3f} status={val['status']}")
-
-        validation[insert_name] = val
-
+        validation[part_name] = validate_placement(
+            meshes[part_name],
+            receiver_mesh,
+            placement_to_matrix(placement),
+            num_samples=num_samples,
+        )
     result["validation"] = validation
+    result["validation_scope"] = (
+        "pairwise_against_reference_only; use known_group_assembly for final gate"
+    )
     return result
+
+
+__all__ = [
+    "step_to_mesh",
+    "validate_placement",
+    "refine_rotation",
+    "maximize_contact_along_axis",
+    "solve_with_joinable_validation",
+    "rotation_about_axis_matrix",
+    "transform_points",
+]

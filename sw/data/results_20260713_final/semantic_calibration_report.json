@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "semantic_reranking_enabled": false,
+  "semantic_application_mode": "explanation_only",
+  "structured_functional_fields_available": false,
+  "input_count": 0,
+  "provider_called": false,
+  "historical_semantic_auc": 0.5,
+  "historical_semantic_brier_score": 0.7322222222222222,
+  "historical_geometry_brier_score": 0.7780912106332436,
+  "historical_verdicts": [
+    "abstain",
+    "accept"
+  ],
+  "gate_rules": {
+    "minimum_semantic_auc": 0.7,
+    "brier_must_improve_over_geometry": true,
+    "required_verdicts": [
+      "accept",
+      "reject",
+      "abstain"
+    ],
+    "holdout_auto_accept_precision_not_decreased": true,
+    "holdout_false_positive_count_not_increased": true
+  },
+  "gate_failure_reasons": [
+    "frozen mixed pools lack part_role, interface_type, assembly_family, and functional_relation fields",
+    "historical semantic AUC is below 0.70",
+    "historical verdicts do not contain accept/reject/abstain",
+    "holdout acceptance safety has not been demonstrated"
+  ]
+}

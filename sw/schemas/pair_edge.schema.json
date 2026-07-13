@@ -1,0 +1,140 @@
+{
+  "additionalProperties": false,
+  "description": "Provider-aware pair relation used by functional proposal generation.",
+  "properties": {
+    "schema_version": {
+      "const": "2.0.0",
+      "default": "2.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "pair_edge_id": {
+      "title": "Pair Edge Id",
+      "type": "string"
+    },
+    "parts": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Parts",
+      "type": "array"
+    },
+    "providers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Providers",
+      "type": "array"
+    },
+    "provider_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Provider Count",
+      "type": "integer"
+    },
+    "analytic_candidate_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Analytic Candidate Ids",
+      "type": "array"
+    },
+    "learned_candidate_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Learned Candidate Ids",
+      "type": "array"
+    },
+    "candidate_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidate Ids",
+      "type": "array"
+    },
+    "relation_types": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Relation Types",
+      "type": "array"
+    },
+    "best_analytic_geometry_score": {
+      "default": 0.0,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Best Analytic Geometry Score",
+      "type": "number"
+    },
+    "best_joinable_probability": {
+      "default": 0.0,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Best Joinable Probability",
+      "type": "number"
+    },
+    "best_joinable_rank": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Best Joinable Rank"
+    },
+    "physical_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Physical Evidence",
+      "type": "array"
+    },
+    "independent_physical_evidence_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Independent Physical Evidence Count",
+      "type": "integer"
+    },
+    "provider_agreement_present": {
+      "default": false,
+      "title": "Provider Agreement Present",
+      "type": "boolean"
+    },
+    "provider_agreement_counts_as_independent_evidence": {
+      "const": false,
+      "default": false,
+      "title": "Provider Agreement Counts As Independent Evidence",
+      "type": "boolean"
+    },
+    "learned_only": {
+      "default": false,
+      "title": "Learned Only",
+      "type": "boolean"
+    },
+    "critical_learned_only": {
+      "default": false,
+      "title": "Critical Learned Only",
+      "type": "boolean"
+    },
+    "audit_trace": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Trace",
+      "type": "array"
+    }
+  },
+  "required": [
+    "pair_edge_id",
+    "parts"
+  ],
+  "title": "PairEdge",
+  "type": "object"
+}

@@ -70,27 +70,40 @@ def _merge_stl_files(stl_paths: list[Path], output_path: Path) -> bool:
 
 
 def _select_core_part(
+    parts: list[str],
+    selected_edges: list[list[str]],
     parts_features: dict[str, Any],
-    matches: list[dict[str, Any]],
 ) -> str:
-    """Select the central structural part: largest main cylinder + most connections."""
+    """Select the central hub: highest degree in the assembly graph.
+
+    The core is the part that connects to the most other parts — the
+    structural center (shaft, baseplate, chassis).  Secondary tiebreakers:
+    largest main cylinder radius, then largest bounding box volume.
+    """
+    # Degree in the selected edge graph
+    degree = defaultdict(int)
+    for a, b in selected_edges:
+        degree[a] += 1
+        degree[b] += 1
+
+    # Score: degree first, then largest cylinder, then bbox volume
     scores = {}
-    for name, feats in parts_features.items():
+    for name in parts:
+        feats = parts_features.get(name, {})
+        cyls = feats.get("cylinders", [])
+        max_r = max((c["radius"] for c in cyls), default=0)
         bbox = feats.get("bbox", {})
         lo = bbox.get("min", [0,0,0])
         hi = bbox.get("max", [0,0,0])
-        volume = 1.0
+        vol = 1.0
         for i in range(3):
-            volume *= max(1.0, hi[i] - lo[i])
-        
-        # Main cylinder radius (largest)
-        cyls = feats.get("cylinders", [])
-        max_radius = max((c["radius"] for c in cyls), default=0)
-        n_cyl = len(cyls)
-        n_conn = sum(1 for m in matches if name in m["parts"])
-        
-        # Core = has a LARGE main cylinder (shaft), not many small bolt holes
-        scores[name] = max_radius * 10 + n_conn * 5 + math.log(volume + 1)
+            vol *= max(1.0, hi[i] - lo[i])
+
+        scores[name] = (
+            degree.get(name, 0) * 1000  # Degree dominates
+            + max_r * 10                 # Then structural cylinder
+            + math.log(vol + 1)          # Then size
+        )
     
     return max(scores, key=scores.get)
 
@@ -150,8 +163,8 @@ def sequential_assemble(
     selected_edges = [row["parts"] for row in graph["selected"]]
     print(f"Selected edges: {selected_edges}")
     
-    # Step 2: Select core part
-    core = _select_core_part(features, raw_matches)
+    # Step 2: Select core part (highest degree in edge graph)
+    core = _select_core_part(parts, selected_edges, features)
     print(f"Core part: {core}")
     
     # Step 3: Export STLs
@@ -194,22 +207,29 @@ def sequential_assemble(
         print(f"\nPlacing {best_part} (connected to {best_edge_count} placed parts)...")
         tgt_stl = stl_cache[best_part]
         
-        # Get joint axis: prefer from a CONNECTED placed part that has cylinders
+        # Get joint axis from the clearance constraint between best_part and a placed part
         axis_info = None
-        # First try: find a placed part connected to best_part that has cylinders
-        for ep in selected_edges:
-            if best_part not in ep:
+        for m in raw_matches:
+            if m.get("type") != "clearance":
                 continue
-            other = ep[0] if ep[1] == best_part else ep[1]
-            if other in placed_parts:
-                other_axis = _get_clearance_axis(features[other])
-                if other_axis:
-                    axis_info = other_axis
-                    break
-        # Fallback: use best_part's own cylinders
+            parts_in_match = set(m["parts"])
+            if best_part not in parts_in_match:
+                continue
+            other = (parts_in_match - {best_part}).pop()
+            if other not in placed_parts:
+                continue
+            # Get axis from the reference part's matched cylinder
+            ref_feats = features.get(other, {})
+            ref_cyls = ref_feats.get("cylinders", [])
+            if ref_cyls:
+                a, b = m["parts"]
+                idx = m.get("feat_a_idx", 0) if other == a else m.get("feat_b_idx", 0)
+                cyl = ref_cyls[min(idx, len(ref_cyls)-1)]
+                axis_info = (list(cyl["origin"]), list(cyl["axis"]))
+                break
+
         if axis_info is None:
             axis_info = _get_clearance_axis(features[best_part])
-        # Last resort
         if axis_info is None:
             axis_info = ([0,0,0], [0,0,1])
         

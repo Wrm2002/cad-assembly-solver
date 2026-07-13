@@ -365,6 +365,46 @@ def _baseline_rows(pool: Path) -> list[dict[str, Any]]:
     ]
 
 
+def _route_baseline_audit_rows(
+    baseline_rows: list[dict[str, Any]],
+    final_accepted: list[dict[str, Any]],
+    final_review: list[dict[str, Any]],
+    final_rejected: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Attach the conservative destination to every legacy accepted row."""
+
+    post_gate_by_candidate = {
+        (item["pool_id"], item["group_id"]): item
+        for item in (final_accepted + final_review + final_rejected)
+    }
+    routed_rows = []
+    for row in baseline_rows:
+        routed = post_gate_by_candidate.get(
+            (row["pool_id"], row["candidate_id"])
+        )
+        routed_rows.append(
+            {
+                **row,
+                "post_gate_decision": (
+                    routed.get("final_decision")
+                    if routed is not None
+                    else "not_generated_or_not_retained"
+                ),
+                "post_gate_review_queue_state": (
+                    routed.get("review_queue_state", "")
+                    if routed is not None
+                    else ""
+                ),
+                "post_gate_reason": (
+                    "|".join(routed.get("decision_reasons", []))
+                    if routed is not None
+                    else "candidate absent from final tier artifacts"
+                ),
+            }
+        )
+    return routed_rows
+
+
 def _metrics(
     accepted: list[dict[str, Any]],
     review: list[dict[str, Any]],
@@ -899,7 +939,10 @@ def run(
         },
     )
 
-    fp_rows = baseline_rows + [
+    routed_baseline_rows = _route_baseline_audit_rows(
+        baseline_rows, final_accepted, final_review, final_rejected
+    )
+    fp_rows = routed_baseline_rows + [
         {
             "mode": "after_conservative_gate",
             "pool_id": item["pool_id"],
@@ -911,6 +954,9 @@ def run(
             "geometry_score": item["geometry_score"],
             "final_decision": "accepted",
             "reason": "|".join(item["decision_reasons"]),
+            "post_gate_decision": "accepted",
+            "post_gate_review_queue_state": "",
+            "post_gate_reason": "|".join(item["decision_reasons"]),
         }
         for item in final_accepted
     ]
@@ -928,6 +974,9 @@ def run(
             "geometry_score",
             "final_decision",
             "reason",
+            "post_gate_decision",
+            "post_gate_review_queue_state",
+            "post_gate_reason",
         ]
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()

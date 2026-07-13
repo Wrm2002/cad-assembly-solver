@@ -1,0 +1,67 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "proposal_id": {
+      "title": "Proposal Id",
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "accept",
+        "reject",
+        "abstain"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "plausibility_score": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Plausibility Score",
+      "type": "number"
+    },
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Reason Codes",
+      "type": "array"
+    },
+    "explanation": {
+      "maxLength": 800,
+      "title": "Explanation",
+      "type": "string"
+    },
+    "risk_flags": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Risk Flags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "proposal_id",
+    "verdict",
+    "plausibility_score",
+    "confidence",
+    "reason_codes",
+    "explanation"
+  ],
+  "title": "SemanticDecision",
+  "type": "object"
+}

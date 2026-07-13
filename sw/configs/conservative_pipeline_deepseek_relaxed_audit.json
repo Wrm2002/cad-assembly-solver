@@ -1,0 +1,27 @@
+{
+  "schema_version": "2.0.0",
+  "artifact_role": "evaluation_only_snapshot_of_deepseek_relaxed_route",
+  "geometry_threshold": 0.65,
+  "group_consistency_threshold": 0.60,
+  "semantic_threshold": 0.75,
+  "minimum_independent_evidence": 2,
+  "minimum_auto_accept_group_size": 3,
+  "max_auto_accept_group_size": 5,
+  "conflict_score_margin": 0.04,
+  "maximum_pose_validations_per_pool": 12,
+  "maximum_review_groups_per_pool": 24,
+  "review_groups_per_size": 4,
+  "maximum_semantic_explanations_per_pool": 2,
+  "maximum_visualizations_per_pool": 6,
+  "semantic_application_mode": "explanation_only",
+  "source_template_allowed_for_decision": false,
+  "joinable_min_softmax": 0.85,
+  "learned_evidence_enabled": true,
+  "audit_result": {
+    "accepted_group_count": 0,
+    "review_group_count": 5990,
+    "rejected_group_count": 10,
+    "review_frontier_recall": 0.2222222222222222,
+    "comparison_note": "No frontier-recall gain versus the 0.80/0.70 route; 376 additional groups moved from rejected to review."
+  }
+}

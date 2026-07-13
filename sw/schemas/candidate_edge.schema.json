@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "CandidateStatus": {
+      "enum": [
+        "generated",
+        "kept",
+        "removed",
+        "rejected_by_prescreen"
+      ],
+      "title": "CandidateStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "parts": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Parts",
+      "type": "array"
+    },
+    "candidate_type": {
+      "title": "Candidate Type",
+      "type": "string"
+    },
+    "feature_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Feature Refs",
+      "type": "array"
+    },
+    "geometry_score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Geometry Score",
+      "type": "number"
+    },
+    "confidence": {
+      "title": "Confidence",
+      "type": "string"
+    },
+    "geometric_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Geometric Evidence",
+      "type": "array"
+    },
+    "collision_free": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Collision Free"
+    },
+    "status": {
+      "$ref": "#/$defs/CandidateStatus"
+    },
+    "audit_reason": {
+      "additionalProperties": true,
+      "title": "Audit Reason",
+      "type": "object"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "parts",
+    "candidate_type",
+    "geometry_score",
+    "confidence",
+    "geometric_evidence",
+    "status",
+    "audit_reason"
+  ],
+  "title": "CandidateEdge",
+  "type": "object"
+}

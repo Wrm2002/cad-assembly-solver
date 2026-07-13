@@ -1,0 +1,16 @@
+{
+  "clearance": {
+    "truth_interfaces": 30,
+    "generated": 30,
+    "kept_after_pruning": 30,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  },
+  "planar_mate": {
+    "truth_interfaces": 38,
+    "generated": 38,
+    "kept_after_pruning": 38,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  }
+}

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import shutil
 from collections import defaultdict
 from pathlib import Path
@@ -39,6 +40,10 @@ from placement_validation import (
     exact_shape_collisions,
     transform_point,
     transform_vector,
+)
+from pose_search import (
+    compose_group_pose_hypotheses,
+    load_joinable_pair_pose_candidate_directory,
 )
 from small_assembly_solver import solve_small_assembly
 
@@ -798,6 +803,15 @@ def _conservative_pose_output(
         (row for row in pose_audit if row.get("rank") == selected_rank),
         {},
     )
+    precision = result.get("precision_pose_validation")
+    if not isinstance(precision, dict):
+        precision = selected.get("precision_pose_validation")
+    if not isinstance(precision, dict):
+        precision = {
+            "precision_status": "not_checked",
+            "review_required": True,
+            "reason": "precision_pose_validation_missing",
+        }
     group_record = {
         "assembly_id": result.get("assembly_id"),
         "parts": result.get("parts", []),
@@ -810,6 +824,7 @@ def _conservative_pose_output(
         "contact_objective": selected.get("contact_objective"),
         "overlap_objective": selected.get("overlap_objective"),
         "collision_validation": result.get("collision_validation", {}),
+        "precision_pose_validation": precision,
         "direct_connections": [
             {
                 "connection_id": row.get("connection_id"),
@@ -828,9 +843,18 @@ def _conservative_pose_output(
     if not result.get("assembly_connected"):
         review.append(group_record)
         reasons.append("assembly_graph_not_connected")
-    elif result.get("pose_status") == "valid":
+    elif (
+        result.get("pose_status") == "valid"
+        and precision.get("precision_status", precision.get("status"))
+        == "valid"
+    ):
         accepted.append(group_record)
-        reasons.append("full_closure_and_exact_collision_free")
+        reasons.append("full_closure_exact_collision_and_precision_gate_valid")
+    elif result.get("pose_status") == "valid":
+        review.append(group_record)
+        reasons.append(
+            str(precision.get("reason") or "precision_pose_validation_not_valid")
+        )
     elif result.get("pose_status") == "failed":
         rejected.append(group_record)
         reasons.append("exact_collision_or_pose_failure")
@@ -847,7 +871,10 @@ def _conservative_pose_output(
     group_record["decision_reasons"] = reasons
     return {
         "schema_version": "known_group_conservative_pose.v1",
-        "policy": "accepted_requires_connected_full_closure_and_exact_collision_free",
+        "policy": (
+            "accepted_requires_connected_full_closure_exact_collision_and_"
+            "multi_evidence_precision_gate"
+        ),
         "accepted_groups": accepted,
         "review_groups": review,
         "rejected_groups": rejected,
@@ -863,11 +890,29 @@ def _conservative_pose_output(
     }
 
 
-def _portable_components(components: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _portable_components(
+    components: list[dict[str, Any]],
+    source_dir: str | Path,
+    manifest_dir: str | Path,
+) -> list[dict[str, Any]]:
+    """Make component sources portable from the actual manifest directory.
+
+    The previous implementation assumed every output directory was a direct
+    child of the input case and blindly emitted ``../<part>``.  Independent
+    frozen-exam directories therefore pointed at nonexistent STEP files.
+    """
+
+    source_root = Path(source_dir).resolve()
+    manifest_root = Path(manifest_dir).resolve()
     result = []
     for component in components:
         item = dict(component)
-        item["source"] = f"../{Path(item['source']).name}"
+        source = Path(str(item["source"]))
+        if not source.is_absolute():
+            source = source_root / source.name
+        item["source"] = Path(
+            os.path.relpath(source.resolve(), manifest_root)
+        ).as_posix()
         result.append(item)
     return result
 
@@ -1042,6 +1087,73 @@ def _candidate_from_placements(
         "candidate_origin": origin,
         **extra,
     }
+
+
+def _inject_joinable_group_pose_seed(
+    search: dict[str, Any],
+    features: dict[str, Any],
+    pose_report_root: str | Path | None,
+) -> dict[str, Any]:
+    """Compose cached pair poses into one generic group-pose proposal.
+
+    The proposal is admitted only when all parts are connected and all pair
+    cycles are consistent.  It still goes through the same closure, overlap and
+    exact OCCT checks as every analytic pose candidate.
+    """
+
+    if pose_report_root is None:
+        return search
+    seeds = load_joinable_pair_pose_candidate_directory(
+        pose_report_root, limit_per_pair=8
+    )
+    hypotheses = compose_group_pose_hypotheses(
+        features.keys(),
+        seeds,
+        maximum_candidates_per_pair=4,
+        maximum_combinations=64,
+    )
+    updated = dict(search)
+    updated["joinable_group_pose_composition"] = {
+        "pair_pose_candidate_count": len(seeds),
+        "group_hypothesis_count": len(hypotheses),
+        "complete_hypothesis_count": sum(
+            row["status"] == "complete" for row in hypotheses
+        ),
+        "review_hypothesis_count": sum(
+            row["review_required"] for row in hypotheses
+        ),
+        "hypotheses": hypotheses,
+    }
+    complete = [row for row in hypotheses if row["status"] == "complete"]
+    if not complete:
+        return updated
+    candidates = []
+    for index, composition in enumerate(complete):
+        candidates.append(_candidate_from_placements(
+            features,
+            composition["placements"],
+            search,
+            origin="joinable_pair_pose_composition",
+            score_penalty=0.02 + 0.001 * index,
+            extra={
+                "joinable_group_pose": {
+                    "combination_index": composition["combination_index"],
+                    "reference_part": composition["reference_part"],
+                    "usable_pair_seed_count": composition[
+                        "usable_pair_seed_count"
+                    ],
+                    "pair_seed_sources": composition["pair_seed_sources"],
+                    "pair_seed_score_sum": composition[
+                        "pair_seed_score_sum"
+                    ],
+                    "cycle_checks": composition["cycle_checks"],
+                }
+            },
+        ))
+    updated["pose_candidates"] = (
+        list(search.get("pose_candidates") or []) + candidates
+    )
+    return updated
 
 
 def _axial_slide_pose_candidates(
@@ -1865,6 +1977,34 @@ def _augment_pose_candidates(
                 search, graph, features, max_candidates=160
             )
         )
+        # Pair-wise SDF optima often place several satellites at the same
+        # high-contact location on a central shaft.  Relax a bounded number of
+        # composed group seeds along the shared axial DOF before exact group
+        # collision validation.
+        composed_sources = [
+            row for row in candidates
+            if row.get("candidate_origin")
+            == "joinable_pair_pose_composition"
+        ][:8]
+        composed_relaxation_count = 0
+        for source_candidate in composed_sources:
+            local_search = {
+                **search,
+                **source_candidate,
+                "placements": source_candidate["placements"],
+            }
+            generated = _axial_slide_pose_candidates(
+                local_search, graph, features, max_candidates=24
+            )
+            for row in generated:
+                row["candidate_origin"] = (
+                    "joinable_group_axial_relaxation"
+                )
+                row["joinable_group_pose"] = source_candidate.get(
+                    "joinable_group_pose"
+                )
+            candidates.extend(generated)
+            composed_relaxation_count += len(generated)
         # Run planar/pocket DOF search over the already bounded candidate
         # frontier, including identity and axial candidates.
         candidates.extend(
@@ -1928,6 +2068,9 @@ def _augment_pose_candidates(
         "large_step_case": large_step_case,
         "total_surface_count": total_surface_count,
         "total_pose_candidates_after_augmentation": len(unique),
+        "joinable_group_axial_relaxation_count": (
+            composed_relaxation_count if not large_step_case else 0
+        ),
     }
     return augmented
 
@@ -1954,7 +2097,12 @@ def _evaluate_pose_candidates(
     large_step_case = bool(
         (search.get("candidate_augmentation") or {}).get("large_step_case")
     )
-    exact_check_budget = max(1, len(candidates))  # always check all known-group candidates
+    # OCCT boolean common is the final validator, not an inner-loop objective.
+    # Keep the exact frontier bounded and disable it for very large STEP cases
+    # where a single global boolean check has previously stalled for minutes.
+    exact_check_budget = (
+        0 if large_step_case else min(len(candidates), 180)
+    )
     prechecked = []
     for rank, candidate in enumerate(candidates, 1):
         precheck = _pose_precheck(candidate, graph, features)
@@ -1975,7 +2123,9 @@ def _evaluate_pose_candidates(
     }
 
     for rank, candidate, precheck in prechecked:
-        components = _portable_components(candidate["components"])
+        components = _portable_components(
+            candidate["components"], case_dir, output_dir
+        )
         closure = precheck["constraint_closure"]
         if large_step_case and not closure["fully_closed"]:
             exact = {
@@ -2173,7 +2323,7 @@ def _refine_with_searchsimplex(
     for part_name in features:
         stl_path = stl_dir / f"{Path(part_name).stem}.stl"
         if not stl_path.exists():
-            _export_part_stl(part_name, stl_path)
+            _export_part_stl(case_dir / part_name, stl_path)
         if stl_path.exists():
             stl_cache[part_name] = stl_path
 
@@ -2280,7 +2430,7 @@ def _export_part_stl(part_name: str, stl_path: Path) -> None:
             pass
         else:
             # part_name is just a filename — look in known locations
-            for search_dir in [Path("sw/1"), Path("sw/2"), Path("sw/3"), Path("sw/4_lightweight"), Path("sw/5_lightweight")]:
+            for search_dir in [Path(part_name).parent]:
                 candidate = search_dir / part_name
                 if candidate.exists():
                     step_path = candidate
@@ -2310,6 +2460,7 @@ def run_known_group_assembly(
     *,
     output_dir: str | Path | None = None,
     joinable_report: str | Path | None = None,
+    joinable_pose_dir: str | Path | None = None,
     beam_width: int = 20,
 ) -> dict[str, Any]:
     case_dir = Path(case_dir).resolve()
@@ -2364,48 +2515,19 @@ def run_known_group_assembly(
         beam_width=beam_width,
         target_branching=min(3, max(1, len(parts) - 1)),
     )
+    search = _inject_joinable_group_pose_seed(
+        search, features, joinable_pose_dir
+    )
     search = _augment_pose_candidates(search, graph, features)
     selected_pose, exact, pose_audit, pose_fully_closed, selected_pose_rank = _evaluate_pose_candidates(
         case_dir, output_dir, search, graph, features
     )
-    components = _portable_components(selected_pose["components"])
+    components = _portable_components(
+        selected_pose["components"], case_dir, output_dir
+    )
     placements = selected_pose["placements"]
     # ── Cylinder axial stop ──
-    from coordinate_solver import _cylinder_extent_along_axis, _part_bbox_interval_along_axis, _global_vector, _vec_norm
-    result = dict(placements)
-    for m in solver_matches:
-        if m.get("type") != "clearance": continue
-        if canonical_pair(m["parts"]) not in selected_pairs: continue
-        a, b = m["parts"]
-        pa = result.get(a,{}).get("translate",[0,0,0]); pb = result.get(b,{}).get("translate",[0,0,0])
-        ref = a if sum(v*v for v in pa) <= sum(v*v for v in pb) else b
-        tgt = b if ref == a else a
-        rf = features.get(ref); tf = features.get(tgt)
-        if not rf or not tf or not rf.get("cylinders"): continue
-        rc = rf["cylinders"][0]
-        ax = _global_vector(rc["axis"], result.get(ref,{})); au = _vec_norm(ax)
-        re = _cylinder_extent_along_axis(rf, rc)
-        if not re: continue
-        rmin, rmax = re
-        tp = result.get(tgt,{})
-        ti = _part_bbox_interval_along_axis(tf, tp, ax)
-        if not ti: continue
-        tmin, tmax = ti
-        cur = list(tp.get("translate",[0,0,0])); G = 1.0
-        sl = (rmin - tmax - G) if abs(tmax-rmin) < abs(tmin-rmax) else (rmax - tmin + G)
-        nt = dict(tp); nt["translate"] = [cur[i] + sl*au[i] for i in range(3)]
-        result[tgt] = nt
-    placements = result
     # ──────────────────────────
-    selected_pose["placements"] = placements
-    # Update component placements from the corrected placements dict
-    for comp in selected_pose.get("components", []):
-        label = comp.get("label", "")
-        for part_name, plac in placements.items():
-            if Path(part_name).stem == label or part_name == label:
-                comp["placement"] = plac
-                break
-    components = _portable_components(selected_pose["components"])
     # ─────────────────────────────
     manifest = {
         "schema_version": "2.0.0",
@@ -2577,6 +2699,9 @@ def run_known_group_assembly(
         "expanded_states": search["expanded_states"],
         "complete_pose_candidate_count": search["complete_pose_candidate_count"],
         "candidate_augmentation": search.get("candidate_augmentation", {}),
+        "joinable_group_pose_composition": search.get(
+            "joinable_group_pose_composition"
+        ),
         "group_pose_optimizer": {
             "enabled": True,
             "exact_check_policy": (
@@ -2600,12 +2725,14 @@ def main() -> int:
     parser.add_argument("case_dir")
     parser.add_argument("--output-dir")
     parser.add_argument("--joinable-report")
+    parser.add_argument("--joinable-pose-dir")
     parser.add_argument("--beam-width", type=int, default=20)
     args = parser.parse_args()
     result = run_known_group_assembly(
         args.case_dir,
         output_dir=args.output_dir,
         joinable_report=args.joinable_report,
+        joinable_pose_dir=args.joinable_pose_dir,
         beam_width=args.beam_width,
     )
     print(json.dumps({

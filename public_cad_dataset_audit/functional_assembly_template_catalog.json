@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_status": "annotation_contract_only",
+  "purpose": "Functional labels required for future human-validated CAD cases; these templates are not used to relabel anonymous Fusion parts automatically.",
+  "assembly_families": [
+    {
+      "assembly_family": "cover_base",
+      "engineering_name": "Fastened enclosure cover and base",
+      "required_roles": [
+        "base",
+        "cover"
+      ],
+      "optional_roles": [
+        "locating_pin",
+        "stud",
+        "screw"
+      ],
+      "interface_types": [
+        "planar_seating",
+        "locating_pin_hole",
+        "fastener_hole_pattern"
+      ],
+      "functional_mates": [
+        {
+          "roles": [
+            "base",
+            "cover"
+          ],
+          "mate_type": "planar_located_fastening",
+          "functional_relation": "The cover closes the base and is located by pins or a repeated fastener pattern."
+        }
+      ],
+      "minimum_independent_evidence": [
+        "planar_seating",
+        "locating_or_fastener_pattern"
+      ],
+      "semantic_hard_negative_examples": [
+        [
+          "shaft",
+          "cover"
+        ],
+        [
+          "bearing",
+          "random_plate"
+        ]
+      ]
+    },
+    {
+      "assembly_family": "shaft_hub_key",
+      "engineering_name": "Keyed shaft and hub torque-transmission assembly",
+      "required_roles": [
+        "shaft",
+        "hub",
+        "key"
+      ],
+      "optional_roles": [
+        "axial_retainer"
+      ],
+      "interface_types": [
+        "cylindrical_shaft",
+        "hub_bore",
+        "shaft_keyway",
+        "hub_keyway",
+        "axial_retaining_face"
+      ],
+      "functional_mates": [
+        {
+          "roles": [
+            "shaft",
+            "hub"
+          ],
+          "mate_type": "coaxial_insert",
+          "functional_relation": "The shaft supports and centers the hub."
+        },
+        {
+          "roles": [
+            "shaft",
+            "hub",
+            "key"
+          ],
+          "mate_type": "keyed_torque_transfer",
+          "functional_relation": "The key transfers torque between the shaft and hub."
+        }
+      ],
+      "minimum_independent_evidence": [
+        "coaxial_radius_fit",
+        "paired_keyway_support"
+      ],
+      "semantic_hard_negative_examples": [
+        [
+          "hub",
+          "chassis_lid"
+        ],
+        [
+          "key",
+          "cover"
+        ]
+      ]
+    },
+    {
+      "assembly_family": "bearing_housing",
+      "engineering_name": "Shaft, rolling bearing, housing and end-cover support",
+      "required_roles": [
+        "housing",
+        "bearing",
+        "shaft",
+        "end_cover"
+      ],
+      "optional_roles": [
+        "seal",
+        "retaining_ring",
+        "fastener"
+      ],
+      "interface_types": [
+        "housing_bore",
+        "bearing_outer_race",
+        "bearing_inner_race",
+        "shaft_bearing_seat",
+        "end_cover_register",
+        "cover_fastener_pattern"
+      ],
+      "functional_mates": [
+        {
+          "roles": [
+            "housing",
+            "bearing"
+          ],
+          "mate_type": "outer_race_seat",
+          "functional_relation": "The housing locates the bearing outer race."
+        },
+        {
+          "roles": [
+            "bearing",
+            "shaft"
+          ],
+          "mate_type": "inner_race_shaft_fit",
+          "functional_relation": "The bearing supports the rotating shaft."
+        },
+        {
+          "roles": [
+            "housing",
+            "end_cover"
+          ],
+          "mate_type": "registered_fastened_cover",
+          "functional_relation": "The end cover retains or seals the bearing."
+        }
+      ],
+      "minimum_independent_evidence": [
+        "nested_coaxial_race_fits",
+        "axial_retention_or_cover_register"
+      ],
+      "semantic_hard_negative_examples": [
+        [
+          "bearing",
+          "random_plate"
+        ],
+        [
+          "housing",
+          "chassis_lid"
+        ]
+      ]
+    }
+  ],
+  "negative_tiers": {
+    "easy_negative": "Geometry prevents assembly.",
+    "geometric_hard_negative": "Geometry can be posed using only weak or accidental interface evidence.",
+    "semantic_hard_negative": "Geometry may be feasible, but the functional roles do not form a plausible mechanism."
+  },
+  "acceptance_requirements_for_future_cases": [
+    "A human reviewer can name the assembly.",
+    "Every part has a part_role.",
+    "Every interface has an interface_type.",
+    "Every mate has a functional_relation.",
+    "At least two independent geometry or function evidences support each positive case.",
+    "Interchangeable parts are explicitly marked."
+  ],
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "human_validated_geometry_cases",
+    "part_role_labels_for_current_fusion360_selected_10",
+    "functional_relation_labels_for_current_fusion360_selected_10"
+  ]
+}

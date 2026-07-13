@@ -1,0 +1,177 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "group_id": {
+      "title": "Group Id",
+      "type": "string"
+    },
+    "parts": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 6,
+      "minItems": 1,
+      "title": "Parts",
+      "type": "array"
+    },
+    "candidate_edges": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidate Edges",
+      "type": "array"
+    },
+    "geometry_score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Geometry Score",
+      "type": "number"
+    },
+    "connected": {
+      "title": "Connected",
+      "type": "boolean"
+    },
+    "status": {
+      "title": "Status",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "pair_edge_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pair Edge Ids",
+      "type": "array"
+    },
+    "assembly_family": {
+      "default": "unknown",
+      "title": "Assembly Family",
+      "type": "string"
+    },
+    "center_part_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Center Part Ids",
+      "type": "array"
+    },
+    "role_assignment": {
+      "additionalProperties": true,
+      "title": "Role Assignment",
+      "type": "object"
+    },
+    "slot_coverage": {
+      "additionalProperties": true,
+      "title": "Slot Coverage",
+      "type": "object"
+    },
+    "completeness_status": {
+      "default": "unknown",
+      "title": "Completeness Status",
+      "type": "string"
+    },
+    "completeness_score": {
+      "default": 0.0,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Completeness Score",
+      "type": "number"
+    },
+    "relation_coverage": {
+      "default": 0.0,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Relation Coverage",
+      "type": "number"
+    },
+    "independent_evidence_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Independent Evidence Count",
+      "type": "integer"
+    },
+    "missing_required_slots": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Required Slots",
+      "type": "array"
+    },
+    "missing_required_relations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Required Relations",
+      "type": "array"
+    },
+    "subset_of": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Subset Of",
+      "type": "array"
+    },
+    "supersets": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supersets",
+      "type": "array"
+    },
+    "proposal_cluster_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proposal Cluster Id"
+    },
+    "status_modifiers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Status Modifiers",
+      "type": "array"
+    },
+    "ranking_features": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Ranking Features",
+      "type": "object"
+    },
+    "audit_trace": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Trace",
+      "type": "array"
+    }
+  },
+  "required": [
+    "group_id",
+    "parts",
+    "geometry_score",
+    "connected",
+    "status",
+    "reasons"
+  ],
+  "title": "GroupProposal",
+  "type": "object"
+}

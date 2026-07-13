@@ -1,0 +1,2024 @@
+[
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_10492752be81.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_656f3d1f8e40",
+      "G_3ea3ee99fdb7",
+      "G_f41f6dc1e808",
+      "G_d7e5a3191954",
+      "G_84b99236bd5b",
+      "G_33ef8c86dba3",
+      "G_f22ea4d2b3e0",
+      "G_8ad6b25c3836",
+      "G_28961f561d1e",
+      "G_a447de0bcddb",
+      "G_4849bf2f2123",
+      "G_3934748b7201",
+      "G_5872cf5f3048",
+      "G_74b08db16500"
+    ],
+    "deferred_review_candidate_count": 13
+  },
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_377204cd22a1.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_01a4ea08ca10",
+      "G_f41f6dc1e808",
+      "G_0f6785ca977f",
+      "G_f22ea4d2b3e0",
+      "G_28961f561d1e",
+      "G_a447de0bcddb",
+      "G_4849bf2f2123",
+      "G_3934748b7201",
+      "G_6b9438400765",
+      "G_74b08db16500",
+      "G_ae18567a5161",
+      "G_d842ff5f81f1"
+    ],
+    "deferred_review_candidate_count": 10
+  },
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_456c93cc0c83.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_42cf8d39a232",
+      "G_abf856bc9061",
+      "G_f41f6dc1e808",
+      "G_84b99236bd5b",
+      "G_33ef8c86dba3",
+      "G_0f6785ca977f",
+      "G_d03cf4e7242c",
+      "G_8ad6b25c3836",
+      "G_a447de0bcddb",
+      "G_4849bf2f2123",
+      "G_3934748b7201",
+      "G_6b9438400765",
+      "G_5872cf5f3048",
+      "G_fea67bf5391e",
+      "G_ae18567a5161",
+      "G_d842ff5f81f1",
+      "G_d30b773c1bab"
+    ],
+    "deferred_review_candidate_count": 10
+  },
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_860644ab5968.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_656f3d1f8e40",
+      "G_abf856bc9061",
+      "G_01a4ea08ca10",
+      "G_d7e5a3191954",
+      "G_33ef8c86dba3",
+      "G_d03cf4e7242c",
+      "G_f22ea4d2b3e0",
+      "G_8ad6b25c3836",
+      "G_28961f561d1e",
+      "G_a447de0bcddb",
+      "G_3934748b7201",
+      "G_6b9438400765",
+      "G_5872cf5f3048",
+      "G_fea67bf5391e",
+      "G_74b08db16500",
+      "G_ae18567a5161"
+    ],
+    "deferred_review_candidate_count": 12
+  },
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_a7df1a57cf84.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_33ef8c86dba3",
+      "G_0f6785ca977f",
+      "G_d03cf4e7242c",
+      "G_f22ea4d2b3e0",
+      "G_8ad6b25c3836",
+      "G_28961f561d1e",
+      "G_a447de0bcddb",
+      "G_4849bf2f2123",
+      "G_3934748b7201",
+      "G_d30b773c1bab"
+    ],
+    "deferred_review_candidate_count": 12
+  },
+  {
+    "pool_id": "pool_001",
+    "part_id": "part_c2c2636823c8.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_42cf8d39a232",
+      "G_3ea3ee99fdb7",
+      "G_01a4ea08ca10",
+      "G_d7e5a3191954",
+      "G_84b99236bd5b",
+      "G_0f6785ca977f",
+      "G_d03cf4e7242c",
+      "G_8ad6b25c3836",
+      "G_28961f561d1e",
+      "G_4849bf2f2123",
+      "G_3934748b7201",
+      "G_fea67bf5391e",
+      "G_ae18567a5161",
+      "G_d842ff5f81f1",
+      "G_d30b773c1bab"
+    ],
+    "deferred_review_candidate_count": 12
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_0a80ed37a5a4.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_baa0d4ed1e20",
+      "G_455ea6ec47b4",
+      "G_415164f3e014",
+      "G_76129c41b904",
+      "G_f42d20a37e0a",
+      "G_e716ab1c402e",
+      "G_ac080eaaf56c",
+      "G_8d14c00777a2",
+      "G_321b739d7876",
+      "G_3ff1d724077d",
+      "G_20e2c3357b6b",
+      "G_4a9d18526658",
+      "G_5e5b59f5b701",
+      "G_59256f6ef31a",
+      "G_ec7a7a7bc029",
+      "G_e05409b46269",
+      "G_7b9013215249",
+      "G_16874d7dbb78"
+    ],
+    "deferred_review_candidate_count": 43
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_0a9bc24681ec.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_9db19ac65031",
+      "G_764d4b424712",
+      "G_5794d69780e7",
+      "G_e716ab1c402e",
+      "G_ac080eaaf56c",
+      "G_8d14c00777a2",
+      "G_23dc729e59bb",
+      "G_3ff1d724077d",
+      "G_20e2c3357b6b",
+      "G_4a9d18526658",
+      "G_5e5b59f5b701",
+      "G_ec7a7a7bc029",
+      "G_e05409b46269",
+      "G_7b9013215249"
+    ],
+    "deferred_review_candidate_count": 46
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_5c4fd45e108c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f4ece1e02354",
+      "G_415164f3e014",
+      "G_764d4b424712",
+      "G_f42d20a37e0a",
+      "G_5794d69780e7",
+      "G_8d14c00777a2",
+      "G_23dc729e59bb",
+      "G_3ff1d724077d",
+      "G_20e2c3357b6b",
+      "G_4a9d18526658",
+      "G_59256f6ef31a",
+      "G_ec7a7a7bc029",
+      "G_16874d7dbb78"
+    ],
+    "deferred_review_candidate_count": 47
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_63ac2f044499.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_455ea6ec47b4",
+      "G_764d4b424712",
+      "G_2d4b3af0c159",
+      "G_f42d20a37e0a",
+      "G_e716ab1c402e",
+      "G_8d14c00777a2",
+      "G_321b739d7876",
+      "G_23dc729e59bb",
+      "G_20e2c3357b6b",
+      "G_5e5b59f5b701",
+      "G_59256f6ef31a",
+      "G_e05409b46269"
+    ],
+    "deferred_review_candidate_count": 48
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_83fc890356c6.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_baa0d4ed1e20",
+      "G_f4ece1e02354",
+      "G_2d4b3af0c159",
+      "G_f42d20a37e0a",
+      "G_5794d69780e7",
+      "G_ac080eaaf56c",
+      "G_321b739d7876",
+      "G_23dc729e59bb",
+      "G_20e2c3357b6b",
+      "G_4a9d18526658",
+      "G_5e5b59f5b701",
+      "G_59256f6ef31a",
+      "G_ec7a7a7bc029",
+      "G_e05409b46269",
+      "G_7b9013215249",
+      "G_16874d7dbb78"
+    ],
+    "deferred_review_candidate_count": 44
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_a65737968d42.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_76129c41b904",
+      "G_ac080eaaf56c",
+      "G_8d14c00777a2",
+      "G_321b739d7876",
+      "G_23dc729e59bb",
+      "G_3ff1d724077d",
+      "G_20e2c3357b6b",
+      "G_4a9d18526658",
+      "G_5e5b59f5b701",
+      "G_59256f6ef31a",
+      "G_16874d7dbb78"
+    ],
+    "deferred_review_candidate_count": 46
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_bef153580b03.step",
+    "reason": "no accepted or review candidate",
+    "review_candidate_ids": [],
+    "deferred_review_candidate_count": 0
+  },
+  {
+    "pool_id": "pool_002",
+    "part_id": "part_db5437f18ad6.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_9db19ac65031",
+      "G_415164f3e014",
+      "G_76129c41b904",
+      "G_2d4b3af0c159",
+      "G_5794d69780e7",
+      "G_e716ab1c402e",
+      "G_321b739d7876",
+      "G_3ff1d724077d",
+      "G_4a9d18526658",
+      "G_5e5b59f5b701",
+      "G_59256f6ef31a",
+      "G_7b9013215249"
+    ],
+    "deferred_review_candidate_count": 48
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_163121955dd0.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_ba52532200c2",
+      "G_ff47f427a104",
+      "G_5f10db3049bf",
+      "G_3f45734884a5",
+      "G_631887caaa79",
+      "G_e38a13cf27f6",
+      "G_53e423b1a80c",
+      "G_6a1dc4b956b8",
+      "G_af34c6d2cbac",
+      "G_c8f90b7fee84",
+      "G_82b2aaaf09af",
+      "G_417aea614774",
+      "G_cd6d99e9432c",
+      "G_9182b16f4092",
+      "G_02718815eeb1",
+      "G_2100d4c4693a",
+      "G_4f7e2bb7bcd1",
+      "G_b018d66eacb0"
+    ],
+    "deferred_review_candidate_count": 53
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_4f6101610c73.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_6a1dc4b956b8",
+      "G_c8f90b7fee84",
+      "G_9182b16f4092"
+    ],
+    "deferred_review_candidate_count": 15
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_5615d1fc281e.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_581df58cedf3",
+      "G_631887caaa79",
+      "G_e38a13cf27f6",
+      "G_b9739fbf36cf",
+      "G_c8f90b7fee84",
+      "G_82b2aaaf09af",
+      "G_417aea614774",
+      "G_cd6d99e9432c",
+      "G_4f7e2bb7bcd1",
+      "G_b018d66eacb0"
+    ],
+    "deferred_review_candidate_count": 48
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_652947012577.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_fa9501b0dc5a",
+      "G_5f10db3049bf",
+      "G_53e423b1a80c",
+      "G_37e61583d5ba",
+      "G_af34c6d2cbac",
+      "G_82b2aaaf09af",
+      "G_417aea614774",
+      "G_cd6d99e9432c",
+      "G_9182b16f4092",
+      "G_2100d4c4693a",
+      "G_4f7e2bb7bcd1"
+    ],
+    "deferred_review_candidate_count": 38
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_6e7da86baeb3.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_aa6fafa2aee7",
+      "G_090e0b57e15c",
+      "G_e38a13cf27f6",
+      "G_53e423b1a80c",
+      "G_37e61583d5ba",
+      "G_6a1dc4b956b8",
+      "G_b9739fbf36cf",
+      "G_82b2aaaf09af",
+      "G_417aea614774",
+      "G_cd6d99e9432c",
+      "G_9182b16f4092",
+      "G_02718815eeb1",
+      "G_2100d4c4693a",
+      "G_b018d66eacb0"
+    ],
+    "deferred_review_candidate_count": 41
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_8e2839f46aa2.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_aa6fafa2aee7",
+      "G_ff47f427a104",
+      "G_fa9501b0dc5a",
+      "G_3f45734884a5",
+      "G_090e0b57e15c",
+      "G_e38a13cf27f6",
+      "G_37e61583d5ba",
+      "G_6a1dc4b956b8",
+      "G_af34c6d2cbac",
+      "G_b9739fbf36cf",
+      "G_c8f90b7fee84",
+      "G_82b2aaaf09af",
+      "G_417aea614774",
+      "G_9182b16f4092",
+      "G_02718815eeb1",
+      "G_2100d4c4693a"
+    ],
+    "deferred_review_candidate_count": 61
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_c81906aa8232.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_ba52532200c2",
+      "G_fa9501b0dc5a",
+      "G_3f45734884a5",
+      "G_090e0b57e15c",
+      "G_631887caaa79",
+      "G_53e423b1a80c",
+      "G_af34c6d2cbac",
+      "G_b9739fbf36cf",
+      "G_c8f90b7fee84",
+      "G_82b2aaaf09af",
+      "G_cd6d99e9432c",
+      "G_9182b16f4092",
+      "G_02718815eeb1",
+      "G_4f7e2bb7bcd1",
+      "G_b018d66eacb0"
+    ],
+    "deferred_review_candidate_count": 49
+  },
+  {
+    "pool_id": "pool_003",
+    "part_id": "part_f2deb637a8c2.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_581df58cedf3",
+      "G_5f10db3049bf",
+      "G_631887caaa79",
+      "G_37e61583d5ba",
+      "G_6a1dc4b956b8",
+      "G_af34c6d2cbac",
+      "G_b9739fbf36cf",
+      "G_417aea614774",
+      "G_cd6d99e9432c",
+      "G_02718815eeb1"
+    ],
+    "deferred_review_candidate_count": 48
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_242db3d3b9aa.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_92c058c4b32b",
+      "G_6e505bd82bf6",
+      "G_f63e3464de24",
+      "G_efa29c2b472a",
+      "G_242f135e7678",
+      "G_7627bee75fe1",
+      "G_e4adb3e1b669"
+    ],
+    "deferred_review_candidate_count": 792
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_26df19963184.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_6e505bd82bf6",
+      "G_c0f9065c209f",
+      "G_96891da3ad08",
+      "G_6b6f4338d605",
+      "G_be9eefce0f32",
+      "G_f4a8da653bdd",
+      "G_f63e3464de24",
+      "G_7627bee75fe1",
+      "G_f65cc54c58d2"
+    ],
+    "deferred_review_candidate_count": 947
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_29307f8dc602.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c4fdcc9aa388",
+      "G_d1b2c3c335f5",
+      "G_f2e5c4fa9b35",
+      "G_be9eefce0f32",
+      "G_a9f8e6ab0812",
+      "G_242f135e7678",
+      "G_7627bee75fe1",
+      "G_a527fd915e74",
+      "G_deb3ed753feb"
+    ],
+    "deferred_review_candidate_count": 817
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_29fe83dcaad9.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d1b2c3c335f5",
+      "G_80a78bd35731",
+      "G_96891da3ad08",
+      "G_6b6f4338d605",
+      "G_f63e3464de24",
+      "G_efa29c2b472a",
+      "G_a527fd915e74",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 808
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_3e8a07414f0f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_80a78bd35731",
+      "G_96891da3ad08",
+      "G_f4a8da653bdd",
+      "G_242f135e7678",
+      "G_e4adb3e1b669",
+      "G_f65cc54c58d2",
+      "G_deb3ed753feb"
+    ],
+    "deferred_review_candidate_count": 852
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_714fa9ea359f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_6e505bd82bf6",
+      "G_be9eefce0f32",
+      "G_a9f8e6ab0812",
+      "G_efa29c2b472a",
+      "G_f65cc54c58d2"
+    ],
+    "deferred_review_candidate_count": 718
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_8a522f232945.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f098d0eda642",
+      "G_b9d776305be8",
+      "G_f2e5c4fa9b35",
+      "G_80a78bd35731",
+      "G_6b6f4338d605",
+      "G_a9f8e6ab0812",
+      "G_efa29c2b472a",
+      "G_7627bee75fe1",
+      "G_e4adb3e1b669",
+      "G_f65cc54c58d2",
+      "G_deb3ed753feb",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 900
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_8b06a352023b.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c0f9065c209f",
+      "G_80a78bd35731",
+      "G_f63e3464de24",
+      "G_a9f8e6ab0812",
+      "G_242f135e7678",
+      "G_f65cc54c58d2",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 875
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_a1a2c3d1d8e4.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c4fdcc9aa388",
+      "G_b9d776305be8",
+      "G_2feaf3cb1839",
+      "G_f4a8da653bdd",
+      "G_efa29c2b472a",
+      "G_242f135e7678",
+      "G_7627bee75fe1",
+      "G_a527fd915e74",
+      "G_deb3ed753feb",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 822
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_e878b7563d58.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c0f9065c209f",
+      "G_6b6f4338d605",
+      "G_f4a8da653bdd",
+      "G_a9f8e6ab0812",
+      "G_e4adb3e1b669",
+      "G_a527fd915e74",
+      "G_deb3ed753feb",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 773
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_ef0d9de2f921.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f098d0eda642",
+      "G_2feaf3cb1839",
+      "G_d1b2c3c335f5",
+      "G_be9eefce0f32",
+      "G_f4a8da653bdd",
+      "G_f63e3464de24",
+      "G_7627bee75fe1",
+      "G_e4adb3e1b669",
+      "G_6cf58cb4fcb4"
+    ],
+    "deferred_review_candidate_count": 883
+  },
+  {
+    "pool_id": "pool_004",
+    "part_id": "part_f5a54867e8b0.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_92c058c4b32b",
+      "G_2feaf3cb1839",
+      "G_f2e5c4fa9b35",
+      "G_c0f9065c209f",
+      "G_96891da3ad08",
+      "G_be9eefce0f32",
+      "G_efa29c2b472a",
+      "G_242f135e7678",
+      "G_e4adb3e1b669",
+      "G_a527fd915e74",
+      "G_f65cc54c58d2"
+    ],
+    "deferred_review_candidate_count": 937
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_3d05a9032f96.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f14ea619b0f0",
+      "G_fe8aada36461",
+      "G_3a3c1c635697",
+      "G_b3e44f48d4ff",
+      "G_969678897588",
+      "G_b5e64c50d3dc",
+      "G_a0b1ed633286",
+      "G_b69a7c27847f",
+      "G_7cd09594213b",
+      "G_f3add3fe893e",
+      "G_ebd88e1fd0cc"
+    ],
+    "deferred_review_candidate_count": 150
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_41c58efdb5da.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f14ea619b0f0",
+      "G_104fb89fb5c8",
+      "G_84f67a62419a",
+      "G_969678897588",
+      "G_b5e64c50d3dc",
+      "G_875c98197524",
+      "G_b69a7c27847f",
+      "G_f3add3fe893e",
+      "G_ebd88e1fd0cc"
+    ],
+    "deferred_review_candidate_count": 149
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_766829df8e3f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_af0c5d179217",
+      "G_c13ae189c55f",
+      "G_84f67a62419a",
+      "G_969678897588",
+      "G_b5e64c50d3dc",
+      "G_97fea665894b",
+      "G_a0b1ed633286",
+      "G_b69a7c27847f",
+      "G_58f1c388bbda",
+      "G_e27f78f0193e"
+    ],
+    "deferred_review_candidate_count": 143
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_9144870ea62f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d0b94ee4a19c",
+      "G_af0c5d179217",
+      "G_9d5990fb07aa",
+      "G_9ac5ab5c39e9",
+      "G_c13ae189c55f",
+      "G_3a3c1c635697",
+      "G_b3e44f48d4ff",
+      "G_84f67a62419a",
+      "G_875c98197524",
+      "G_97fea665894b",
+      "G_a0b1ed633286",
+      "G_b69a7c27847f",
+      "G_7cd09594213b",
+      "G_e27f78f0193e",
+      "G_ebd88e1fd0cc"
+    ],
+    "deferred_review_candidate_count": 196
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_9834786b0ae1.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d0b94ee4a19c",
+      "G_3a42496ecb50",
+      "G_fe8aada36461",
+      "G_104fb89fb5c8",
+      "G_b3e44f48d4ff",
+      "G_84f67a62419a",
+      "G_969678897588",
+      "G_875c98197524",
+      "G_97fea665894b",
+      "G_a0b1ed633286",
+      "G_b69a7c27847f",
+      "G_7cd09594213b",
+      "G_f3add3fe893e",
+      "G_58f1c388bbda"
+    ],
+    "deferred_review_candidate_count": 177
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_a06c41734223.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_9ac5ab5c39e9",
+      "G_c13ae189c55f",
+      "G_104fb89fb5c8",
+      "G_b3e44f48d4ff",
+      "G_b5e64c50d3dc",
+      "G_97fea665894b",
+      "G_b69a7c27847f",
+      "G_7cd09594213b",
+      "G_58f1c388bbda"
+    ],
+    "deferred_review_candidate_count": 144
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_aa5f5916f45c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_348b19511c30",
+      "G_3a42496ecb50",
+      "G_af0c5d179217",
+      "G_9ac5ab5c39e9",
+      "G_3a3c1c635697",
+      "G_969678897588",
+      "G_875c98197524",
+      "G_97fea665894b",
+      "G_a0b1ed633286",
+      "G_58f1c388bbda",
+      "G_e27f78f0193e"
+    ],
+    "deferred_review_candidate_count": 132
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_acfdfe5a109a.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_9d5990fb07aa",
+      "G_3a3c1c635697",
+      "G_84f67a62419a",
+      "G_b5e64c50d3dc",
+      "G_97fea665894b",
+      "G_7cd09594213b",
+      "G_f3add3fe893e",
+      "G_e27f78f0193e",
+      "G_ebd88e1fd0cc"
+    ],
+    "deferred_review_candidate_count": 133
+  },
+  {
+    "pool_id": "pool_005",
+    "part_id": "part_ff5fc28d3017.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_348b19511c30",
+      "G_9d5990fb07aa",
+      "G_fe8aada36461",
+      "G_c13ae189c55f",
+      "G_104fb89fb5c8",
+      "G_875c98197524",
+      "G_a0b1ed633286",
+      "G_7cd09594213b",
+      "G_58f1c388bbda",
+      "G_e27f78f0193e"
+    ],
+    "deferred_review_candidate_count": 131
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_1c1e9c1ec6e6.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e240fa928daa",
+      "G_ae8327d42e8d",
+      "G_7de088712ccc",
+      "G_11d7d0746ee7",
+      "G_cf2f987423a0",
+      "G_8e057b4d870b",
+      "G_52a0f7e956c6",
+      "G_be884a568925",
+      "G_68c393ef975a"
+    ],
+    "deferred_review_candidate_count": 929
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_270bd822f31f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d64edabac758",
+      "G_fa6b52acd489",
+      "G_cf2f987423a0",
+      "G_8e057b4d870b",
+      "G_68c393ef975a",
+      "G_9f336b064c8b"
+    ],
+    "deferred_review_candidate_count": 696
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_51fee1dc2993.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d64edabac758",
+      "G_092d5e9e9821",
+      "G_11d7d0746ee7",
+      "G_bc4537c50791",
+      "G_be884a568925",
+      "G_68c393ef975a",
+      "G_ef0e5fdef1f3"
+    ],
+    "deferred_review_candidate_count": 752
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_52837c5b503d.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_259fbeada883",
+      "G_e2927fe73545",
+      "G_d64edabac758",
+      "G_092d5e9e9821",
+      "G_30128f3c8623",
+      "G_11d7d0746ee7",
+      "G_cf2f987423a0",
+      "G_5737baa0a40b",
+      "G_52a0f7e956c6",
+      "G_9f336b064c8b"
+    ],
+    "deferred_review_candidate_count": 966
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_52c87e848450.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e2927fe73545",
+      "G_30128f3c8623",
+      "G_bc4537c50791",
+      "G_cf2f987423a0",
+      "G_52a0f7e956c6",
+      "G_be884a568925",
+      "G_68c393ef975a",
+      "G_ef0e5fdef1f3"
+    ],
+    "deferred_review_candidate_count": 754
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_73d25ceba242.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_af1748129e35",
+      "G_7de088712ccc",
+      "G_217ddb642dc8",
+      "G_092d5e9e9821",
+      "G_fa6b52acd489",
+      "G_cf2f987423a0",
+      "G_5737baa0a40b",
+      "G_be884a568925",
+      "G_ef0e5fdef1f3"
+    ],
+    "deferred_review_candidate_count": 852
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_77d1ea74d2bd.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_259fbeada883",
+      "G_f732ae087d45",
+      "G_7de088712ccc",
+      "G_bc4537c50791",
+      "G_8e057b4d870b",
+      "G_5737baa0a40b",
+      "G_52a0f7e956c6",
+      "G_ef0e5fdef1f3"
+    ],
+    "deferred_review_candidate_count": 881
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_8f1a15a719fc.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e240fa928daa",
+      "G_f732ae087d45",
+      "G_217ddb642dc8",
+      "G_092d5e9e9821",
+      "G_fa6b52acd489",
+      "G_30128f3c8623",
+      "G_bc4537c50791",
+      "G_52a0f7e956c6",
+      "G_68c393ef975a",
+      "G_9f336b064c8b",
+      "G_1dab41827ae4"
+    ],
+    "deferred_review_candidate_count": 901
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_962292eee134.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_217ddb642dc8",
+      "G_8e057b4d870b",
+      "G_52a0f7e956c6",
+      "G_ef0e5fdef1f3",
+      "G_1dab41827ae4"
+    ],
+    "deferred_review_candidate_count": 734
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_a4d895b39f82.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_4e993b6159cd",
+      "G_e2927fe73545",
+      "G_fa6b52acd489",
+      "G_11d7d0746ee7",
+      "G_bc4537c50791",
+      "G_8e057b4d870b",
+      "G_5737baa0a40b",
+      "G_be884a568925",
+      "G_1dab41827ae4"
+    ],
+    "deferred_review_candidate_count": 865
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_ab2089fe5c0b.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_4e993b6159cd",
+      "G_ae8327d42e8d",
+      "G_d64edabac758",
+      "G_217ddb642dc8",
+      "G_30128f3c8623",
+      "G_8e057b4d870b",
+      "G_5737baa0a40b",
+      "G_be884a568925"
+    ],
+    "deferred_review_candidate_count": 865
+  },
+  {
+    "pool_id": "pool_006",
+    "part_id": "part_e9f1badf0b11.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_af1748129e35",
+      "G_ae8327d42e8d",
+      "G_f732ae087d45",
+      "G_30128f3c8623",
+      "G_11d7d0746ee7",
+      "G_5737baa0a40b",
+      "G_68c393ef975a",
+      "G_ef0e5fdef1f3",
+      "G_1dab41827ae4"
+    ],
+    "deferred_review_candidate_count": 857
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_072f53919b92.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_40ccf54d67db",
+      "G_7c04973f4ad8",
+      "G_163b88a9182b",
+      "G_3c2328ae753f",
+      "G_ef26e8aba261",
+      "G_d2f294c00fc0",
+      "G_5a05d3b0a610",
+      "G_9883f3731b8d",
+      "G_d111bca26745",
+      "G_41f7f198bffd"
+    ],
+    "deferred_review_candidate_count": 7
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_5d3314391955.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_bb7fe254a71f",
+      "G_bf351602c874",
+      "G_beaae5d0f7df",
+      "G_a39a5b0e93df",
+      "G_957e9a8ea935",
+      "G_b1930aaf0c23",
+      "G_7c04973f4ad8",
+      "G_bc79644ce3aa",
+      "G_b37b5b5740e9",
+      "G_3c2328ae753f",
+      "G_ef26e8aba261",
+      "G_d2f294c00fc0",
+      "G_5a05d3b0a610",
+      "G_6c74fb1609d8",
+      "G_d111bca26745",
+      "G_41f7f198bffd",
+      "G_841b2a4bce0e"
+    ],
+    "deferred_review_candidate_count": 10
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_5ed111792ada.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_bb7fe254a71f",
+      "G_c7c1d13c352f",
+      "G_957e9a8ea935",
+      "G_b1930aaf0c23",
+      "G_40ccf54d67db",
+      "G_7c04973f4ad8",
+      "G_bc79644ce3aa",
+      "G_b37b5b5740e9",
+      "G_3c2328ae753f",
+      "G_d2f294c00fc0",
+      "G_5a05d3b0a610",
+      "G_c5e14b2c6249",
+      "G_6c74fb1609d8",
+      "G_d111bca26745",
+      "G_841b2a4bce0e"
+    ],
+    "deferred_review_candidate_count": 9
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_b5e196b87e77.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_35e7c4c46b27",
+      "G_bf351602c874",
+      "G_a39a5b0e93df",
+      "G_957e9a8ea935",
+      "G_40ccf54d67db",
+      "G_163b88a9182b",
+      "G_bc79644ce3aa",
+      "G_b37b5b5740e9",
+      "G_3c2328ae753f",
+      "G_ef26e8aba261",
+      "G_5a05d3b0a610",
+      "G_c5e14b2c6249",
+      "G_9883f3731b8d",
+      "G_e168f3520e56",
+      "G_41f7f198bffd",
+      "G_841b2a4bce0e"
+    ],
+    "deferred_review_candidate_count": 9
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_c1fe7043b62d.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_35e7c4c46b27",
+      "G_beaae5d0f7df",
+      "G_c7c1d13c352f",
+      "G_a39a5b0e93df",
+      "G_b1930aaf0c23",
+      "G_40ccf54d67db",
+      "G_163b88a9182b",
+      "G_bc79644ce3aa",
+      "G_b37b5b5740e9",
+      "G_ef26e8aba261",
+      "G_d2f294c00fc0",
+      "G_5a05d3b0a610",
+      "G_c5e14b2c6249",
+      "G_9883f3731b8d",
+      "G_e168f3520e56",
+      "G_41f7f198bffd"
+    ],
+    "deferred_review_candidate_count": 9
+  },
+  {
+    "pool_id": "pool_007",
+    "part_id": "part_ddc26778cc5e.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c7c1d13c352f",
+      "G_7c04973f4ad8",
+      "G_163b88a9182b",
+      "G_b37b5b5740e9",
+      "G_3c2328ae753f",
+      "G_ef26e8aba261",
+      "G_d2f294c00fc0",
+      "G_5a05d3b0a610",
+      "G_6c74fb1609d8",
+      "G_e168f3520e56",
+      "G_841b2a4bce0e"
+    ],
+    "deferred_review_candidate_count": 10
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_45bbfa6c89be.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_84d2b0ef0b51",
+      "G_4e461617d569",
+      "G_a059a69cd859",
+      "G_d52c3accea04",
+      "G_642048a6e9eb",
+      "G_accdfb37f6e3",
+      "G_2fc2e655789b",
+      "G_072148a41a73",
+      "G_c9caafb432f0",
+      "G_4be14255b0d7",
+      "G_dab2cf55fbf7",
+      "G_ff396d6114a0",
+      "G_81675bae55ff",
+      "G_d0c59c3f96f2"
+    ],
+    "deferred_review_candidate_count": 100
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_698fa96c043b.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_5b8d32a80019",
+      "G_a57592835d5f",
+      "G_a059a69cd859",
+      "G_642048a6e9eb",
+      "G_7436b4073bf5",
+      "G_3ad2d9409189",
+      "G_072148a41a73",
+      "G_709206edbd6a",
+      "G_c9caafb432f0",
+      "G_dab2cf55fbf7",
+      "G_ff396d6114a0",
+      "G_81675bae55ff",
+      "G_63adae29184c",
+      "G_d0c59c3f96f2"
+    ],
+    "deferred_review_candidate_count": 103
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_6a3961f1df6a.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d19d740d593e",
+      "G_a57592835d5f",
+      "G_d52c3accea04",
+      "G_7436b4073bf5",
+      "G_accdfb37f6e3",
+      "G_2fc2e655789b",
+      "G_709206edbd6a",
+      "G_c9caafb432f0",
+      "G_dab2cf55fbf7",
+      "G_ff396d6114a0",
+      "G_6edbaaea3ea4",
+      "G_cbc24425a150",
+      "G_d0c59c3f96f2"
+    ],
+    "deferred_review_candidate_count": 103
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_867c9373b35e.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_106604753908",
+      "G_a059a69cd859",
+      "G_accdfb37f6e3",
+      "G_3ad2d9409189",
+      "G_709206edbd6a",
+      "G_c9caafb432f0",
+      "G_4be14255b0d7",
+      "G_dab2cf55fbf7",
+      "G_81675bae55ff",
+      "G_6edbaaea3ea4"
+    ],
+    "deferred_review_candidate_count": 106
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_88ddc0042a2b.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_5b8d32a80019",
+      "G_d52c3accea04",
+      "G_7436b4073bf5",
+      "G_3ad2d9409189",
+      "G_072148a41a73",
+      "G_4be14255b0d7",
+      "G_dab2cf55fbf7",
+      "G_ff396d6114a0",
+      "G_81675bae55ff",
+      "G_6edbaaea3ea4",
+      "G_63adae29184c",
+      "G_cbc24425a150"
+    ],
+    "deferred_review_candidate_count": 100
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_c83d1c6a1830.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_2fc2e655789b",
+      "G_072148a41a73",
+      "G_709206edbd6a",
+      "G_4be14255b0d7",
+      "G_dab2cf55fbf7",
+      "G_63adae29184c",
+      "G_cbc24425a150"
+    ],
+    "deferred_review_candidate_count": 99
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_cee4ad27b789.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d19d740d593e",
+      "G_4e461617d569",
+      "G_106604753908",
+      "G_642048a6e9eb",
+      "G_7436b4073bf5",
+      "G_accdfb37f6e3",
+      "G_2fc2e655789b",
+      "G_709206edbd6a",
+      "G_4be14255b0d7",
+      "G_ff396d6114a0",
+      "G_81675bae55ff",
+      "G_6edbaaea3ea4",
+      "G_63adae29184c",
+      "G_cbc24425a150",
+      "G_d0c59c3f96f2"
+    ],
+    "deferred_review_candidate_count": 99
+  },
+  {
+    "pool_id": "pool_008",
+    "part_id": "part_cf206081bb59.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_84d2b0ef0b51",
+      "G_a57592835d5f",
+      "G_106604753908",
+      "G_642048a6e9eb",
+      "G_3ad2d9409189",
+      "G_2fc2e655789b",
+      "G_072148a41a73",
+      "G_c9caafb432f0",
+      "G_4be14255b0d7",
+      "G_ff396d6114a0",
+      "G_81675bae55ff",
+      "G_6edbaaea3ea4"
+    ],
+    "deferred_review_candidate_count": 104
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_16667a8613f0.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_fea8d2ff544f",
+      "G_4b7d79f223c1",
+      "G_9f989e0d3bcd",
+      "G_f25ad83ffe8b",
+      "G_f0915c8639c2",
+      "G_889f0f6cc110",
+      "G_1a882a38bc87",
+      "G_6cf432631fa1",
+      "G_d3f4738bf58c",
+      "G_e09be9879969",
+      "G_30f7a4c6d0f1"
+    ],
+    "deferred_review_candidate_count": 58
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_50b2ddf759af.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_fea8d2ff544f",
+      "G_30ab19bd33fc",
+      "G_d6285a786978",
+      "G_8ea59b82335b",
+      "G_e0fd77a9d1ed",
+      "G_9f989e0d3bcd",
+      "G_f25ad83ffe8b",
+      "G_64135431f710",
+      "G_f0915c8639c2",
+      "G_f1b7c56b56fa",
+      "G_1a882a38bc87",
+      "G_6cf432631fa1",
+      "G_e99637a70210",
+      "G_d3f4738bf58c",
+      "G_e09be9879969",
+      "G_f8b0a63061c6"
+    ],
+    "deferred_review_candidate_count": 85
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_5ff3716bc0b9.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f7e03540d539",
+      "G_7f73a813826b",
+      "G_64135431f710",
+      "G_f0915c8639c2",
+      "G_f1b7c56b56fa",
+      "G_1a882a38bc87",
+      "G_6cf432631fa1",
+      "G_c268531dcd5c"
+    ],
+    "deferred_review_candidate_count": 69
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_77999814a220.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_30ab19bd33fc",
+      "G_4b7d79f223c1",
+      "G_9f989e0d3bcd",
+      "G_37b6b1b286e1",
+      "G_64135431f710",
+      "G_f1b7c56b56fa",
+      "G_1a882a38bc87",
+      "G_e99637a70210",
+      "G_d3f4738bf58c",
+      "G_e09be9879969",
+      "G_f8b0a63061c6"
+    ],
+    "deferred_review_candidate_count": 64
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_c05b0e282baf.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_4ec7b2a770ce",
+      "G_d6285a786978",
+      "G_e0fd77a9d1ed",
+      "G_9f989e0d3bcd",
+      "G_7f73a813826b",
+      "G_37b6b1b286e1",
+      "G_f0915c8639c2",
+      "G_889f0f6cc110",
+      "G_f1b7c56b56fa",
+      "G_6cf432631fa1",
+      "G_e99637a70210",
+      "G_d3f4738bf58c",
+      "G_c268531dcd5c",
+      "G_30f7a4c6d0f1"
+    ],
+    "deferred_review_candidate_count": 80
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_d9973583e257.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_8ea59b82335b",
+      "G_37b6b1b286e1",
+      "G_64135431f710",
+      "G_f0915c8639c2",
+      "G_889f0f6cc110",
+      "G_1a882a38bc87",
+      "G_e99637a70210",
+      "G_d3f4738bf58c",
+      "G_c268531dcd5c"
+    ],
+    "deferred_review_candidate_count": 56
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_ef75489ba5f7.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_4ec7b2a770ce",
+      "G_8ea59b82335b",
+      "G_4b7d79f223c1",
+      "G_e0fd77a9d1ed",
+      "G_7f73a813826b",
+      "G_37b6b1b286e1",
+      "G_f25ad83ffe8b",
+      "G_889f0f6cc110",
+      "G_f1b7c56b56fa",
+      "G_1a882a38bc87",
+      "G_6cf432631fa1",
+      "G_e99637a70210",
+      "G_d3f4738bf58c",
+      "G_c268531dcd5c",
+      "G_f8b0a63061c6",
+      "G_30f7a4c6d0f1"
+    ],
+    "deferred_review_candidate_count": 78
+  },
+  {
+    "pool_id": "pool_009",
+    "part_id": "part_f31503d5311c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_f7e03540d539",
+      "G_d6285a786978",
+      "G_7f73a813826b",
+      "G_f25ad83ffe8b",
+      "G_64135431f710",
+      "G_889f0f6cc110",
+      "G_6cf432631fa1",
+      "G_e99637a70210",
+      "G_e09be9879969"
+    ],
+    "deferred_review_candidate_count": 68
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_0cdb7ddcefcc.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_1a6bff70bed5",
+      "G_1d52b97c2033",
+      "G_c4215eb4229d",
+      "G_0a3fa6e24912",
+      "G_e3648120deb2",
+      "G_f817287954cb",
+      "G_a3bd24f70bee",
+      "G_b84a22dc3d64",
+      "G_559e0f3dc07b"
+    ],
+    "deferred_review_candidate_count": 898
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_17ede4cc0d41.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_b82560a442cf",
+      "G_1a6bff70bed5",
+      "G_a5e6f2fad3db",
+      "G_ab5c59ff6f32",
+      "G_0a3fa6e24912",
+      "G_e3648120deb2",
+      "G_fb0b009753dc",
+      "G_cfedde46ee9a",
+      "G_6c6d610cbf2f",
+      "G_8c1a25b37029"
+    ],
+    "deferred_review_candidate_count": 891
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_27071625bca4.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_a5e6f2fad3db",
+      "G_c4215eb4229d",
+      "G_dbaecbf9ded2",
+      "G_f527216165aa",
+      "G_e3648120deb2",
+      "G_fb0b009753dc",
+      "G_f817287954cb",
+      "G_a3bd24f70bee"
+    ],
+    "deferred_review_candidate_count": 801
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_51277be3352e.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e76a864864e3",
+      "G_f527216165aa",
+      "G_e3648120deb2",
+      "G_cfedde46ee9a",
+      "G_b84a22dc3d64"
+    ],
+    "deferred_review_candidate_count": 754
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_6ba3e3752fd4.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e2079c21c8a6",
+      "G_a5e6f2fad3db",
+      "G_4d0525337ba2",
+      "G_e76a864864e3",
+      "G_dbaecbf9ded2",
+      "G_f527216165aa",
+      "G_0a3fa6e24912",
+      "G_6c6d610cbf2f",
+      "G_f817287954cb",
+      "G_a3bd24f70bee",
+      "G_a1afd9aeb302"
+    ],
+    "deferred_review_candidate_count": 974
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_6e9f55a45ed4.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_4d0525337ba2",
+      "G_ab5c59ff6f32",
+      "G_dbaecbf9ded2",
+      "G_0a3fa6e24912",
+      "G_fb0b009753dc",
+      "G_f817287954cb"
+    ],
+    "deferred_review_candidate_count": 755
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_7c4aaf2c0be3.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e0dd59afa666",
+      "G_c4215eb4229d",
+      "G_fb0b009753dc",
+      "G_cfedde46ee9a",
+      "G_6c6d610cbf2f",
+      "G_b84a22dc3d64",
+      "G_a1afd9aeb302",
+      "G_559e0f3dc07b"
+    ],
+    "deferred_review_candidate_count": 798
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_8f7a91b24773.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_ab5c59ff6f32",
+      "G_f527216165aa",
+      "G_cfedde46ee9a",
+      "G_f817287954cb",
+      "G_a1afd9aeb302"
+    ],
+    "deferred_review_candidate_count": 786
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_a46d72e5fd87.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_22c08f036542",
+      "G_e76a864864e3",
+      "G_1d52b97c2033",
+      "G_ab5c59ff6f32",
+      "G_dbaecbf9ded2",
+      "G_e3648120deb2",
+      "G_6c6d610cbf2f",
+      "G_a3bd24f70bee",
+      "G_a1afd9aeb302",
+      "G_559e0f3dc07b",
+      "G_8c1a25b37029"
+    ],
+    "deferred_review_candidate_count": 915
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_b946d63ae773.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e0dd59afa666",
+      "G_1d52b97c2033",
+      "G_0a3fa6e24912",
+      "G_cfedde46ee9a",
+      "G_a3bd24f70bee",
+      "G_b84a22dc3d64",
+      "G_a1afd9aeb302",
+      "G_8c1a25b37029"
+    ],
+    "deferred_review_candidate_count": 804
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_e76f0330de1a.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_b82560a442cf",
+      "G_e2079c21c8a6",
+      "G_1d52b97c2033",
+      "G_c4215eb4229d",
+      "G_cfedde46ee9a",
+      "G_6c6d610cbf2f",
+      "G_f817287954cb"
+    ],
+    "deferred_review_candidate_count": 856
+  },
+  {
+    "pool_id": "pool_010",
+    "part_id": "part_ee69e88b2c51.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_22c08f036542",
+      "G_1a6bff70bed5",
+      "G_4d0525337ba2",
+      "G_f527216165aa",
+      "G_fb0b009753dc",
+      "G_6c6d610cbf2f",
+      "G_a3bd24f70bee",
+      "G_b84a22dc3d64"
+    ],
+    "deferred_review_candidate_count": 890
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_1f744f7adc98.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_084b3c0634bc",
+      "G_98738db1f5ba",
+      "G_d7f67ddd1a4a",
+      "G_02a4e89a5178",
+      "G_8f3cda05f38b",
+      "G_bf29c95bb433",
+      "G_40b0b09e99be",
+      "G_df0e22607f9d",
+      "G_cfbe19dfb768",
+      "G_7a7b5e80b37a",
+      "G_597b1f6d3784",
+      "G_bf16d6ac69ab",
+      "G_86a1733638f9",
+      "G_fe27f8dadd14",
+      "G_ba6121efd781"
+    ],
+    "deferred_review_candidate_count": 195
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_3426509cfe45.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_8f21a565c70b",
+      "G_d7f67ddd1a4a",
+      "G_d5c874192201",
+      "G_bf29c95bb433",
+      "G_40b0b09e99be",
+      "G_63f26bfd8a55",
+      "G_cfbe19dfb768",
+      "G_bf16d6ac69ab",
+      "G_86a1733638f9",
+      "G_5c0304ab4417",
+      "G_59da2f64cc7e"
+    ],
+    "deferred_review_candidate_count": 148
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_64759d417560.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_8f21a565c70b",
+      "G_400dd093050a",
+      "G_02a4e89a5178",
+      "G_d9c072d8df25",
+      "G_1e3f3b7ce38e",
+      "G_cfbe19dfb768",
+      "G_7a7b5e80b37a",
+      "G_86a1733638f9",
+      "G_fe27f8dadd14",
+      "G_ba6121efd781",
+      "G_5c0304ab4417"
+    ],
+    "deferred_review_candidate_count": 143
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_7195b30b49a2.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_400dd093050a",
+      "G_98738db1f5ba",
+      "G_8f3cda05f38b",
+      "G_40b0b09e99be",
+      "G_63f26bfd8a55",
+      "G_d9c072d8df25",
+      "G_1e3f3b7ce38e",
+      "G_cfbe19dfb768",
+      "G_7a7b5e80b37a",
+      "G_597b1f6d3784",
+      "G_5c0304ab4417",
+      "G_59da2f64cc7e"
+    ],
+    "deferred_review_candidate_count": 165
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_8470108d7c24.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_465eadd635b1",
+      "G_d7f67ddd1a4a",
+      "G_8f3cda05f38b",
+      "G_63f26bfd8a55",
+      "G_df0e22607f9d",
+      "G_1e3f3b7ce38e",
+      "G_7a7b5e80b37a",
+      "G_bf16d6ac69ab",
+      "G_fe27f8dadd14",
+      "G_59da2f64cc7e"
+    ],
+    "deferred_review_candidate_count": 147
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_ae241a2b8729.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_084b3c0634bc",
+      "G_d5c874192201",
+      "G_63f26bfd8a55",
+      "G_df0e22607f9d",
+      "G_d9c072d8df25",
+      "G_cfbe19dfb768",
+      "G_7a7b5e80b37a",
+      "G_597b1f6d3784",
+      "G_bf16d6ac69ab",
+      "G_86a1733638f9"
+    ],
+    "deferred_review_candidate_count": 167
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_e9c743b17d3c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d5c874192201",
+      "G_40b0b09e99be",
+      "G_df0e22607f9d",
+      "G_d9c072d8df25",
+      "G_1e3f3b7ce38e",
+      "G_597b1f6d3784",
+      "G_bf16d6ac69ab",
+      "G_86a1733638f9"
+    ],
+    "deferred_review_candidate_count": 149
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_eb6eef70f7bf.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_02a4e89a5178",
+      "G_8f3cda05f38b",
+      "G_bf29c95bb433",
+      "G_d9c072d8df25",
+      "G_597b1f6d3784",
+      "G_bf16d6ac69ab",
+      "G_5c0304ab4417",
+      "G_59da2f64cc7e"
+    ],
+    "deferred_review_candidate_count": 128
+  },
+  {
+    "pool_id": "pool_011",
+    "part_id": "part_ffaa867e5b91.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_465eadd635b1",
+      "G_98738db1f5ba",
+      "G_bf29c95bb433",
+      "G_df0e22607f9d",
+      "G_1e3f3b7ce38e",
+      "G_7a7b5e80b37a",
+      "G_597b1f6d3784",
+      "G_86a1733638f9",
+      "G_ba6121efd781",
+      "G_59da2f64cc7e"
+    ],
+    "deferred_review_candidate_count": 147
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_21c14a99ad41.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_d45ee4393fec",
+      "G_dc89bfaf2514",
+      "G_b1ed06bf3de2",
+      "G_3866d93806c7",
+      "G_6a7c3b3cf78a",
+      "G_07662ca00fe5",
+      "G_2239fdf7b641",
+      "G_8b3f80f1a9e0"
+    ],
+    "deferred_review_candidate_count": 758
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_27422160f5f2.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_8a9412220465",
+      "G_a685189fe0af",
+      "G_dc89bfaf2514",
+      "G_447b07022966",
+      "G_b1ed06bf3de2",
+      "G_3866d93806c7",
+      "G_9113001ad0ec",
+      "G_f7de57d7ab59",
+      "G_6a7c3b3cf78a",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 942
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_2c28b4d6bcf2.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_ec234f3e1b4b",
+      "G_5ec5dbc505d1",
+      "G_3866d93806c7",
+      "G_0ba817c91a14",
+      "G_d436a107bb73",
+      "G_8b3f80f1a9e0",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 673
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_330f0c72f68c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_c1ed7d35b15c",
+      "G_a685189fe0af",
+      "G_447b07022966",
+      "G_e5aa542a6f02",
+      "G_3866d93806c7",
+      "G_d436a107bb73",
+      "G_0aa682c0d191",
+      "G_2239fdf7b641",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 767
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_38a440f7bf20.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_81fa6aa164e8",
+      "G_e5aa542a6f02",
+      "G_0ba817c91a14",
+      "G_f7de57d7ab59",
+      "G_6a7c3b3cf78a",
+      "G_d4cd50641854",
+      "G_d436a107bb73",
+      "G_8b3f80f1a9e0"
+    ],
+    "deferred_review_candidate_count": 783
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_3cd87a2889c5.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_447b07022966",
+      "G_b1ed06bf3de2",
+      "G_0ba817c91a14",
+      "G_f7de57d7ab59",
+      "G_07662ca00fe5",
+      "G_d436a107bb73",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 709
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_724e948a1a4f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_8a9412220465",
+      "G_d45ee4393fec",
+      "G_c1ed7d35b15c",
+      "G_ec234f3e1b4b",
+      "G_e5aa542a6f02",
+      "G_5ec5dbc505d1",
+      "G_0ba817c91a14",
+      "G_9113001ad0ec",
+      "G_6a7c3b3cf78a",
+      "G_07662ca00fe5",
+      "G_0aa682c0d191",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 890
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_7812aaac47df.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_dc89bfaf2514",
+      "G_447b07022966",
+      "G_0ba817c91a14",
+      "G_9113001ad0ec",
+      "G_d4cd50641854",
+      "G_07662ca00fe5"
+    ],
+    "deferred_review_candidate_count": 699
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_8c524771b63c.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e724f97adfb7",
+      "G_ec234f3e1b4b",
+      "G_3866d93806c7",
+      "G_6a7c3b3cf78a",
+      "G_d4cd50641854",
+      "G_07662ca00fe5",
+      "G_d436a107bb73",
+      "G_0aa682c0d191",
+      "G_2239fdf7b641",
+      "G_8b3f80f1a9e0"
+    ],
+    "deferred_review_candidate_count": 789
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_b7749e1c428f.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_e724f97adfb7",
+      "G_e5aa542a6f02",
+      "G_5ec5dbc505d1",
+      "G_f7de57d7ab59",
+      "G_d4cd50641854",
+      "G_07662ca00fe5",
+      "G_2239fdf7b641",
+      "G_8b3f80f1a9e0",
+      "G_bc7b688a65f6"
+    ],
+    "deferred_review_candidate_count": 831
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_b82037578b68.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_a685189fe0af",
+      "G_b1ed06bf3de2",
+      "G_9113001ad0ec",
+      "G_d4cd50641854",
+      "G_0aa682c0d191"
+    ],
+    "deferred_review_candidate_count": 623
+  },
+  {
+    "pool_id": "pool_012",
+    "part_id": "part_eea1d133a2f7.step",
+    "reason": "only review candidates available",
+    "review_candidate_ids": [
+      "G_81fa6aa164e8",
+      "G_c1ed7d35b15c",
+      "G_5ec5dbc505d1",
+      "G_9113001ad0ec",
+      "G_f7de57d7ab59",
+      "G_6a7c3b3cf78a",
+      "G_d4cd50641854",
+      "G_d436a107bb73",
+      "G_2239fdf7b641"
+    ],
+    "deferred_review_candidate_count": 850
+  }
+]

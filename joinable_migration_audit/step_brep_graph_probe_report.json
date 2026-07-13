@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "occt_available": true,
+  "requested_count": 3,
+  "attempted_count": 3,
+  "success_count": 3,
+  "failure_count": 0,
+  "results": [
+    {
+      "source_step_path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\1\\flange_part_a.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\step_brep_graph_samples\\flange_part_a.brep_graph.json",
+      "status": "success",
+      "num_faces": 13,
+      "num_edges": 27,
+      "num_adjacencies": 45,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\1\\flange_part_b.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\step_brep_graph_samples\\flange_part_b.brep_graph.json",
+      "status": "success",
+      "num_faces": 13,
+      "num_edges": 27,
+      "num_adjacencies": 45,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\2\\shaft_with_keyway.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\step_brep_graph_samples\\shaft_with_keyway.brep_graph.json",
+      "status": "success",
+      "num_faces": 8,
+      "num_edges": 15,
+      "num_adjacencies": 29,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    }
+  ],
+  "entity_id_audit": {
+    "traceable_ids_present": true,
+    "stable_for_unchanged_file_same_environment": true,
+    "stable_across_step_reexport_or_topology_healing": false,
+    "reverse_lookup_to_occt_shape": "Yes inside extraction worker through IndexedMap.FindKey; serialized ids require deterministic re-import."
+  },
+  "joinable_required_fields_not_extracted": [
+    "face UV point/normal/trimming-mask grids",
+    "edge point/tangent grids",
+    "edge convexity and dihedral angle",
+    "designer-selected joint entity labels",
+    "joint equivalence labels",
+    "contact and hole labels",
+    "assembly transform and hierarchy"
+  ],
+  "acceptance_met": true,
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "assembly transforms and hierarchy",
+    "contact labels",
+    "designer-selected joint labels",
+    "dihedral angle",
+    "edge convexity",
+    "edge point/tangent grids",
+    "face UV point/normal/trimming-mask grids",
+    "hole labels"
+  ]
+}
