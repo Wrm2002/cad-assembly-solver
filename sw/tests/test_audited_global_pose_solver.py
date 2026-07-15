@@ -71,6 +71,23 @@ class AuditedGlobalPoseSolverTests(unittest.TestCase):
         self.assertFalse(result["hypotheses"][0]["all_independent_cycles_consistent"])
         self.assertEqual(result["hypotheses"][0]["independent_cycle_count"], 0)
 
+    def test_tree_residual_tie_uses_prior_for_ranking_only(self):
+        result = solve_bounded_global_pose(
+            ["a", "b"],
+            [_pool(
+                "a", "b",
+                ("low_prior", _translation(1), 0.1),
+                ("high_prior", _translation(2), 0.9),
+            )],
+            max_candidates_per_pair=2,
+            max_hypotheses=2,
+        )
+        best = result["hypotheses"][0]
+        self.assertEqual(best["tree_candidates"][0]["candidate_id"], "high_prior")
+        self.assertAlmostEqual(best["ranking_prior_sum"], 0.9)
+        self.assertFalse(best["accepted"])
+        self.assertTrue(best["review_required"])
+
     def test_disconnected_input_has_no_pose_hypothesis(self):
         result = solve_bounded_global_pose(
             ["a", "b", "c"],

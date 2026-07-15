@@ -149,6 +149,7 @@ def render_manifest(
     view_height: int = 900,
     audit_path: str | Path | None = None,
     expanded_views: bool = False,
+    complete_views: bool = False,
     relationship_focus: bool = False,
     relationship_view: bool = False,
     context_transparency: float = 0.72,
@@ -245,7 +246,7 @@ def render_manifest(
         ("right", viewer.View_Right),
         ("top", viewer.View_Top),
     ]
-    if expanded_views:
+    if expanded_views or complete_views:
         def opposite_isometric() -> None:
             viewer.View_Iso()
             camera = viewer.View.Camera()
@@ -264,6 +265,17 @@ def render_manifest(
             ("right", viewer.View_Right),
             ("top", viewer.View_Top),
         ]
+        if complete_views:
+            view_methods = [
+                ("isometric", viewer.View_Iso),
+                ("opposite isometric", opposite_isometric),
+                ("front", viewer.View_Front),
+                ("rear", viewer.View_Rear),
+                ("left", viewer.View_Left),
+                ("right", viewer.View_Right),
+                ("top", viewer.View_Top),
+                ("bottom", viewer.View_Bottom),
+            ]
     if relationship_focus:
         from OCC.Core.V3d import V3d_XposYposZpos
 
@@ -332,6 +344,11 @@ def main() -> int:
         help="render six directions, including the opposite isometric and rear views",
     )
     parser.add_argument(
+        "--complete-views",
+        action="store_true",
+        help="render two isometrics plus all six orthographic directions",
+    )
+    parser.add_argument(
         "--relationship-view",
         action="store_true",
         help="make the largest bounding-box component translucent",
@@ -350,6 +367,7 @@ def main() -> int:
         view_height=args.view_height,
         audit_path=args.audit,
         expanded_views=args.expanded_views,
+        complete_views=args.complete_views,
         relationship_focus=args.relationship_focus,
         relationship_view=args.relationship_view,
         context_transparency=args.context_transparency,

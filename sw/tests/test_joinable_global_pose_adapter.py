@@ -75,6 +75,33 @@ class JoinableGlobalPoseAdapterTests(unittest.TestCase):
         offsets = sorted(round(row["T_rel"][0][3]) for row in pool["candidates"])
         self.assertEqual(offsets, [0, 50])
 
+    def test_manifold_initial_is_available_when_sdf_search_is_disabled(self):
+        transform = np.eye(4)
+        transform[2, 3] = 42.0
+        payload = {
+            "pose_search": {"enabled": False, "results": []},
+            "joint_hypotheses": {"rows": [{
+                "rank": 3,
+                "confidence": 0.2,
+                "manifold_type": "axis_coincidence",
+                "entity_a": "face_1",
+                "entity_b": "face_2",
+                "initial_pose_b_in_a": transform.tolist(),
+            }]},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            pool, audit = load_joinable_pose_pool("carrier", "ear", path)
+        self.assertEqual(len(pool["candidates"]), 1)
+        self.assertEqual(
+            pool["candidates"][0]["candidate_origin"],
+            "joinable_constraint_manifold_initial",
+        )
+        self.assertEqual(pool["candidates"][0]["pair_exact_status"], "not_checked")
+        self.assertEqual(audit["input_manifold_count"], 1)
+        self.assertEqual(audit["parsed_manifold_initial_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -502,6 +502,11 @@ def solve_bounded_global_pose(
                 "optimizer": final_pass,
                 "max_translation_residual_mm": max_translation,
                 "max_rotation_residual_degrees": max_rotation,
+                # Ranking evidence only.  In a spanning tree every selected
+                # edge can have zero closure residual, so omitting this term
+                # made tied hypotheses fall back to arbitrary string IDs.
+                # It must not participate in the acceptance boundary.
+                "ranking_prior_sum": float(sum(row.prior for row in tree_edges)),
                 "part_poses": _serialise_poses(poses),
                 "exact_validation": {"status": "not_checked"},
                 # A fit to pair constraints alone never establishes source or
@@ -518,11 +523,18 @@ def solve_bounded_global_pose(
             validation, 4
         )
         cycle_rank = 0 if row["all_independent_cycles_consistent"] else 1
+        # Solver noise around 1e-14 is not a meaningful geometric advantage.
+        # Treat sub-micron/sub-microdegree residuals as ties before consulting
+        # the ranking prior; otherwise arbitrary floating-point jitter can
+        # outrank a much stronger candidate.
+        translation_rank = round(float(row["max_translation_residual_mm"]), 6)
+        rotation_rank = round(float(row["max_rotation_residual_degrees"]), 6)
         return (
             physical_rank,
             cycle_rank,
-            row["max_translation_residual_mm"],
-            row["max_rotation_residual_degrees"],
+            translation_rank,
+            rotation_rank,
+            -float(row.get("ranking_prior_sum", 0.0)),
             row["hypothesis_id"],
         )
 

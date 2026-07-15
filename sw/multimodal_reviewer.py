@@ -72,6 +72,23 @@ def encode_image_base64(image_path: str | Path) -> str:
     return f"data:image/png;base64,{encoded}"
 
 
+def _first_environment_value(names: tuple[str, ...]) -> str:
+    """Return the first non-empty environment value without logging it."""
+    for name in names:
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _chat_completions_url(base_url: str) -> str:
+    """Accept either an API root or a complete chat-completions endpoint."""
+    normalized = base_url.rstrip("/")
+    if normalized.endswith("/chat/completions"):
+        return normalized
+    return normalized + "/chat/completions"
+
+
 def _extract_json(text: str) -> str:
     """Extract a JSON object from text that may contain preamble or markdown."""
     # Try to find JSON object boundaries
@@ -110,10 +127,16 @@ class QwenVLReviewer:
         self.cache_dir = Path(cache_dir).resolve()
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.transport = transport or self._http_transport
-        self._model = self.config.get("vision_model", "qwen-vl-plus")
-        self._base_url = self.config.get(
-            "vision_base_url",
-            "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        self._model = (
+            os.environ.get("QWEN_VL_MODEL", "").strip()
+            or self.config.get("vision_model", "qwen-vl-plus")
+        )
+        self._base_url = (
+            _first_environment_value(("QWEN_BASE_URL", "OPENAI_BASE_URL"))
+            or self.config.get(
+                "vision_base_url",
+                "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            )
         )
         self._max_tokens = int(self.config.get("vision_max_tokens", 1024))
         self._timeout = float(self.config.get("vision_timeout_seconds", 45))
@@ -171,7 +194,7 @@ class QwenVLReviewer:
     def _http_transport(
         self, payload: dict[str, Any], api_key: str, timeout: float
     ) -> dict[str, Any]:
-        url = self._base_url.rstrip("/") + "/chat/completions"
+        url = _chat_completions_url(self._base_url)
         request = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
@@ -218,17 +241,13 @@ class QwenVLReviewer:
                 "cache_hit": False,
                 "provider": "qwen-vl",
             }
-        api_key = next(
+        api_key = _first_environment_value(
             (
-                os.environ.get(name, "").strip()
-                for name in (
-                    "QWEN_API_KEY",
-                    "Qwen_API_KEY",
-                    "DASHSCOPE_API_KEY",
-                )
-                if os.environ.get(name, "").strip()
-            ),
-            "",
+                "QWEN_API_KEY",
+                "Qwen_API_KEY",
+                "DASHSCOPE_API_KEY",
+                "OPENAI_API_KEY",
+            )
         )
         if not api_key:
             return {
@@ -296,6 +315,167 @@ class QwenVLReviewer:
             "decision": _abstention(proposal_id, "all_attempts_failed"),
             "request_summary": {"error": "; ".join(errors)},
         }
+
+    def structured_review(
+        self,
+        stage_id: str,
+        image_paths: list[str | Path],
+        text_context: str,
+        *,
+        system_prompt: str,
+        prompt_version: str,
+        validate_output: Callable[[Any], dict[str, Any]],
+        fallback_output: dict[str, Any],
+        mode: Literal["live", "cache_only", "off"] = "live",
+    ) -> dict[str, Any]:
+        """Run one strict-JSON multimodal stage with an isolated cache.
+
+        The cache contains hashes and validated output only.  It deliberately
+        excludes request payloads, data URIs, authorization headers and keys.
+        """
+        valid_paths = [Path(path).resolve() for path in image_paths if Path(path).is_file()]
+        image_manifest = [
+            {
+                "path": str(path),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for path in valid_paths
+        ]
+        material = {
+            "stage_id": stage_id,
+            "provider": "qwen-vl",
+            "base_url": self._base_url,
+            "model": self._model,
+            "prompt_version": prompt_version,
+            "system_prompt_sha256": hashlib.sha256(
+                system_prompt.encode("utf-8")
+            ).hexdigest(),
+            "text_context_sha256": hashlib.sha256(
+                text_context.encode("utf-8")
+            ).hexdigest(),
+            "images": image_manifest,
+        }
+        cache_key = hashlib.sha256(
+            _canonical(material).encode("utf-8")
+        ).hexdigest()
+        cache_path = self.cache_dir / f"structured_{cache_key}.json"
+
+        def abstain(reason: str, errors: list[str] | None = None) -> dict[str, Any]:
+            return {
+                "schema_version": "visual_semantic_stage.v1",
+                "stage_id": stage_id,
+                "provider": "qwen-vl",
+                "model": self._model,
+                "prompt_version": prompt_version,
+                "cache_key": cache_key,
+                "cache_hit": False,
+                "status": "abstain",
+                "abstention_reason": reason,
+                "errors": list(errors or []),
+                "image_manifest": image_manifest,
+                "output": fallback_output,
+            }
+
+        if mode == "off":
+            return abstain("semantic_disabled")
+        if not valid_paths:
+            return abstain("no_valid_images")
+        if cache_path.is_file():
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            cached["output"] = validate_output(cached["output"])
+            cached["cache_hit"] = True
+            return cached
+        if mode == "cache_only":
+            return abstain("cache_miss")
+
+        api_key = _first_environment_value(
+            (
+                "QWEN_API_KEY",
+                "Qwen_API_KEY",
+                "DASHSCOPE_API_KEY",
+                "OPENAI_API_KEY",
+            )
+        )
+        if not api_key:
+            return abstain("api_key_missing")
+
+        user_content: list[dict[str, Any]] = []
+        for path in valid_paths:
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": encode_image_base64(path)},
+                }
+            )
+        user_content.append(
+            {
+                "type": "text",
+                "text": (
+                    text_context
+                    + "\n\nOutput ONLY one strict JSON object. "
+                    "No markdown and no text outside JSON."
+                ),
+            }
+        )
+        payload = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            "max_tokens": self._max_tokens,
+            "stream": False,
+        }
+        errors: list[str] = []
+        for attempt in range(1, self._max_attempts + 1):
+            started = time.perf_counter()
+            try:
+                response = self.transport(payload, api_key, self._timeout)
+                content = response["choices"][0]["message"].get("content")
+                if isinstance(content, list):
+                    content = "".join(
+                        str(item.get("text", "")) if isinstance(item, dict) else str(item)
+                        for item in content
+                    )
+                if not content:
+                    raise ValueError("empty response content")
+                output = validate_output(json.loads(_extract_json(str(content))))
+                record = {
+                    "schema_version": "visual_semantic_stage.v1",
+                    "stage_id": stage_id,
+                    "provider": "qwen-vl",
+                    "model": response.get("model", self._model),
+                    "prompt_version": prompt_version,
+                    "cache_key": cache_key,
+                    "cache_hit": False,
+                    "status": "ok",
+                    "attempt": attempt,
+                    "latency_seconds": time.perf_counter() - started,
+                    "usage": response.get("usage", {}),
+                    "finish_reason": response["choices"][0].get("finish_reason"),
+                    "image_manifest": image_manifest,
+                    "input_hashes": {
+                        "system_prompt_sha256": material["system_prompt_sha256"],
+                        "text_context_sha256": material["text_context_sha256"],
+                    },
+                    "output": output,
+                }
+                cache_path.write_text(
+                    json.dumps(record, indent=2, ensure_ascii=False) + "\n",
+                    encoding="utf-8",
+                )
+                return record
+            except (
+                KeyError,
+                IndexError,
+                TypeError,
+                ValueError,
+                json.JSONDecodeError,
+                urllib.error.URLError,
+            ) as exc:
+                # Never retain payloads or headers in the error record.
+                errors.append(f"attempt {attempt}: {type(exc).__name__}: {str(exc)[:240]}")
+        return abstain("all_attempts_failed", errors)
 
 
 def smoke_test() -> int:

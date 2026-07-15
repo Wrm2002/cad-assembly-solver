@@ -6471,6 +6471,8 @@ def _evaluate_pose_candidates(
     search: dict[str, Any],
     graph: dict[str, Any],
     features: dict[str, Any],
+    *,
+    enable_exact_collision: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], bool, int]:
     candidates = list(search.get("pose_candidates") or [])
     if not candidates:
@@ -6492,16 +6494,54 @@ def _evaluate_pose_candidates(
     # per-solid AABB broad phase; whole-compound Boolean checks previously
     # stalled or exhausted memory on these models.
     exact_check_budget = (
-        min(len(candidates), 3)
-        if large_step_case
-        else min(len(candidates), 180)
+        (
+            min(len(candidates), 3)
+            if large_step_case
+            else min(len(candidates), 180)
+        )
+        if enable_exact_collision
+        else 0
     )
     prechecked = []
     for rank, candidate in enumerate(candidates, 1):
-        precheck = _pose_precheck(
-            candidate, _candidate_topology_graph(candidate, graph), features
-        )
+        try:
+            precheck = _pose_precheck(
+                candidate, _candidate_topology_graph(candidate, graph), features
+            )
+        except Exception as exc:
+            audit_by_rank[rank] = {
+                "rank": rank,
+                "candidate_origin": candidate.get(
+                    "candidate_origin", "solver_beam"
+                ),
+                "proposal_only": candidate.get("proposal_only", False),
+                "review_required": True,
+                "can_auto_accept": False,
+                "precheck_status": "invalid_candidate",
+                "precheck_error": f"{type(exc).__name__}: {exc}",
+                "collision_status": "skipped_invalid_candidate",
+                "collision_count": 0,
+                "collisions": [],
+                "errors": [f"pose precheck failed: {type(exc).__name__}: {exc}"],
+                "constraint_closure": {
+                    "fully_closed": False,
+                    "closed_connection_count": 0,
+                    "connection_count": len(graph.get("selected") or []),
+                    "closure_ratio": 0.0,
+                    "connections": [],
+                    "review_required": True,
+                },
+                "contact_objective": {},
+                "overlap_objective": {},
+                "bbox_overlap_items": [],
+                "group_pose_precheck_score": None,
+                "group_pose_final_score": None,
+            }
+            continue
         prechecked.append((rank, candidate, precheck))
+
+    if not prechecked:
+        raise RuntimeError("all pose candidates failed numerical precheck")
 
     exact_budget_plan = _plan_exact_rank_budget(
         prechecked,
@@ -6518,7 +6558,14 @@ def _evaluate_pose_candidates(
             candidate["components"], case_dir, output_dir
         )
         closure = precheck["constraint_closure"]
-        if large_step_case and not closure["fully_closed"]:
+        if not enable_exact_collision:
+            exact = {
+                "status": "skipped_deferred_visual_rerank",
+                "method": "deferred_visual_topk_exact_gate",
+                "collisions": [],
+                "errors": [],
+            }
+        elif large_step_case and not closure["fully_closed"]:
             exact = {
                 "status": "skipped_constraint_not_closed",
                 "method": "closure_short_circuit",
@@ -6551,6 +6598,7 @@ def _evaluate_pose_candidates(
         final_score = _group_pose_final_score(candidate, exact, precheck)
         row = {
             "rank": rank,
+            "precheck_status": "success",
             "candidate_origin": candidate.get("candidate_origin", "solver_beam"),
             "proposal_only": candidate.get("proposal_only", False),
             "review_required": candidate.get("review_required", False),
@@ -6683,6 +6731,180 @@ def _evaluate_pose_candidates(
         bool(selected_closure["fully_closed"]),
         int(selected_rank),
     )
+
+
+def _export_pose_candidate_frontier(
+    case_dir: Path,
+    output_dir: Path,
+    search: dict[str, Any],
+    pose_audit: list[dict[str, Any]],
+    *,
+    maximum_candidates: int,
+) -> dict[str, Any]:
+    """Export a bounded, origin-diverse pose frontier for visual review.
+
+    The export is deliberately downstream of geometric candidate generation
+    and upstream of any semantic decision.  It always protects the identity
+    input, the geometry-selected result, and group-level centering candidates,
+    then allocates one representative to every remaining candidate origin
+    before filling by physical/closure quality.  No visual model receives the
+    geometry score, so semantic review cannot simply echo it.
+    """
+
+    limit = max(0, int(maximum_candidates))
+    candidates = list(search.get("pose_candidates") or [])
+    if limit <= 0 or not candidates:
+        return {
+            "schema_version": "pose_candidate_frontier.v1",
+            "candidate_count": 0,
+            "candidates": [],
+        }
+
+    audit_by_rank = {
+        int(row["rank"]): row
+        for row in pose_audit
+        if row.get("rank") is not None
+        and row.get("precheck_status") != "invalid_candidate"
+    }
+
+    def quality(rank: int) -> tuple[Any, ...]:
+        row = audit_by_rank.get(rank, {})
+        collision_status = str(row.get("collision_status", ""))
+        collision_count = int(row.get("collision_count", 0) or 0)
+        physical_rank = (
+            0 if collision_status == "success" and collision_count == 0
+            else 1 if collision_status.startswith("skipped_")
+            else 2 if collision_status == "success"
+            else 3
+        )
+        closure = row.get("constraint_closure") or {}
+        return (
+            physical_rank,
+            -int(closure.get("closed_connection_count", 0) or 0),
+            -float(closure.get("closure_ratio", 0.0) or 0.0),
+            -float(row.get("group_pose_final_score", -1e12) or -1e12),
+            rank,
+        )
+
+    protected_origins = {"axial_group_symmetric_centering"}
+    selected: list[int] = []
+    reasons: dict[int, list[str]] = {}
+
+    def add(rank: int, reason: str) -> None:
+        if rank < 1 or rank > len(candidates):
+            return
+        if rank not in selected:
+            selected.append(rank)
+        reasons.setdefault(rank, [])
+        if reason not in reasons[rank]:
+            reasons[rank].append(reason)
+
+    for rank, row in sorted(audit_by_rank.items()):
+        origin = str(row.get("candidate_origin", "solver_beam"))
+        if origin in protected_origins:
+            add(rank, f"protected_origin:{origin}")
+        if row.get("selected_by_group_pose_optimizer"):
+            add(rank, "geometry_selected")
+
+    by_origin: dict[str, list[int]] = defaultdict(list)
+    for rank, row in audit_by_rank.items():
+        by_origin[str(row.get("candidate_origin", "solver_beam"))].append(rank)
+    for origin in sorted(by_origin):
+        representative = min(by_origin[origin], key=quality)
+        add(representative, f"origin_representative:{origin}")
+        if origin == "identity_input_pose":
+            reasons.setdefault(representative, []).append(
+                "protected_origin:identity_input_pose"
+            )
+
+    for rank in sorted(audit_by_rank, key=quality):
+        if len(selected) >= limit:
+            break
+        add(rank, "quality_fill")
+
+    # Protected rows may exceed the requested soft limit; never delete them.
+    selected = sorted(selected, key=quality)
+    if len(selected) > limit:
+        protected = [
+            rank for rank in selected
+            if any(
+                reason.startswith("protected_origin:")
+                or reason == "geometry_selected"
+                for reason in reasons.get(rank, [])
+            )
+        ]
+        optional = [rank for rank in selected if rank not in protected]
+        selected = protected + optional[: max(0, limit - len(protected))]
+        selected = sorted(dict.fromkeys(selected), key=quality)
+
+    frontier_dir = output_dir / "pose_candidate_frontier"
+    manifest_dir = frontier_dir / "manifests"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for export_index, rank in enumerate(selected, start=1):
+        candidate = candidates[rank - 1]
+        audit = audit_by_rank.get(rank, {})
+        candidate_id = f"POSE_RANK_{rank:04d}"
+        manifest_path = manifest_dir / f"{export_index:02d}_{candidate_id}.json"
+        manifest = {
+            "schema_version": "2.0.0",
+            "assembly_name": candidate_id,
+            "global_units": "mm",
+            "review_required": True,
+            "can_auto_accept": False,
+            "components": _portable_components(
+                candidate["components"], case_dir, manifest_dir
+            ),
+        }
+        _write(manifest_path, manifest)
+        closure = audit.get("constraint_closure") or {}
+        rows.append({
+            "candidate_id": candidate_id,
+            "source_pose_rank": rank,
+            "candidate_origin": audit.get(
+                "candidate_origin", candidate.get("candidate_origin", "solver_beam")
+            ),
+            "protected": any(
+                reason.startswith("protected_origin:")
+                or reason == "geometry_selected"
+                for reason in reasons.get(rank, [])
+            ),
+            "selection_reasons": reasons.get(rank, []),
+            "manifest": str(manifest_path.resolve()),
+            "machine_evidence": {
+                "collision_status": audit.get("collision_status"),
+                "collision_count": audit.get("collision_count"),
+                "fully_closed": bool(closure.get("fully_closed", False)),
+                "closed_connection_count": int(
+                    closure.get("closed_connection_count", 0) or 0
+                ),
+                "connection_count": int(closure.get("connection_count", 0) or 0),
+                "closure_ratio": float(closure.get("closure_ratio", 0.0) or 0.0),
+                "proposal_only": bool(audit.get("proposal_only", False)),
+                "review_required": bool(audit.get("review_required", False)),
+                "multi_interface_families": [
+                    key for key in (
+                        "axial_group_centering",
+                        "axial_compound_interface",
+                        "enclosure_bay",
+                        "edge_slot_interface",
+                        "planar_footprint",
+                        "pocket_depth",
+                    )
+                    if audit.get(key)
+                ],
+            },
+        })
+    payload = {
+        "schema_version": "pose_candidate_frontier.v1",
+        "assembly_id": case_dir.name,
+        "candidate_count": len(rows),
+        "soft_limit": limit,
+        "visual_input_excludes_geometry_scores": True,
+        "candidates": rows,
+    }
+    _write(frontier_dir / "pose_candidate_frontier.json", payload)
+    return payload
 
 
 def _apply_axial_contact_to_clearance_pairs(
@@ -6932,6 +7154,8 @@ def run_known_group_assembly(
     brep_graph_dir: str | Path | None = None,
     beam_width: int = 20,
     write_assembly_step: bool = True,
+    export_pose_candidates: int = 0,
+    enable_exact_collision: bool = True,
 ) -> dict[str, Any]:
     case_dir = Path(case_dir).resolve()
     _PLANAR_FOOTPRINT_RECALL_CACHE.clear()
@@ -6988,7 +7212,19 @@ def run_known_group_assembly(
         joinable_pose_dir=joinable_pose_dir,
     )
     selected_pose, exact, pose_audit, pose_fully_closed, selected_pose_rank = _evaluate_pose_candidates(
-        case_dir, output_dir, search, graph, features
+        case_dir,
+        output_dir,
+        search,
+        graph,
+        features,
+        enable_exact_collision=enable_exact_collision,
+    )
+    pose_candidate_frontier = _export_pose_candidate_frontier(
+        case_dir,
+        output_dir,
+        search,
+        pose_audit,
+        maximum_candidates=export_pose_candidates,
     )
     selected_graph = _candidate_topology_graph(selected_pose, graph)
     components = _portable_components(
@@ -7195,6 +7431,15 @@ def run_known_group_assembly(
             "selected_topology_rank": selected_pose.get("topology_rank"),
             "joinable": joinable_audit,
             "brep_graph_sidecars": brep_graph_audit,
+            "visual_pose_candidate_frontier": {
+                "enabled": bool(export_pose_candidates),
+                "candidate_count": pose_candidate_frontier["candidate_count"],
+                "path": str(
+                    output_dir
+                    / "pose_candidate_frontier"
+                    / "pose_candidate_frontier.json"
+                ),
+            },
         },
         "limitations": limitations,
     }
@@ -7278,6 +7523,24 @@ def main() -> int:
         action="store_true",
         help="write all pose/audit JSON but skip the final native STEP export",
     )
+    parser.add_argument(
+        "--export-pose-candidates",
+        type=int,
+        default=0,
+        metavar="N",
+        help=(
+            "export an origin-diverse, protected frontier of at most N pose "
+            "manifests for downstream visual-semantic review"
+        ),
+    )
+    parser.add_argument(
+        "--defer-exact-collision",
+        action="store_true",
+        help=(
+            "defer OCCT Boolean validation until a downstream visual-semantic "
+            "Top-K stage has reduced the pose frontier"
+        ),
+    )
     args = parser.parse_args()
     result = run_known_group_assembly(
         args.case_dir,
@@ -7287,6 +7550,8 @@ def main() -> int:
         brep_graph_dir=args.brep_graph_dir,
         beam_width=args.beam_width,
         write_assembly_step=not args.skip_assembly_step,
+        export_pose_candidates=args.export_pose_candidates,
+        enable_exact_collision=not args.defer_exact_collision,
     )
     print(json.dumps({
         "assembly_id": result["assembly_id"],

@@ -809,13 +809,13 @@ def run_pipeline(
     roi_maximum_nodes: int = DEFAULT_ROI_MAXIMUM_NODES,
     roi_pair_limit: int = DEFAULT_ROI_PAIR_LIMIT,
     roi_neighborhood_hops: int = 1,
+    graph_cache_dir: Path | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     output_dir = output_dir or Path("joinable_e2e_output")
     output_dir.mkdir(parents=True, exist_ok=True)
-    graph_a, graph_b = extract_brep_graphs(
-        step_a, step_b, output_dir / "cache"
-    )
+    graph_cache = graph_cache_dir or (output_dir / "cache")
+    graph_a, graph_b = extract_brep_graphs(step_a, step_b, graph_cache)
     inference_graph_a, inference_graph_b, roi_audit = prepare_roi_inference_graphs(
         graph_a,
         graph_b,
@@ -938,6 +938,7 @@ def run_pipeline(
     output = {
         "schema_version": "joinable_e2e.v2",
         "pipeline": "released_joinable_topk_plus_constraint_manifold_pose_frontier",
+        "graph_cache_dir": str(graph_cache.resolve()),
         "part_a_fixed": str(step_a.resolve()),
         "part_b_moving": str(step_b.resolve()),
         "runtime_seconds": round(time.perf_counter() - started, 3),
@@ -1053,6 +1054,14 @@ def main() -> int:
         default=DEFAULT_ROI_PAIR_LIMIT,
     )
     parser.add_argument("--roi-neighborhood-hops", type=int, default=1)
+    parser.add_argument(
+        "--graph-cache-dir",
+        type=Path,
+        help=(
+            "optional shared hash-verified B-Rep graph cache; useful when an "
+            "all-pairs group repeatedly contains the same large carrier"
+        ),
+    )
     parser.add_argument("--no-search", action="store_true")
     args = parser.parse_args()
     for path in (args.step_a, args.step_b):
@@ -1077,6 +1086,7 @@ def main() -> int:
         roi_maximum_nodes=args.roi_maximum_nodes,
         roi_pair_limit=args.roi_pair_limit,
         roi_neighborhood_hops=args.roi_neighborhood_hops,
+        graph_cache_dir=args.graph_cache_dir,
     )
     best = result["pose_search"]["best"]
     best_exact = result["pose_search"]["best_exact_collision_free"]

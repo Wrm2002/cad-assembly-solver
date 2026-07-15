@@ -67,8 +67,16 @@ def load_joinable_pose_pool(
     *,
     maximum_candidates: int = 8,
     include_not_checked: bool = True,
+    include_manifold_initials: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Read proper-rigid pair hypotheses from one JoinABLe E2E JSON report."""
+    """Read proper-rigid pair hypotheses from one JoinABLe E2E JSON report.
+
+    A large multi-solid STEP may be safe to run through B-Rep inference but too
+    expensive to mesh for the released SDF search.  In that case the audited
+    constraint-manifold ``initial_pose_b_in_a`` rows remain legitimate pose
+    *proposals*.  They are admitted with ``pair_exact_status=not_checked`` and
+    can never become acceptance evidence by themselves.
+    """
 
     path = Path(result_path)
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -130,6 +138,62 @@ def load_joinable_pose_pool(
             "rotation_degrees": row.get("rotation_degrees"),
             "axis_flip": row.get("axis_flip"),
         })
+    manifold_rows = (data.get("joint_hypotheses") or {}).get("rows") or []
+    manifold_input_count = len(manifold_rows)
+    manifold_retained_count = 0
+    if include_manifold_initials:
+        ordered_manifolds = sorted(
+            enumerate(manifold_rows),
+            key=lambda item: (
+                int(item[1].get("rank", 1_000_000) or 1_000_000),
+                item[0],
+            ),
+        )
+        # Bound parsing before farthest-first selection.  Multiple phase and
+        # polarity rows are useful, but an unbounded periodic manifold is not.
+        for index, row in ordered_manifolds[: max(16, maximum_candidates * 12)]:
+            try:
+                transform = np.asarray(row["initial_pose_b_in_a"], dtype=float)
+                if transform.shape != (4, 4):
+                    raise ValueError("not_4x4")
+                determinant = float(np.linalg.det(transform[:3, :3]))
+                if (
+                    not np.isfinite(transform).all()
+                    or abs(determinant - 1.0) > 1e-4
+                ):
+                    raise ValueError("not_proper_rigid")
+            except (KeyError, TypeError, ValueError) as exc:
+                excluded.append({
+                    "manifold_index": index,
+                    "reason": f"invalid_manifold_initial:{exc}",
+                })
+                continue
+            signature = tuple(np.round(transform.reshape(-1), 5).tolist())
+            if signature in seen:
+                continue
+            seen.add(signature)
+            try:
+                confidence = float(row.get("confidence", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                confidence = 0.0
+            retained.append({
+                "candidate_id": f"{path.stem}:manifold:{index:04d}",
+                "source": source,
+                "target": target,
+                "T_rel": transform.tolist(),
+                "prior": confidence,
+                "rank": row.get("rank"),
+                "pair_exact_status": "not_checked",
+                "candidate_origin": "joinable_constraint_manifold_initial",
+                "proposal_only": True,
+                "can_auto_accept": False,
+                "manifold_type": row.get("manifold_type"),
+                "entity_a": row.get("entity_a"),
+                "entity_b": row.get("entity_b"),
+                "polarity": row.get("polarity"),
+                "phase_degrees": row.get("phase_degrees"),
+            })
+            manifold_retained_count += 1
     retained = _select_diverse_candidates(retained, maximum_candidates)
     return {
         "source": source,
@@ -140,9 +204,12 @@ def load_joinable_pose_pool(
         "target": target,
         "result_path": str(path.resolve()),
         "input_result_count": len(rows),
+        "input_manifold_count": manifold_input_count,
+        "parsed_manifold_initial_count": manifold_retained_count,
         "retained_count": len(retained),
         "excluded": excluded,
         "include_not_checked": include_not_checked,
+        "include_manifold_initials": include_manifold_initials,
     }
 
 

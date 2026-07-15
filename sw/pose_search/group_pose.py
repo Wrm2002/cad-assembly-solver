@@ -62,8 +62,16 @@ def load_joinable_pair_pose_candidates(
     path: str | Path,
     *,
     limit: int = 8,
+    include_manifold_initials: bool = True,
 ) -> list[PairPoseSeed]:
-    """Load multiple exact-collision-free pair hypotheses from one report."""
+    """Load bounded pair-pose proposals from one JoinABLe report.
+
+    Exact collision-free search results retain priority.  A ``--no-search``
+    report may contain only analytic constraint-manifold initial poses; those
+    are admitted as *proposals* so the legacy group solver can perform its own
+    closure and exact validation instead of silently treating the pair as
+    missing.  The source suffix makes that weaker provenance auditable.
+    """
 
     report_path = Path(path).resolve()
     payload = json.loads(report_path.read_text(encoding="utf-8"))
@@ -90,6 +98,33 @@ def load_joinable_pair_pose_candidates(
         ))
         if len(candidates) >= max(1, int(limit)):
             break
+    if include_manifold_initials and len(candidates) < max(1, int(limit)):
+        manifold_rows = (payload.get("joint_hypotheses") or {}).get("rows") or []
+        for index, row in enumerate(manifold_rows):
+            matrix = np.asarray(row.get("initial_pose_b_in_a"), dtype=float)
+            if (
+                matrix.shape != (4, 4)
+                or not np.all(np.isfinite(matrix))
+                or not np.allclose(matrix[3], [0.0, 0.0, 0.0, 1.0], atol=1e-6)
+                or abs(np.linalg.det(matrix[:3, :3]) - 1.0) > 1e-5
+            ):
+                continue
+            confidence = float(row.get("confidence", 0.0) or 0.0)
+            candidates.append(PairPoseSeed(
+                part_a=_part_name(payload["part_a_fixed"]),
+                part_b=_part_name(payload["part_b_moving"]),
+                transform_b_to_a=tuple(
+                    tuple(float(value) for value in values) for values in matrix
+                ),
+                source=(
+                    f"{report_path}#manifold_initial={index};"
+                    "proposal_only=true;exact_collision=not_checked"
+                ),
+                # Pair seed scores are costs (lower is preferred).
+                score=float(1.0 - max(0.0, min(1.0, confidence))),
+            ))
+            if len(candidates) >= max(1, int(limit)):
+                break
     return candidates
 
 
@@ -116,6 +151,7 @@ def load_joinable_pair_pose_candidate_directory(
     root: str | Path,
     *,
     limit_per_pair: int = 8,
+    include_manifold_initials: bool = True,
 ) -> list[PairPoseSeed]:
     root = Path(root).resolve()
     paths = (
@@ -126,7 +162,9 @@ def load_joinable_pair_pose_candidate_directory(
     for path in paths:
         try:
             seeds.extend(load_joinable_pair_pose_candidates(
-                path, limit=limit_per_pair
+                path,
+                limit=limit_per_pair,
+                include_manifold_initials=include_manifold_initials,
             ))
         except (OSError, ValueError, KeyError, json.JSONDecodeError):
             continue
