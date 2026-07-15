@@ -2,27 +2,44 @@
 
 更新日期：2026-07-13
 
-## 0. 本次精密门交付更新
+## 0. 本次 case1～5 泛化闭合交付
 
-完整结果：
-[`sw/exam_final_20260713/FINAL_REPORT.md`](sw/exam_final_20260713/FINAL_REPORT.md)。
+完整实现说明、审计结论和五个最终渲染：
+[`sw/GENERALIZATION_WORK_REPORT_CASE1_5_20260713.md`](sw/GENERALIZATION_WORK_REPORT_CASE1_5_20260713.md)。
 
-- case1：`precision-valid`，轴距约 `0.000048 mm`，孔阵列 RMS 约 0，
-  已生成最终四视图。
-- case2：5 个 OCCT exact-valid，但 precision gate 全部为 review；所选候选
-  轴距约 `0.0649 mm`，未独立测得键槽 insertion depth，不能标为成功。
-- 新增 precision validator、compound 独立候选预算、闭环一致性预排序、
-  compound pair 的隔离 OCCT 审计和 precision-tier finalizer。
-- frozen 12-pool 重跑后 false positive 从 39 降到 0；accepted 为 0，
-  因此总体 accepted precision 仍不可估计。
-- 下文中“case1 偏心 4.648 mm / case2 无严格有效解”是更新前基线，
-  保留用于解释本次改动动机。
+- case1、case3 沿用已经人工确认的正确结果；case5 保持 enclosure/bay 结果。
+- case2 已修正并由用户确认：两法兰内侧面贴合，轴位于联合中心，键同时跨过
+  接触面并与两侧轮毂键槽和轴键槽相位一致。所选 rank 为 `882/1760`；
+  接触残差约 `1.78e-15 mm`、中心残差约 `5.33e-15 mm`、双侧插入约
+  `45.0/45.0 mm`，OCCT common-volume 碰撞数为 0。
+- case2 的实现是匿名几何组约束，不读取名称、case ID、颜色，也不写死最终平移。
+  它要求两个可比支撑、两个同轴适配孔、真实 CLEARANCE、两套成对
+  `topological_key_slot` witness、对称轴向范围和跨接键；任何一项缺失就 abstain。
+- sidecar 必须有匹配的 STEP SHA-256，键槽 witness 必须有具体拓扑 ID，适配孔必须
+  是凹面圆柱；`0.1x/1x/10x` 匿名尺度回归已通过。
+- case4 的 DIMM 已由 repeated bounded edge-slot family 放入槽中；槽宽约
+  `1.6673 mm`、功能体厚度约 `1.27 mm`、入槽边到槽底残差约
+  `2.84e-14 mm`。但主板含 `104864` 个未覆盖 open-shell/orphan faces，
+  因此状态必须保持 `review/uncertain`，不能宣称完整 collision-free。
+- case2 组级规则仍为 `proposal_only/review_required/can_auto_accept=false`；
+  正确考试结果不会被用来放宽 accepted gate。
+- case3 仍因约 `192.715 mm³` 局部干涉进入 review；case4 所选 rank 的 exact
+  validation 因预算跳过，邻近 exact ranks 另有 CPU—主板严重碰撞；case5 仅
+  `1/2` connection closure。五张图用于关系核对，不能统称 exact-valid。
+- frozen 12-pool 的既有保守基线仍是 false positive `39 -> 0`、accepted `0`，
+  因而 accepted precision 不可估计；本轮没有用 case1～5 重新调该门槛。
+- 下文旧的 case1/case2 失败描述是历史基线；若与本节冲突，以本节和工作报告为准。
 
 ## 1. 一句话状态
 
-项目已经具备 JoinABLe B-Rep 候选、两个轻量 Pair Pose/Interface 网络、多零件 SE(3) 求解、sampled contact residual 和 OCCT exact validation；但当前仍不能稳定恢复精密装配 Pose：case1 面贴合但横向偏心约 4.648 mm，case2 尚未得到功能正确的完整装配。
+项目已能在已知真组上组合 JoinABLe/解析 B-Rep 候选、组级多接口约束、
+刚体依赖传播和 OCCT 审计；case1～5 已生成当前关系渲染，但这仍不等于
+mixed-pool 分组泛化已经解决。生产策略继续是高精度优先：证据不完整、几何覆盖不全
+或仅有 proposal 的结果进入 review，而不是为了覆盖率自动接受。
 
-下一个接手者的第一任务不是继续训练，而是实现“同一零件对多接口联合约束 + 精密 Pose 验收”。
+下一个最小任务不是继续训练或扩大 beam，而是把这些通用接口族放进独立的
+非考试 holdout：不同尺度、不同法兰/轮毂外形、无键/单键槽/错位键槽、阶梯轴，
+以及 DIMM 槽宽和插入深度困难负例。
 
 ## 2. 不可违反的边界
 

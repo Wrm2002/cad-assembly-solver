@@ -50,8 +50,22 @@ from pose_search import (  # noqa: E402
     generate_axial_rotation_hypotheses,
     matrix_to_placement,
 )
+from pose_search.interface_roi import (  # noqa: E402
+    build_roi_subgraph,
+    match_roi_pairs,
+    rank_interface_rois,
+)
 from placement_validation import exact_shape_collisions  # noqa: E402
 from learned_joint import attach_pose_initials, build_joint_hypotheses  # noqa: E402
+
+
+DEFAULT_ROI_COMBINED_NODE_LIMIT = 950
+DEFAULT_ROI_CARTESIAN_LIMIT = 250_000
+DEFAULT_ROI_MAXIMUM_FACES = 96
+DEFAULT_ROI_MAXIMUM_NODES = 475
+DEFAULT_ROI_PAIR_LIMIT = 64
+
+_AXIAL_SURFACE_TYPES = {"cylinder", "cone", "torus", "sphere"}
 
 
 def _write_json(path: Path, payload: Any) -> None:
@@ -91,6 +105,361 @@ def extract_brep_graphs(
     return graphs[0], graphs[1]
 
 
+def _node_count(graph: dict[str, Any]) -> int:
+    return len(graph.get("nodes") or [])
+
+
+def _source_index_by_id(graph: dict[str, Any]) -> dict[str, int]:
+    return {
+        str(node["node_id"]): int(node["joinable_node_index"])
+        for node in graph.get("nodes") or []
+        if node.get("node_id") is not None
+        and node.get("joinable_node_index") is not None
+    }
+
+
+def _annotate_source_indices(
+    subgraph: dict[str, Any], source_graph: dict[str, Any]
+) -> None:
+    source_indices = _source_index_by_id(source_graph)
+    for node in subgraph.get("nodes") or []:
+        source_index = source_indices.get(str(node.get("node_id")))
+        if source_index is not None:
+            node["source_joinable_node_index"] = source_index
+
+
+def prepare_roi_inference_graphs(
+    graph_a: dict[str, Any],
+    graph_b: dict[str, Any],
+    *,
+    mode: str = "auto",
+    combined_node_limit: int = DEFAULT_ROI_COMBINED_NODE_LIMIT,
+    cartesian_limit: int = DEFAULT_ROI_CARTESIAN_LIMIT,
+    maximum_faces: int = DEFAULT_ROI_MAXIMUM_FACES,
+    maximum_nodes: int = DEFAULT_ROI_MAXIMUM_NODES,
+    pair_proposal_limit: int = DEFAULT_ROI_PAIR_LIMIT,
+    neighborhood_hops: int = 1,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Return GNN input graphs plus an auditable, proposal-only ROI record.
+
+    ``auto`` preserves the exact full-graph inference path while the pair is
+    within both released-model and Cartesian-product limits.  Above either
+    limit, only bodies exceeding the per-body node cap are replaced by local
+    ROI subgraphs.  ROI scores and compatible pairs are recall proposals; they
+    never become assembly acceptance evidence.
+    """
+
+    if mode not in {"auto", "off", "force"}:
+        raise ValueError("ROI mode must be one of: auto, off, force")
+    for name, value in (
+        ("combined_node_limit", combined_node_limit),
+        ("cartesian_limit", cartesian_limit),
+        ("maximum_faces", maximum_faces),
+        ("pair_proposal_limit", pair_proposal_limit),
+    ):
+        if int(value) < 1:
+            raise ValueError(f"{name} must be positive")
+    if int(maximum_nodes) < 2:
+        raise ValueError("maximum_nodes must be at least two")
+    if int(maximum_faces) > int(maximum_nodes):
+        raise ValueError("maximum_faces cannot exceed maximum_nodes")
+    if neighborhood_hops < 0:
+        raise ValueError("neighborhood_hops must be non-negative")
+
+    source_a = _node_count(graph_a)
+    source_b = _node_count(graph_b)
+    source_combined = source_a + source_b
+    source_cartesian = source_a * source_b
+    exceeds_combined = source_combined > int(combined_node_limit)
+    exceeds_cartesian = source_cartesian > int(cartesian_limit)
+    active = mode == "force" or (
+        mode == "auto" and (exceeds_combined or exceeds_cartesian)
+    )
+    base_audit: dict[str, Any] = {
+        "schema_version": "joinable_roi_integration.v1",
+        "mode": mode,
+        "status": "not_applied",
+        "reason": (
+            "ROI disabled explicitly."
+            if mode == "off"
+            else "Full-graph inference is within configured safety limits."
+        ),
+        "source_graph": {
+            "part_a_node_count": source_a,
+            "part_b_node_count": source_b,
+            "combined_node_count": source_combined,
+            "cartesian_candidate_count": source_cartesian,
+        },
+        "limits": {
+            "combined_node_limit": int(combined_node_limit),
+            "cartesian_candidate_limit": int(cartesian_limit),
+            "maximum_faces_per_roi_frontier": int(maximum_faces),
+            "maximum_nodes_per_roi_subgraph": int(maximum_nodes),
+            "pair_proposal_limit": int(pair_proposal_limit),
+            "neighborhood_hops": int(neighborhood_hops),
+        },
+        "trigger": {
+            "exceeds_combined_node_limit": exceeds_combined,
+            "exceeds_cartesian_candidate_limit": exceeds_cartesian,
+        },
+        "part_a": None,
+        "part_b": None,
+        "pair_proposals": [],
+        "pair_proposal_count": 0,
+        "geometry_only": True,
+        "uses_part_names_or_case_ids": False,
+        "review_required": True,
+        "can_auto_accept": False,
+    }
+    if not active:
+        base_audit["inference_graph"] = dict(base_audit["source_graph"])
+        base_audit["cartesian_reduction_ratio"] = 1.0
+        return graph_a, graph_b, base_audit
+
+    roi_a = rank_interface_rois(graph_a, maximum=int(maximum_faces))
+    roi_b = rank_interface_rois(graph_b, maximum=int(maximum_faces))
+    if not roi_a.get("rois") or not roi_b.get("rois"):
+        raise RuntimeError(
+            "ROI reduction required by safety policy, but one or both B-Rep "
+            "graphs produced no interface ROI"
+        )
+
+    # In a mixed large/small pair, retain the small body verbatim.  If a
+    # user forces ROI, both sides are intentionally reduced for diagnostics.
+    reduce_a = mode == "force" or source_a > int(maximum_nodes)
+    reduce_b = mode == "force" or source_b > int(maximum_nodes)
+    if not reduce_a and not reduce_b:
+        # This can happen only with custom limits below the per-body cap.
+        # Reducing the larger side is the least invasive way to obey them.
+        reduce_a = source_a >= source_b
+        reduce_b = not reduce_a
+
+    inference_a = graph_a
+    if reduce_a:
+        inference_a = build_roi_subgraph(
+            graph_a,
+            roi_a["rois"],
+            neighborhood_hops=int(neighborhood_hops),
+            maximum_nodes=int(maximum_nodes),
+        )
+        _annotate_source_indices(inference_a, graph_a)
+    inference_b = graph_b
+    if reduce_b:
+        inference_b = build_roi_subgraph(
+            graph_b,
+            roi_b["rois"],
+            neighborhood_hops=int(neighborhood_hops),
+            maximum_nodes=int(maximum_nodes),
+        )
+        _annotate_source_indices(inference_b, graph_b)
+
+    pair_proposals = match_roi_pairs(
+        roi_a,
+        roi_b,
+        maximum=int(pair_proposal_limit),
+    )
+    inference_count_a = _node_count(inference_a)
+    inference_count_b = _node_count(inference_b)
+    inference_cartesian = inference_count_a * inference_count_b
+    if mode == "auto" and (
+        inference_count_a + inference_count_b > int(combined_node_limit)
+        or inference_cartesian > int(cartesian_limit)
+    ):
+        raise RuntimeError(
+            "ROI subgraphs still exceed configured GNN safety limits; "
+            "decrease --roi-maximum-nodes"
+        )
+    base_audit.update({
+        "status": "applied",
+        "reason": (
+            "Geometry-only ROI subgraphs bound released JoinABLe Cartesian "
+            "inference; downstream pose and conservative validation remain mandatory."
+        ),
+        "part_a": {
+            **roi_a,
+            "inference_scope": "roi_subgraph" if reduce_a else "full_graph",
+        },
+        "part_b": {
+            **roi_b,
+            "inference_scope": "roi_subgraph" if reduce_b else "full_graph",
+        },
+        "pair_proposals": pair_proposals,
+        "pair_proposal_count": len(pair_proposals),
+        "inference_graph": {
+            "part_a_node_count": inference_count_a,
+            "part_b_node_count": inference_count_b,
+            "combined_node_count": inference_count_a + inference_count_b,
+            "cartesian_candidate_count": inference_cartesian,
+        },
+        "cartesian_reduction_ratio": round(
+            inference_cartesian / max(1, source_cartesian), 9
+        ),
+    })
+    return inference_a, inference_b, base_audit
+
+
+def _pose_candidate_family(candidate: dict[str, Any]) -> str:
+    left = str((candidate.get("node_a") or {}).get("geometry_type", "")).lower()
+    right = str((candidate.get("node_b") or {}).get("geometry_type", "")).lower()
+    if left == right == "plane":
+        return "planar"
+    if left in _AXIAL_SURFACE_TYPES and right in _AXIAL_SURFACE_TYPES:
+        return "axial"
+    return "mixed"
+
+
+def roi_pose_candidates(
+    graph_a: dict[str, Any],
+    graph_b: dict[str, Any],
+    roi_audit: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Lift geometry-only ROI pairs into bounded pose-search proposals.
+
+    These rows deliberately carry no learned confidence and remain review-only.
+    They improve candidate recall when a released checkpoint is flat or
+    out-of-distribution, but cannot change any acceptance decision by itself.
+    """
+
+    if roi_audit.get("status") != "applied":
+        return []
+    nodes_a = {
+        str(node.get("node_id")): node for node in graph_a.get("nodes") or []
+    }
+    nodes_b = {
+        str(node.get("node_id")): node for node in graph_b.get("nodes") or []
+    }
+    output = []
+    for source_rank, proposal in enumerate(
+        roi_audit.get("pair_proposals") or [], 1
+    ):
+        node_a = nodes_a.get(str(proposal.get("fixed_face_id")))
+        node_b = nodes_b.get(str(proposal.get("moving_face_id")))
+        if node_a is None or node_b is None:
+            continue
+        score = float(proposal.get("score", 0.0))
+        output.append({
+            "rank": source_rank,
+            "node_a": _public_node_with_local_patch(graph_a, node_a),
+            "node_b": _public_node_with_local_patch(graph_b, node_b),
+            "logit": score,
+            "probability": 0.0,
+            "proposal_source": "geometry_roi",
+            "proposal_review_required": True,
+            "roi_score": score,
+            "roi_dimension_compatibility": proposal.get(
+                "dimension_compatibility"
+            ),
+            "roi_shared_interface_hints": proposal.get(
+                "shared_interface_hints"
+            ) or [],
+        })
+    return output
+
+
+def build_pose_candidate_frontier(
+    learned_candidates: list[dict[str, Any]],
+    geometry_candidates: list[dict[str, Any]],
+    *,
+    maximum: int = 96,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Interleave learned and geometric candidates with interface diversity.
+
+    Ranking only controls search work.  The first learned prediction is kept,
+    while one representative from every geometry interface family is promoted
+    ahead of repeated same-family rows.  This prevents a flat checkpoint from
+    spending the entire bounded pose budget on one repeated feature family.
+    """
+
+    if not geometry_candidates:
+        return learned_candidates, {
+            "status": "learned_only",
+            "learned_candidate_count": len(learned_candidates),
+            "geometry_candidate_count": 0,
+            "frontier_count": len(learned_candidates),
+            "family_coverage": sorted({
+                _pose_candidate_family(row) for row in learned_candidates
+            }),
+            "can_auto_accept": False,
+        }
+
+    learned = [
+        {**row, "proposal_source": row.get("proposal_source", "joinable_gnn")}
+        for row in learned_candidates
+    ]
+    geometry = list(geometry_candidates)
+    ordered: list[dict[str, Any]] = []
+    seen_pairs: set[tuple[str, str]] = set()
+
+    def append(row: dict[str, Any]) -> None:
+        key = (
+            str((row.get("node_a") or {}).get("entity_id")),
+            str((row.get("node_b") or {}).get("entity_id")),
+        )
+        if key in seen_pairs or len(ordered) >= max(1, int(maximum)):
+            return
+        seen_pairs.add(key)
+        source_rank = int(row.get("rank", len(ordered) + 1))
+        enriched = dict(row)
+        enriched["source_rank"] = source_rank
+        enriched["rank"] = len(ordered) + 1
+        enriched["pose_candidate_family"] = _pose_candidate_family(row)
+        ordered.append(enriched)
+
+    if learned:
+        append(learned[0])
+
+    # Preserve the score order in which distinct geometry families first
+    # appear.  On large CAD this usually exposes axial and planar alternatives
+    # before repeated screws, holes, or cylinders exhaust the pose budget.
+    promoted_geometry: list[dict[str, Any]] = []
+    promoted_families: set[str] = set()
+    for row in geometry:
+        family = _pose_candidate_family(row)
+        if family not in promoted_families:
+            promoted_geometry.append(row)
+            promoted_families.add(family)
+    for row in promoted_geometry:
+        append(row)
+
+    # Give learned predictions the same family-diversity opportunity, then
+    # fill the remaining bounded frontier by alternating both sources.
+    learned_families = {
+        _pose_candidate_family(ordered_row)
+        for ordered_row in ordered
+        if ordered_row.get("proposal_source") == "joinable_gnn"
+    }
+    for row in learned[1:]:
+        family = _pose_candidate_family(row)
+        if family not in learned_families:
+            append(row)
+            learned_families.add(family)
+    for index in range(max(len(learned), len(geometry))):
+        if index < len(learned):
+            append(learned[index])
+        if index < len(geometry):
+            append(geometry[index])
+        if len(ordered) >= max(1, int(maximum)):
+            break
+
+    return ordered, {
+        "status": "learned_plus_geometry_roi",
+        "learned_candidate_count": len(learned),
+        "geometry_candidate_count": len(geometry),
+        "frontier_count": len(ordered),
+        "family_coverage": sorted({
+            row["pose_candidate_family"] for row in ordered
+        }),
+        "source_counts": {
+            source: sum(
+                row.get("proposal_source") == source for row in ordered
+            )
+            for source in ("joinable_gnn", "geometry_roi")
+        },
+        "rank_is_search_order_only": True,
+        "can_auto_accept": False,
+    }
+
+
 def step_to_stl(step_path: Path, output_dir: Path) -> Path:
     from OCC.Core.BRepMesh import BRepMesh_IncrementalMesh
     from OCC.Core.IFSelect import IFSelect_RetDone
@@ -128,6 +497,10 @@ def _public_node(node: dict[str, Any]) -> dict[str, Any]:
         ),
         "geometry_signature": node["geometry_signature"],
     }
+    if node.get("source_joinable_node_index") is not None:
+        result["source_joinable_node_index"] = int(
+            node["source_joinable_node_index"]
+        )
     for key in (
         "axis_origin",
         "axis_direction",
@@ -215,6 +588,8 @@ def run_gnn_inference(
     checkpoint_path: Path = DEFAULT_CHECKPOINT,
     device_name: str = "cpu",
     top_k: int = 20,
+    context_graph_a: dict[str, Any] | None = None,
+    context_graph_b: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     validate_graph(graph_a, Path("part_a"))
     validate_graph(graph_b, Path("part_b"))
@@ -251,6 +626,8 @@ def run_gnn_inference(
     logits = logits.detach().cpu()
     probabilities = probabilities.detach().cpu()
     candidates = []
+    context_graph_a = context_graph_a or graph_a
+    context_graph_b = context_graph_b or graph_b
     for rank, flat_index in enumerate(top_indices.tolist(), 1):
         node_a_index = int(joint_graph.edge_index[0, flat_index])
         node_b_index = (
@@ -258,8 +635,12 @@ def run_gnn_inference(
         )
         candidates.append({
             "rank": rank,
-            "node_a": _public_node_with_local_patch(graph_a, nodes_a[node_a_index]),
-            "node_b": _public_node_with_local_patch(graph_b, nodes_b[node_b_index]),
+            "node_a": _public_node_with_local_patch(
+                context_graph_a, nodes_a[node_a_index]
+            ),
+            "node_b": _public_node_with_local_patch(
+                context_graph_b, nodes_b[node_b_index]
+            ),
             "logit": float(logits[flat_index]),
             "probability": float(probabilities[flat_index]),
         })
@@ -300,7 +681,7 @@ def joint_axis_seed(candidate: dict[str, Any]) -> JointAxisSeed | None:
         moving_direction=moving[1],
         fixed_origin=fixed[0],
         fixed_direction=fixed[1],
-        prediction_rank=int(candidate["rank"]),
+        prediction_rank=int(candidate.get("rank", 1)),
         prediction_score=float(candidate["logit"]),
         entity_a=str(candidate["node_a"]["entity_id"]),
         entity_b=str(candidate["node_b"]["entity_id"]),
@@ -421,6 +802,13 @@ def run_pipeline(
     search_budget: int = 80,
     sample_count: int = 2048,
     exact_check_limit: int = 12,
+    roi_mode: str = "auto",
+    roi_combined_node_limit: int = DEFAULT_ROI_COMBINED_NODE_LIMIT,
+    roi_cartesian_limit: int = DEFAULT_ROI_CARTESIAN_LIMIT,
+    roi_maximum_faces: int = DEFAULT_ROI_MAXIMUM_FACES,
+    roi_maximum_nodes: int = DEFAULT_ROI_MAXIMUM_NODES,
+    roi_pair_limit: int = DEFAULT_ROI_PAIR_LIMIT,
+    roi_neighborhood_hops: int = 1,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     output_dir = output_dir or Path("joinable_e2e_output")
@@ -428,20 +816,56 @@ def run_pipeline(
     graph_a, graph_b = extract_brep_graphs(
         step_a, step_b, output_dir / "cache"
     )
-    inference = run_gnn_inference(
+    inference_graph_a, inference_graph_b, roi_audit = prepare_roi_inference_graphs(
         graph_a,
         graph_b,
+        mode=roi_mode,
+        combined_node_limit=roi_combined_node_limit,
+        cartesian_limit=roi_cartesian_limit,
+        maximum_faces=roi_maximum_faces,
+        maximum_nodes=roi_maximum_nodes,
+        pair_proposal_limit=roi_pair_limit,
+        neighborhood_hops=roi_neighborhood_hops,
+    )
+    inference = run_gnn_inference(
+        inference_graph_a,
+        inference_graph_b,
         checkpoint_path=checkpoint_path or DEFAULT_CHECKPOINT,
         device_name=device,
         top_k=top_k,
     )
+    inference["graph_scope"] = {
+        "part_a": (
+            "roi_subgraph"
+            if inference_graph_a is not graph_a
+            else "full_graph"
+        ),
+        "part_b": (
+            "roi_subgraph"
+            if inference_graph_b is not graph_b
+            else "full_graph"
+        ),
+        "source_cartesian_candidate_count": roi_audit["source_graph"][
+            "cartesian_candidate_count"
+        ],
+        "roi_is_proposal_only": True,
+    }
+    geometry_pose_candidates = roi_pose_candidates(
+        inference_graph_a,
+        inference_graph_b,
+        roi_audit,
+    )
+    pose_candidate_frontier, pose_frontier_audit = build_pose_candidate_frontier(
+        inference["candidates"],
+        geometry_pose_candidates,
+    )
     raw_axis_seeds = [
         seed
-        for candidate in inference["candidates"]
+        for candidate in pose_candidate_frontier
         if (seed := joint_axis_seed(candidate)) is not None
     ]
     axis_seeds, axial_orientation_audit = attach_axial_orientation_hypotheses(
-        graph_a, graph_b, raw_axis_seeds
+        inference_graph_a, inference_graph_b, raw_axis_seeds
     )
     orientation_by_pair = {
         (str(row.get("entity_a")), str(row.get("entity_b"))): row
@@ -517,7 +941,27 @@ def run_pipeline(
         "part_a_fixed": str(step_a.resolve()),
         "part_b_moving": str(step_b.resolve()),
         "runtime_seconds": round(time.perf_counter() - started, 3),
+        "interface_roi": roi_audit,
         "gnn_inference": inference,
+        "pose_candidate_frontier": {
+            **pose_frontier_audit,
+            "rows": [
+                {
+                    "rank": row.get("rank"),
+                    "source_rank": row.get("source_rank", row.get("rank")),
+                    "proposal_source": row.get(
+                        "proposal_source", "joinable_gnn"
+                    ),
+                    "pose_candidate_family": _pose_candidate_family(row),
+                    "entity_a": (row.get("node_a") or {}).get("entity_id"),
+                    "entity_b": (row.get("node_b") or {}).get("entity_id"),
+                    "proposal_review_required": bool(
+                        row.get("proposal_review_required", False)
+                    ),
+                }
+                for row in pose_candidate_frontier
+            ],
+        },
         "joint_hypotheses": {
             "schema_version": "pair_joint_hypothesis.v1",
             "count": len(joint_hypotheses),
@@ -552,6 +996,7 @@ def run_pipeline(
         },
         "acceptance_boundary": {
             "can_auto_accept": False,
+            "roi_can_auto_accept": False,
             "requires_exact_occt_collision": True,
             "requires_selected_constraint_closure": True,
             "requires_group_consistency": True,
@@ -573,6 +1018,41 @@ def main() -> int:
     parser.add_argument("--search-budget", type=int, default=80)
     parser.add_argument("--sample-count", type=int, default=2048)
     parser.add_argument("--exact-check-limit", type=int, default=12)
+    parser.add_argument(
+        "--roi-mode",
+        choices=("auto", "off", "force"),
+        default="auto",
+        help=(
+            "ROI subgraph policy: auto preserves small full graphs and bounds "
+            "large Cartesian products; off is an explicit unsafe override"
+        ),
+    )
+    parser.add_argument(
+        "--roi-combined-node-limit",
+        type=int,
+        default=DEFAULT_ROI_COMBINED_NODE_LIMIT,
+    )
+    parser.add_argument(
+        "--roi-cartesian-limit",
+        type=int,
+        default=DEFAULT_ROI_CARTESIAN_LIMIT,
+    )
+    parser.add_argument(
+        "--roi-maximum-faces",
+        type=int,
+        default=DEFAULT_ROI_MAXIMUM_FACES,
+    )
+    parser.add_argument(
+        "--roi-maximum-nodes",
+        type=int,
+        default=DEFAULT_ROI_MAXIMUM_NODES,
+    )
+    parser.add_argument(
+        "--roi-pair-limit",
+        type=int,
+        default=DEFAULT_ROI_PAIR_LIMIT,
+    )
+    parser.add_argument("--roi-neighborhood-hops", type=int, default=1)
     parser.add_argument("--no-search", action="store_true")
     args = parser.parse_args()
     for path in (args.step_a, args.step_b):
@@ -590,6 +1070,13 @@ def main() -> int:
         search_budget=args.search_budget,
         sample_count=args.sample_count,
         exact_check_limit=args.exact_check_limit,
+        roi_mode=args.roi_mode,
+        roi_combined_node_limit=args.roi_combined_node_limit,
+        roi_cartesian_limit=args.roi_cartesian_limit,
+        roi_maximum_faces=args.roi_maximum_faces,
+        roi_maximum_nodes=args.roi_maximum_nodes,
+        roi_pair_limit=args.roi_pair_limit,
+        roi_neighborhood_hops=args.roi_neighborhood_hops,
     )
     best = result["pose_search"]["best"]
     best_exact = result["pose_search"]["best_exact_collision_free"]
@@ -597,6 +1084,10 @@ def main() -> int:
         "status": "ok",
         "output": str((args.output_dir or Path("joinable_e2e_output")) / "joinable_e2e_result.json"),
         "candidate_count": result["gnn_inference"]["total_candidates"],
+        "roi_status": result["interface_roi"]["status"],
+        "source_cartesian_candidate_count": result["interface_roi"][
+            "source_graph"
+        ]["cartesian_candidate_count"],
         "axis_seed_count": result["pose_search"]["axis_seed_count"],
         "best_cost": best["evaluation"]["cost"] if best else None,
         "best_overlap": best["evaluation"]["overlap"] if best else None,

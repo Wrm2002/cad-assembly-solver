@@ -60,6 +60,16 @@ sw/real_simplified_*/
 sw/semantic_results/
 sw/synthetic_*/
 
+# Local diagnostic search traces and raw B-Rep feature dumps.  The committed
+# freeze reports are the reproducible record; these files are regenerated from
+# the source STEP models and can exceed GitHub's per-file limits.
+sw/generalization_work/
+cad_assembly_agent/datasets/
+joinable_gpu_reproduction/rule_step_baseline/
+joinable_gpu_reproduction/official_step_predictions/
+joinable_migration_audit/converted_joint_samples/
+joinable_migration_audit/step_brep_graph_samples/
+
 # Keep the compact case 3/4/5 audit, not its generated CAD/renders.
 !sw/exam_generalization_20260713/
 sw/exam_generalization_20260713/*

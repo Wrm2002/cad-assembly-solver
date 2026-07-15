@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "frozen_at": "2026-07-02",
+  "stage": "D5.1_D6_pre_D5.2",
+  "metrics": {
+    "known_group_pose_recall_30_groups": 0.9333333333333333,
+    "four_part_pose_cases": 100,
+    "four_part_pose_acceptance_rate": 1.0,
+    "five_part_pose_cases": 100,
+    "five_part_pose_acceptance_rate": 1.0,
+    "mixed_pool_geometry_pair_f1": 0.3343462408231011,
+    "semantic_calibration_auc": 0.5,
+    "geometry_calibration_auc": 0.8125,
+    "semantic_gate_enabled": false
+  },
+  "source_hashes": {
+    "small_assembly_solver.py": "4c70ec46c02d3dc1ab4a44abc946ad6710980ea4f5fc601ce6de39c85edc098f",
+    "geometry_pipeline.py": "c52a1955cd83f1c0e1594f5910944c59813677dbad3c13567d4b8e9e3a15870f",
+    "semantic_review.py": "773f00b3b4971dd5f2308274387c62286932a4f1500d6de8ae5c1c2093a20cea",
+    "semantic_pool.py": "df70eb5a8eadb465a95e860446e01f6eb18805e608f4ad471858d842a0f1f7f0",
+    "agent_controller.py": "cdcafec6a9d75bdf9b4d872307500e14e69b32c747ab87a567ab5c92c3ee61ce",
+    "configs/pool_pipeline.json": "2904dc4d9d035b4d41a406b1197e5c2787509a12013d3953c2a2979d2813feed"
+  },
+  "known_limits": [
+    "two six-part truth groups fail exact pose validation",
+    "anonymous synthetic semantic summaries fail calibration",
+    "mixed-pool grouping remains the dominant bottleneck",
+    "four/five-part 100-case rates cover one generator family per size"
+  ]
+}

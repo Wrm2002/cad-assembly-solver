@@ -1,0 +1,25 @@
+{
+  "date": "2026-07-07",
+  "mode": "non_destructive",
+  "physical_deletions": [],
+  "deletion_attempt_result": "No files or directories were deleted. The Windows recursive delete attempt stalled before making changes.",
+  "retained_for_audit": [
+    "experiment logs",
+    "stale pid files",
+    "temporary validation outputs",
+    "historical archives",
+    "incident dumps"
+  ],
+  "excluded_from_clean_snapshot": [
+    ".conda",
+    ".vscode",
+    "__pycache__ and pyc files",
+    "pid and log files",
+    "incident_dumps",
+    "rar/zip/7z archives",
+    "nested vendor git metadata",
+    "bulk generated datasets and experiment outputs",
+    "JoinABLe fine-tuning checkpoints and repeated batch results"
+  ],
+  "reason": "Preserve reproducibility and audit evidence while avoiding another long-running destructive operation."
+}

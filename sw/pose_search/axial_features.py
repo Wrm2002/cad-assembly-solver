@@ -113,8 +113,14 @@ class AxialPlanarWitness:
 
 
 def _iter_circular_entities(source: dict[str, Any]) -> Iterable[dict[str, Any]]:
-    """Yield normalized circular entities from either features or B-Rep graph."""
+    """Yield normalized circular entities from either features or B-Rep graph.
 
+    Union sidecar face/edge nodes AND feature-dict cylinders so that
+    incomplete analytic parameters in one source cannot silently disable
+    the other.
+    """
+
+    seen: set[str] = set()
     if "nodes" in source:
         for node in source.get("nodes") or []:
             geometry = str(
@@ -127,20 +133,27 @@ def _iter_circular_entities(source: dict[str, Any]) -> Iterable[dict[str, Any]]:
             radius = node.get("radius")
             if origin is None or direction is None or radius is None:
                 continue
+            fid = str(node.get("node_id"))
+            if fid in seen:
+                continue
+            seen.add(fid)
             yield {
-                "feature_id": str(node.get("node_id")),
+                "feature_id": fid,
                 "origin": origin,
                 "axis": direction,
                 "radius": radius,
                 "source_kind": geometry,
             }
-        return
 
     for index, feature in enumerate(source.get("cylinders") or []):
         if feature.get("origin") is None or feature.get("axis") is None:
             continue
+        fid = str(feature.get("feature_id") or f"cylinder:{index}")
+        if fid in seen:
+            continue
+        seen.add(fid)
         yield {
-            "feature_id": f"cylinder:{index}",
+            "feature_id": fid,
             "origin": feature["origin"],
             "axis": feature["axis"],
             "radius": feature.get("radius"),
@@ -149,6 +162,7 @@ def _iter_circular_entities(source: dict[str, Any]) -> Iterable[dict[str, Any]]:
 
 
 def _iter_planar_entities(source: dict[str, Any]) -> Iterable[dict[str, Any]]:
+    seen: set[str] = set()
     if "nodes" in source:
         for node in source.get("nodes") or []:
             if str(node.get("surface_type") or "").lower() != "plane":
@@ -157,18 +171,25 @@ def _iter_planar_entities(source: dict[str, Any]) -> Iterable[dict[str, Any]]:
             normal = node.get("normal")
             if centroid is None or normal is None:
                 continue
+            fid = str(node.get("node_id"))
+            if fid in seen:
+                continue
+            seen.add(fid)
             yield {
-                "feature_id": str(node.get("node_id")),
+                "feature_id": fid,
                 "position": centroid,
                 "normal": normal,
                 "area": node.get("area", 0.0),
             }
-        return
     for index, feature in enumerate(source.get("planes") or []):
         if feature.get("position") is None or feature.get("normal") is None:
             continue
+        fid = str(feature.get("feature_id") or f"plane:{index}")
+        if fid in seen:
+            continue
+        seen.add(fid)
         yield {
-            "feature_id": f"plane:{index}",
+            "feature_id": fid,
             "position": feature["position"],
             "normal": feature["normal"],
             "area": feature.get("area", 0.0),

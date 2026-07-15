@@ -1,0 +1,245 @@
+{
+  "schema_version": "1.0.0",
+  "frozen_at": "2026-07-06T06:40:55.238193+00:00",
+  "stage": "P1_P2_P3_functional_conservative_delivery",
+  "status": "passed",
+  "policy": {
+    "objective": "precision_first_conservative_candidate_recommendation",
+    "truth_basis": "functional_validity",
+    "semantic_mode": "explanation_only",
+    "reinforcement_learning": false,
+    "model_training": false,
+    "multi_agent_expansion": false,
+    "beam_width_increased": false
+  },
+  "checks": {
+    "required_results_present": true,
+    "dataset_validation_passed": true,
+    "three_supported_families_only": true,
+    "three_variants_per_family": true,
+    "all_step_roundtrips_valid": true,
+    "split_source_cases_disjoint": true,
+    "generated_candidate_recall_100_percent": true,
+    "post_pruning_candidate_recall_100_percent": true,
+    "controlled_negative_auto_accepts_zero": true,
+    "overall_auto_accept_false_positives_zero": true,
+    "semantic_reranking_disabled": true,
+    "legacy_primitive_stacks_not_functional_positive": true
+  },
+  "missing_results": [],
+  "dataset_validation": {
+    "passed": true,
+    "case_count": 9,
+    "family_counts": {
+      "bearing_housing": 3,
+      "cover_base": 3,
+      "shaft_hub_key": 3
+    },
+    "step_roundtrip_count": 69,
+    "invalid_step_count": 0,
+    "preview_count": 9,
+    "negative_counts": {
+      "easy_negative": 9,
+      "geometric_hard_negative": 9,
+      "semantic_hard_negative": 9
+    },
+    "legacy_primitive_stacks_allowed_as_positive": false,
+    "truth_basis": "functional_validity",
+    "errors": []
+  },
+  "pool_and_recall_validation": {
+    "pool_count": 3,
+    "parts_per_pool": [
+      14,
+      14,
+      14
+    ],
+    "truth_basis": "functional_validity",
+    "source_id_is_production_truth": false,
+    "split_source_cases_disjoint": true,
+    "candidate_recall": {
+      "clearance": {
+        "truth_interfaces": 21,
+        "generated": 21,
+        "kept_after_pruning": 21,
+        "generated_recall": 1.0,
+        "post_pruning_recall": 1.0
+      },
+      "planar_mate": {
+        "truth_interfaces": 12,
+        "generated": 12,
+        "kept_after_pruning": 12,
+        "generated_recall": 1.0,
+        "post_pruning_recall": 1.0
+      }
+    },
+    "comparison": {
+      "schema_version": "1.0.0",
+      "baseline": {
+        "ground_truth_edges": 33,
+        "prescreen_pair_recall": 1.0,
+        "generated_typed_edge_recall": 0.8181818181818182,
+        "pruned_typed_edge_recall": 0.7878787878787878,
+        "mean_pair_reduction_rate": 0.31135531135531136
+      },
+      "p3": {
+        "ground_truth_edges": 33,
+        "prescreen_pair_recall": 1.0,
+        "generated_typed_edge_recall": 1.0,
+        "pruned_typed_edge_recall": 1.0,
+        "mean_pair_reduction_rate": 0.31135531135531136
+      },
+      "delta": {
+        "generated_typed_edge_recall": 0.18181818181818177,
+        "pruned_typed_edge_recall": 0.21212121212121215,
+        "mean_pair_reduction_rate": 0.0
+      },
+      "localized_small_component_planar_kept_count": 15
+    }
+  },
+  "conservative_metrics": {
+    "schema_version": "1.0.0",
+    "auto_accept_precision": null,
+    "accepted_group_count": 0,
+    "accepted_true_positive_count": 0,
+    "false_positive_count": 0,
+    "review_group_count": 5614,
+    "review_rate": 0.9356666666666666,
+    "review_frontier_group_count": 72,
+    "deferred_review_group_count": 5542,
+    "operator_queue_rate": 0.012,
+    "review_frontier_compression": 0.988,
+    "rejected_group_count": 386,
+    "unresolved_parts_count": 42,
+    "workload_reduction": null,
+    "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+    "rejected_reason_coverage": 1.0,
+    "candidate_count": 6000,
+    "semantic_reranking_enabled": false,
+    "precision_target": 0.9,
+    "precision_target_status": "not_estimable_no_auto_accepts",
+    "baseline_comparison": {
+      "before": {
+        "status": "unavailable_no_legacy_validated_assignment",
+        "accepted_group_count": null,
+        "accepted_true_positive_count": null,
+        "auto_accept_precision": null,
+        "false_positive_count": null,
+        "review_group_count": null,
+        "unresolved_parts_count": null
+      },
+      "after": {
+        "schema_version": "1.0.0",
+        "auto_accept_precision": null,
+        "accepted_group_count": 0,
+        "accepted_true_positive_count": 0,
+        "false_positive_count": 0,
+        "review_group_count": 5614,
+        "review_rate": 0.9356666666666666,
+        "review_frontier_group_count": 72,
+        "deferred_review_group_count": 5542,
+        "operator_queue_rate": 0.012,
+        "review_frontier_compression": 0.988,
+        "rejected_group_count": 386,
+        "unresolved_parts_count": 42,
+        "workload_reduction": null,
+        "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+        "rejected_reason_coverage": 1.0,
+        "candidate_count": 6000,
+        "semantic_reranking_enabled": false,
+        "precision_target": 0.9,
+        "precision_target_status": "not_estimable_no_auto_accepts"
+      },
+      "false_positive_reduction": null
+    }
+  },
+  "hard_negative_summary": {
+    "negative_count": 9,
+    "auto_accepted_false_positive_count": 0,
+    "outcome_counts": {
+      "rejected": 1,
+      "review_embedded": 8
+    },
+    "outcomes_by_negative_type": {
+      "easy_negative": {
+        "review_embedded": 3
+      },
+      "geometric_hard_negative": {
+        "rejected": 1,
+        "review_embedded": 2
+      },
+      "semantic_hard_negative": {
+        "review_embedded": 3
+      }
+    }
+  },
+  "visual_qa": {
+    "contact_sheet": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_dataset_v1\\functional_contact_sheet.png",
+    "status": "visually_inspected",
+    "finding": "cover/base, shaft/hub/key, and bearing/housing assemblies are recognizable; final domain-engineer sign-off remains recommended"
+  },
+  "verification": {
+    "unit_tests": "55/55 passed",
+    "step_roundtrip_shape_checks": "69/69 passed"
+  },
+  "source_sha256": {
+    "functional_dataset_generator.py": "27d681f41da8da85141338f4217cc411c554b90b71bf661a4213b67064fed8ca",
+    "schemas/functional_metadata.schema.json": "0a5e83cf9065f4ffb291533d3a0c1b8858cdb8773a7e3e31bac78766f81761ff",
+    "build_functional_pools.py": "3ee5982e39675671ddaa2f77da065fcaa89fadfdee3362124bd935b7e9ecbf93",
+    "prepare_functional_semantic_inputs.py": "486a9b0de7f0c10c3795c0ca669b8a0cc45af43bf9edae86991f6e83d517e41c",
+    "audit_functional_negatives.py": "33e0e9bc0449eb2a8de33173f3550b62620d30c0b83189dfe705b14a943f82cf",
+    "freeze_p123_delivery.py": "e3726d8094ab82720aaae207ac0ff8e740dae56a83dc18663fd39560eee1d8d7",
+    "constraints.py": "e1f27e2d6e5e510c14ee1bcf374a68decc13cbb21e15d60a2bd6ca28e4ce0898",
+    "pool_index.py": "487d3ed016e1b9c41a680370f9d113297d68afac782960c0af298a8015e0def6",
+    "match_scoring.py": "70349e2d9bc4d18220594550973bc9ba0481c63c18614c5babd3740534fae870",
+    "candidate_recall_audit.py": "5e33ae93a7b5e85da5ae6638ad4957d49de08a6a61bc43a5de8456b932f4729c",
+    "conservative_pipeline.py": "0224d016ab7e95ab390f3434bece0166318efa1b306e7f671c0ea26f9efbfd20",
+    "run_conservative_delivery.py": "8832f5939788e61a0f99e89d4ef4e00dc3d1fc7c407bfbbd39fa3e2b90d3d05d",
+    "global_optimizer/group_consistency.py": "cdf629e118df1d3a8f86da0f059e53087cbfde0bfc2cb9fd993907182c51e757",
+    "configs/pool_pipeline.json": "26b56b3bb55b47f4dd8d48508a82c2f9f6a113e0e6da9b218cbf80e74c8ff918",
+    "configs/conservative_pipeline.json": "21e4f9fabe77527d6b8741c87ef94fa3937553949493d745b667367107741e25",
+    "sw_dataset_generator/templates/library.py": "3fc61fcd76bbc866c795cfdf49866c7412082c6dbe3d7dd35455d3515697ce13",
+    "sw_dataset_generator/write_ground_truth.py": "dbf882657f37cde8f314dfe58f8d8c5bcc417d5eeee1f4dcda6c27e28ab0f948",
+    "sw_dataset_generator/batch_generate.py": "27e5b633a67686f02449533a54f41c2e90685267c9c75ccb78d1f4866cda97aa",
+    "sw_dataset_generator/README.md": "02fdad655c63f3d2c4591dc412887802f9cd66ecfabcdee26602490bfe2dfdff",
+    "tests/test_functional_dataset.py": "1de712a966fbcd31a157e449cdd9caf156d6927e1820f6aa6571ff87bc7d368d"
+  },
+  "result_sha256": {
+    "missed_true_candidates.csv": "b4daee8fc2f40f94bfafec9de4827636833d8da66f44b33ba38a7f3e8137bd3e",
+    "pruned_true_candidates.csv": "b4daee8fc2f40f94bfafec9de4827636833d8da66f44b33ba38a7f3e8137bd3e",
+    "candidate_recall_by_type.json": "a9e3a7e95655f1695ab8149560440e7c944ca2956ab98c8b952f28c46cd1e6e7",
+    "candidate_recall_by_group_size.json": "028e7b163f065ee5d45fe98439758f956af1a0759ab0beb2832ae82bad7e271c",
+    "candidate_recall_audit.md": "d2931ba0bc5b61a68cd3b7053cb3915e89ce5f11eaeb70ff5dae4e46178bce01",
+    "accepted_geometry_candidates.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+    "review_geometry_candidates.json": "a127d85b65f3b1acc4ee5a16757af79fc86c8d8a72a32a76cb70392dea40b488",
+    "rejected_geometry_candidates.json": "32e89be4df33907ff0ad3fe41af6e124d22a5dab6108344016d346a363a747f4",
+    "geometry_candidate_tiering.md": "a0e7050170ec988107568807b9380cc9b2b58535c952206b5bc2435d6cd74e1f",
+    "pose_validated_candidates.json": "9666217e8e5cc7dce07957c4cfd7a994c79fb398159d53e5993a4b2f1d46140a",
+    "pose_failed_candidates.json": "cc76f8051dfe93a497171a4c0396b0cbb2c7c2fbe45a67b2682f4ed00ba482cb",
+    "pose_uncertain_candidates.json": "0f8b8de5f655bea4d6e98ed0d8b661340e585f0dac1025aa6fcf6964903ee43e",
+    "pose_validation_report.md": "543bc7e2d137665716a1e3d681b1c72bc5ac204fea8dd1ad4694848ac3d4a71c",
+    "semantic_inputs.json": "394ad0fe781d1d703819bb505a1058e5b29b5eccad2516abcb437a529b99a3a7",
+    "semantic_reviews.json": "9022c6f7c212978a47669393c1e9548a83ec5520fe0758d623a7544f35087d32",
+    "semantic_calibration_report.json": "3ecb68ae0472357bee3dd1042f89be37a704f05edd18e20b35be08872305e801",
+    "semantic_gate_decision.md": "b4f563927eb278eac096fc6a189b223e89c3149c576fbeaab783644542979f1f",
+    "final_accepted_groups.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+    "final_review_groups.json": "5578992ed0f18938d4c23d60348358cca195ab2af5809d2d45f5cc78e99505fc",
+    "final_rejected_groups.json": "93774767528c7ac0df1fcb8c4646f5d0a3a8aa9eeea35b8687ff1dd9aeb227ef",
+    "unresolved_parts.json": "06c7e08e4e35751292f85ec8e3d9a7979135cedd9f2388c2c32a6ed1dc37d9f1",
+    "conservative_metrics.json": "ee20e3fad9a4d623320c8da5fe445b06a883d6014147dd2ce7a78347604f5e29",
+    "candidate_scores.csv": "ad5ddec49c5652c307168b90351726aa8ecd066db29029b34e0207a0f0cd91a9",
+    "assembly_report.md": "418c735677f69eb110d35bc8f1290a98bf35dfac062cf5a4f4fa03f91ad8ecc6",
+    "false_positive_audit.csv": "859fcf9317a9c9d0d4e7ed742ca5c6da8e7de2a0bc0a8cb6af899219f7b620fa",
+    "functional_hard_negative_audit.csv": "f267dd83e8a2c22bac0b55dd1ee478d8a1175499e7014e2544e4f3d809234a59",
+    "functional_hard_negative_audit.json": "aaa49fd268126c7b43a93f8a2b6d1e6ec117541d545ec398a8b9de2ff95a8ac9",
+    "p3_candidate_recall_comparison.json": "a101096e37ba9200e016902584e4e7ae893032ccbb0e25d0f327d0ea8ad25f22",
+    "p3_candidate_recall_comparison.md": "356275c2a988a78a9b03a0450de86124d48cb8e79816a1398b91310a2ac4eaf3"
+  },
+  "delivery_report_sha256": "7cab8c271298a1a42ab72613e56567734f9043725e35a5c1dd1af92c818931f1",
+  "known_limits": [
+    "Zero groups were auto-accepted, so accepted precision is not statistically estimable.",
+    "The immediate review frontier contains 72 groups and all 42 pool-local parts remain unresolved.",
+    "Deferred review candidates remain numerous; workload reduction is not yet established.",
+    "This synthetic benchmark has nine positive cases and requires external CAD validation before production claims."
+  ]
+}

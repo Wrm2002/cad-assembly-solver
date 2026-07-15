@@ -1,18 +1,25 @@
 # CAD 装配 Pose 恢复系统
 
-## 2026-07-13 精密多接口更新
+## 2026-07-13 case1～5 泛化闭合更新
 
-最新 case1/2 结果见
-[`sw/exam_final_20260713/FINAL_REPORT.md`](sw/exam_final_20260713/FINAL_REPORT.md)：
+本轮实现、数值审计和五个最终渲染见
+[`sw/GENERALIZATION_WORK_REPORT_CASE1_5_20260713.md`](sw/GENERALIZATION_WORK_REPORT_CASE1_5_20260713.md)。
 
-- case1 已由 repeated-hole multi-axis compound candidate 恢复为
-  `precision-valid`；轴距约 `0.000048 mm`、孔阵列 RMS 约为 0、
-  OCCT common volume 为 0。
-- case2 已得到 5 个 OCCT exact-valid 候选，但因键槽插入深度和联合
-  自由度闭锁尚未独立验证，最终仍为 `review`，没有自动接受。
-- known-group 输出现在额外要求 multi-evidence precision gate；旧的
-  “connected + closure + collision-free” 不再足以进入 accepted。
-- 以下第 3.3～5 节记录的是本次更新前的冻结基线与根因，保留用于对照。
+- case1、case3 保持已确认的正确装配关系；case4 已把内存条从“平放在主板上”
+  修正为基于重复槽道拓扑的边缘入槽；case5 保持当前 enclosure/bay 结果。
+- case2 不再把轴停在某个轮毂端面，而是用匿名 B-Rep 证据闭合
+  “两个可比轴向支撑 + 小径间隙轴 + 两套成对键槽 + 跨接键”的组级约束。
+  当前法兰接触残差约 `1.78e-15 mm`，轴中心残差约 `5.33e-15 mm`，
+  轴在两侧的重叠均约 `45.0 mm`，OCCT 实体碰撞为 0；该结果已通过人工渲染确认。
+- 这不是 case2 特判：求解逻辑不读取 case ID、文件名、零件名或颜色，也不写死
+  `-55 mm` 位移；若缺少第二支撑孔、CLEARANCE、成对键槽或跨接键，规则会 abstain。
+- 拓扑 sidecar 现在必须声明并通过 STEP SHA-256；键槽 witness 必须携带具体 ID，
+  适配孔必须是凹面圆柱。匿名 `0.1x/1x/10x` 尺度回归均已通过。
+- 该组级闭合仍标记为 `proposal_only/review_required`，不会因本次考试正确就绕过
+  保守 accepted gate。case4 因主板 open-shell 覆盖不完整，同样保持 review/uncertain。
+- 五个图是装配关系检查，不代表五组均 exact-valid：case3 有低比例局部干涉；
+  case4 的所选 rank 未完成 exact；case5 仍只有 `1/2` connection closure。
+- 以下旧实验章节保留作历史对照；若与本节冲突，以本节和工作报告为准。
 
 ## 1. 项目目标
 

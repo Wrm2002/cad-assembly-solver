@@ -103,55 +103,64 @@ def build_pair_candidates(
     return candidates
 
 
-def select_direct_connections(
+def enumerate_connection_topologies(
     parts: list[str],
     pair_candidates: list[dict[str, Any]],
     *,
-    conservative: bool = False,
+    maximum: int = 8,
     part_weights: dict[str, float] | None = None,
-) -> dict[str, Any]:
-    """Globally select a connected skeleton plus bounded supported edges.
-    
-    When conservative=True, only the minimum spanning tree is kept.
-    No additional supported edges are added. This is appropriate for
-    known-group assemblies where all parts are known to belong together
-    and false-positive edges between satellite parts must be avoided.
-    
-    part_weights: optional dict mapping part name → weight (e.g. file size).
-    Used as a tiebreaker to prefer central hubs with higher weight.
+) -> list[dict[str, Any]]:
+    """Retain a bounded frontier of connected pair topologies.
+
+    Pair scores are useful for ordering search, but they are not reliable
+    enough to delete every alternative before pose closure.  In particular, a
+    high-scoring accidental pair can force a wrong maximum spanning tree and
+    make the correct pose unreachable.  This function keeps the best few
+    connected trees for the downstream manifold solver; it makes no assembly
+    acceptance decision.
     """
+
+    if maximum < 1:
+        raise ValueError("maximum topology count must be positive")
     parts = sorted(str(part) for part in parts)
-    if len(parts) == 1:
-        return {"connected": True, "selected": [], "unresolved_parts": []}
+    if len(parts) <= 1:
+        return [{
+            "topology_id": stable_id("T", *(parts or ["empty"])),
+            "rank": 1,
+            "connected": True,
+            "pairs": [],
+            "rows": [],
+            "score_sum": 0.0,
+            "weighted_type_support": 0,
+            "maximum_degree": 0,
+            "hub_weight": 0.0,
+            "pose_validation_required": True,
+        }]
     by_pair = {
         canonical_pair(row["parts"]): row for row in pair_candidates
     }
     pair_keys = sorted(by_pair)
-    best_tree = None
-    best_objective = None
+    frontier: list[tuple[tuple[Any, ...], tuple[tuple[str, str], ...]]] = []
     for combination in itertools.combinations(pair_keys, len(parts) - 1):
         if not _connected(parts, combination):
             continue
         rows = [by_pair[pair] for pair in combination]
-        # Weighted type score: preference for strong constraint types (coaxial,
-        # clearance, pocket_mate) over weak planar-only evidence.
         weighted_types = sum(
             sum(TYPE_PRIORITY.get(t, 0) for t in row["relation_types"])
             for row in rows
         )
-        # Centrality: prefer star topology — max degree in the tree.
         degree = defaultdict(int)
         for a, b in combination:
             degree[a] += 1
             degree[b] += 1
         max_degree = max(degree.values()) if degree else 0
-        # Hub weight: when degrees tie, prefer the higher-weight part as hub.
-        # Weight is typically file size — the largest part is usually the
-        # structural center (chassis, baseplate, main housing).
         hub_weight = 0.0
         if part_weights:
-            hubs = [p for p, d in degree.items() if d == max_degree]
-            hub_weight = max((part_weights.get(p, 0.0) for p in hubs), default=0.0)
+            hubs = [part for part, value in degree.items() if value == max_degree]
+            hub_weight = max(
+                (float(part_weights.get(part, 0.0)) for part in hubs),
+                default=0.0,
+            )
         objective = (
             round(round(sum(float(row["score"]) for row in rows), 2), 9),
             weighted_types,
@@ -159,9 +168,83 @@ def select_direct_connections(
             round(hub_weight, 1),
             tuple(combination),
         )
-        if best_objective is None or objective > best_objective:
-            best_objective = objective
-            best_tree = set(combination)
+        frontier.append((objective, tuple(combination)))
+    frontier.sort(key=lambda item: item[0], reverse=True)
+    output = []
+    for rank, (objective, combination) in enumerate(frontier[:maximum], 1):
+        rows = [by_pair[pair] for pair in combination]
+        output.append({
+            "topology_id": stable_id(
+                "T", *("|".join(pair) for pair in combination)
+            ),
+            "rank": rank,
+            "connected": True,
+            "pairs": [list(pair) for pair in combination],
+            "rows": rows,
+            "score_sum": round(sum(float(row["score"]) for row in rows), 6),
+            "weighted_type_support": int(objective[1]),
+            "maximum_degree": int(objective[2]),
+            "hub_weight": float(objective[3]),
+            "pose_validation_required": True,
+            "selection_boundary": (
+                "Ranking preserves pose-search alternatives; this score cannot "
+                "auto-accept an assembly topology."
+            ),
+        })
+    return output
+
+
+def select_direct_connections(
+    parts: list[str],
+    pair_candidates: list[dict[str, Any]],
+    *,
+    conservative: bool = False,
+    part_weights: dict[str, float] | None = None,
+    topology_limit: int = 8,
+) -> dict[str, Any]:
+    """Globally select a connected skeleton plus bounded supported edges.
+
+    When conservative=True, only the minimum spanning tree is kept.
+    No additional supported edges are added. This is appropriate for
+    known-group assemblies where all parts are known to belong together
+    and false-positive edges between satellite parts must be avoided.
+
+    part_weights: optional dict mapping part name → weight (e.g. file size).
+    Used as a tiebreaker to prefer central hubs with higher weight.
+    """
+    parts = sorted(str(part) for part in parts)
+    if len(parts) == 1:
+        return {
+            "part_ids": parts,
+            "connected": True,
+            "selected": [],
+            "unresolved_parts": [],
+            "candidate_pair_count": len(pair_candidates),
+            "selected_pair_count": 0,
+            "selection_method": "single_part_no_connections_required",
+            "topology_frontier": enumerate_connection_topologies(
+                parts, pair_candidates, maximum=1, part_weights=part_weights
+            ),
+            "topology_frontier_count": 1,
+            "topology_frontier_policy": (
+                "Single-part input has one empty topology and still requires "
+                "the normal conservative delivery boundary."
+            ),
+        }
+    by_pair = {
+        canonical_pair(row["parts"]): row for row in pair_candidates
+    }
+    pair_keys = sorted(by_pair)
+    topology_frontier = enumerate_connection_topologies(
+        parts,
+        pair_candidates,
+        maximum=topology_limit,
+        part_weights=part_weights,
+    )
+    best_tree = (
+        {canonical_pair(pair) for pair in topology_frontier[0]["pairs"]}
+        if topology_frontier else None
+    )
     if best_tree is None:
         # Preserve the strongest reachable forest for an auditable partial result.
         parent = {part: part for part in parts}
@@ -211,10 +294,17 @@ def select_direct_connections(
     connected = _connected(parts, selected_pairs)
     touched = {part for pair in selected_pairs for part in pair}
     return {
+        "part_ids": parts,
         "connected": connected,
         "selected": selected,
         "unresolved_parts": sorted(set(parts) - touched),
         "candidate_pair_count": len(pair_candidates),
         "selected_pair_count": len(selected),
         "selection_method": "exhaustive_maximum_evidence_spanning_skeleton_plus_bounded_support",
+        "topology_frontier": topology_frontier,
+        "topology_frontier_count": len(topology_frontier),
+        "topology_frontier_policy": (
+            "Topologies remain pose-search alternatives; the rank-1 score is "
+            "not an assembly acceptance decision."
+        ),
     }

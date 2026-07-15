@@ -1,0 +1,143 @@
+[
+  {
+    "case_id": "case_1",
+    "passed": true,
+    "pose_status": "valid",
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "runtime_s": 3.1,
+    "collision_count": 0,
+    "checked_pose_count": 41,
+    "selected_pose_rank": 8,
+    "actual": [
+      [
+        "flange_part_a.step",
+        "flange_part_b.step"
+      ]
+    ],
+    "fp_list": [],
+    "fn_list": []
+  },
+  {
+    "case_id": "case_2",
+    "passed": false,
+    "pose_status": "valid",
+    "tp": 2,
+    "fp": 1,
+    "fn": 1,
+    "precision": 0.667,
+    "recall": 0.667,
+    "f1": 0.667,
+    "runtime_s": 60.7,
+    "collision_count": 0,
+    "checked_pose_count": 1593,
+    "selected_pose_rank": 1358,
+    "actual": [
+      [
+        "flange_a_pipe_X_fan15deg.step",
+        "shaft_with_keyway.step"
+      ],
+      [
+        "flange_a_pipe_X_fan15deg.step",
+        "flange_b_pipe_Y_fan20deg.step"
+      ],
+      [
+        "key.step",
+        "shaft_with_keyway.step"
+      ]
+    ],
+    "fp_list": [
+      [
+        "flange_a_pipe_X_fan15deg.step",
+        "flange_b_pipe_Y_fan20deg.step"
+      ]
+    ],
+    "fn_list": [
+      [
+        "flange_b_pipe_Y_fan20deg.step",
+        "shaft_with_keyway.step"
+      ]
+    ]
+  },
+  {
+    "case_id": "case_3",
+    "passed": true,
+    "pose_status": "uncertain",
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "runtime_s": 156.4,
+    "collision_count": 0,
+    "checked_pose_count": 21,
+    "selected_pose_rank": 2,
+    "actual": [
+      [
+        "01_FAN-CAGE-MODULE-R620-NH.stp",
+        "01_FAN-MODULE-SUNON-6056(1).stp"
+      ]
+    ],
+    "fp_list": [],
+    "fn_list": []
+  },
+  {
+    "case_id": "case_4",
+    "passed": true,
+    "pose_status": "uncertain",
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "runtime_s": 28.7,
+    "collision_count": 0,
+    "checked_pose_count": 899,
+    "selected_pose_rank": 37,
+    "actual": [
+      [
+        "01-62DC24-MLB-PCBA.stp",
+        "Hygon-7400-3D.stp"
+      ],
+      [
+        "01-62DC24-MLB-PCBA.stp",
+        "5-rd_rc_a_2rx4_1_ddrv.stp"
+      ]
+    ],
+    "fp_list": [],
+    "fn_list": []
+  },
+  {
+    "case_id": "case_5",
+    "passed": true,
+    "pose_status": "uncertain",
+    "tp": 2,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "runtime_s": 26.3,
+    "collision_count": 0,
+    "checked_pose_count": 936,
+    "selected_pose_rank": 20,
+    "actual": [
+      [
+        "01-ASSY-CHASSIS-MODULE-R6250H0.stp",
+        "5-CRPS1300NC.stp"
+      ],
+      [
+        "01-ASSY-CHASSIS-EAR-L-R620.stp",
+        "01-ASSY-CHASSIS-MODULE-R6250H0.stp"
+      ]
+    ],
+    "fp_list": [],
+    "fn_list": []
+  }
+]

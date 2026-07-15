@@ -22,6 +22,7 @@ CASES = [
         "case_id": "case_1",
         "dir": SW_DIR / "1",
         "beam": 20,
+        "brep_graph_dir": SW_DIR / "1" / "_brep_graphs_enriched",
         "expected_edges": [("flange_part_a.step", "flange_part_b.step")],
         "expected_non_edges": [],
         "desc": "2 flanges",
@@ -30,6 +31,7 @@ CASES = [
         "case_id": "case_2",
         "dir": SW_DIR / "2",
         "beam": 20,
+        "brep_graph_dir": SW_DIR / "2" / "_brep_graphs_enriched",
         "expected_edges": [
             ("shaft_with_keyway.step", "flange_a_pipe_X_fan15deg.step"),
             ("shaft_with_keyway.step", "flange_b_pipe_Y_fan20deg.step"),
@@ -46,6 +48,7 @@ CASES = [
         "case_id": "case_3",
         "dir": SW_DIR / "3",
         "beam": 20,
+        "brep_graph_dir": SW_DIR / "3" / "_brep_graphs_enriched",
         "expected_edges": [
             (
                 "01_FAN-CAGE-MODULE-R620-NH.stp",
@@ -59,6 +62,7 @@ CASES = [
         "case_id": "case_4",
         "dir": SW_DIR / "4_lightweight",
         "beam": 20,
+        "brep_graph_dir": None,
         "expected_edges": [
             ("01-62DC24-MLB-PCBA.stp", "5-rd_rc_a_2rx4_1_ddrv.stp"),
             ("01-62DC24-MLB-PCBA.stp", "Hygon-7400-3D.stp"),
@@ -72,6 +76,7 @@ CASES = [
         "case_id": "case_5",
         "dir": SW_DIR / "5_lightweight",
         "beam": 20,
+        "brep_graph_dir": None,
         "expected_edges": [
             (
                 "01-ASSY-CHASSIS-MODULE-R6250H0.stp",
@@ -103,7 +108,11 @@ def run_one(info: dict) -> dict:
 
     started = time.time()
     try:
-        out = run_known_group_assembly(case_dir, beam_width=info["beam"])
+        out = run_known_group_assembly(
+            case_dir,
+            beam_width=info["beam"],
+            brep_graph_dir=info.get("brep_graph_dir"),
+        )
     except Exception as exc:
         elapsed = time.time() - started
         print(f"  [CRASH] {elapsed:.0f}s: {exc}", flush=True)

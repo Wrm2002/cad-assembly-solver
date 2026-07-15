@@ -1,0 +1,181 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Design-disjoint STEP test comparison of graph-derived analytic and official pretrained JoinABLe ranking",
+  "training_performed": false,
+  "manifest": "D:\\Model_match_public_data\\fusion360_joint\\domain_adapt_2600\\domain_adaptation_manifest.json",
+  "manifest_summary": {
+    "requested_counts": {
+      "train": 2000,
+      "validation": 300,
+      "test": 300
+    },
+    "manifest_counts": {
+      "train": 2000,
+      "validation": 300,
+      "test": 300
+    },
+    "training_usable_counts": {
+      "train": 695,
+      "validation": 151,
+      "test": 221
+    },
+    "status_distribution": {
+      "train": {
+        "training_and_evaluation": 695,
+        "unusable_no_mapped_truth": 227,
+        "excluded_source_design_leakage": 998,
+        "evaluation_only_no_exact_mapping": 72,
+        "unsupported_official_node_limit": 8
+      },
+      "validation": {
+        "training_and_evaluation": 151,
+        "excluded_source_design_leakage": 95,
+        "unusable_no_mapped_truth": 41,
+        "evaluation_only_no_exact_mapping": 13
+      },
+      "test": {
+        "unusable_no_mapped_truth": 64,
+        "training_and_evaluation": 221,
+        "evaluation_only_no_exact_mapping": 15
+      }
+    },
+    "split_policy": "test priority, then validation; train excludes any source design present in heldout splits",
+    "source_design_overlap_after_filter": {
+      "train_validation": 0,
+      "train_test": 0,
+      "validation_test": 0
+    },
+    "exact_entity_side_mapping_rate": 0.846100278551532,
+    "exact_entity_side_attempt_count": 5744,
+    "exact_entity_side_mapped_count": 4860,
+    "mapping_status_distribution": {
+      "mapped": 66253,
+      "unmapped": 18859,
+      "ambiguous_equivalent": 10
+    },
+    "external_failure_count": 0
+  },
+  "split": "test",
+  "device": "cuda:0",
+  "eligible_count": 5,
+  "evaluated_count": 5,
+  "exact": {
+    "evaluable_count": 5,
+    "analytic_top_1_recall": 0.2,
+    "joinable_top_1_recall": 0.0,
+    "union_top_1_plus_1_recall": 0.2,
+    "union_rescue_count_at_1": 0,
+    "analytic_only_hit_count_at_1": 1,
+    "analytic_top_5_recall": 0.4,
+    "joinable_top_5_recall": 0.4,
+    "union_top_5_plus_5_recall": 0.4,
+    "union_rescue_count_at_5": 0,
+    "analytic_only_hit_count_at_5": 0,
+    "analytic_top_10_recall": 0.4,
+    "joinable_top_10_recall": 0.8,
+    "union_top_10_plus_10_recall": 0.8,
+    "union_rescue_count_at_10": 2,
+    "analytic_only_hit_count_at_10": 0,
+    "analytic_top_20_recall": 0.8,
+    "joinable_top_20_recall": 0.8,
+    "union_top_20_plus_20_recall": 1.0,
+    "union_rescue_count_at_20": 1,
+    "analytic_only_hit_count_at_20": 1
+  },
+  "equivalent": {
+    "evaluable_count": 5,
+    "analytic_top_1_recall": 1.0,
+    "joinable_top_1_recall": 1.0,
+    "union_top_1_plus_1_recall": 1.0,
+    "union_rescue_count_at_1": 0,
+    "analytic_only_hit_count_at_1": 0,
+    "analytic_top_5_recall": 1.0,
+    "joinable_top_5_recall": 1.0,
+    "union_top_5_plus_5_recall": 1.0,
+    "union_rescue_count_at_5": 0,
+    "analytic_only_hit_count_at_5": 0,
+    "analytic_top_10_recall": 1.0,
+    "joinable_top_10_recall": 1.0,
+    "union_top_10_plus_10_recall": 1.0,
+    "union_rescue_count_at_10": 0,
+    "analytic_only_hit_count_at_10": 0,
+    "analytic_top_20_recall": 1.0,
+    "joinable_top_20_recall": 1.0,
+    "union_top_20_plus_20_recall": 1.0,
+    "union_rescue_count_at_20": 0,
+    "analytic_only_hit_count_at_20": 0
+  },
+  "rows": [
+    {
+      "sample_id": "joint_set_08045",
+      "source_design_ids": [
+        "55717_8ee13ef1"
+      ],
+      "candidate_pair_count": 80,
+      "analytic_ranked_candidate_count": 80,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01324",
+      "source_design_ids": [
+        "56166_003bf479"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 20,
+      "joinable_exact_rank": 24,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10371",
+      "source_design_ids": [
+        "41729_b5092135"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10420",
+      "source_design_ids": [
+        "23552_10239b96"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 11,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07243",
+      "source_design_ids": [
+        "56488_7a606724"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 50,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    }
+  ],
+  "failures": [],
+  "limitations": [
+    "This split was previously used for evaluation in domain-adaptation experiments; it is design-disjoint but not untouched.",
+    "The analytic comparator is graph-derived and deterministic; it is not the mixed-pool D4 geometry score.",
+    "Interface ranking does not establish functional assembly validity."
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "schema_version": "1.0.0",
+  "stage": "P0_conservative_semantics_repair",
+  "frozen_at": "2026-07-06T02:00:44.620005+00:00",
+  "objective": "Preserve uncertainty as review, forbid greedy overlapping auto-accepts, isolate evaluation truth, and count independent physical evidence rather than agreeing providers.",
+  "policy": {
+    "frontier_capacity_is_rejection_evidence": false,
+    "overlapping_auto_accept_winner_selection": false,
+    "provider_agreement_counts_as_independent_evidence": false,
+    "semantic_reranking_enabled": false
+  },
+  "validation_summary": {
+    "check_count": 26,
+    "passed_count": 26,
+    "failed_count": 0,
+    "delivery_complete": true
+  },
+  "validation_checks": [
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase5_group_search/group_proposals.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase6_candidate_tiers/accepted_geometry_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase6_candidate_tiers/review_geometry_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase6_candidate_tiers/rejected_geometry_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase7_pose_validation/pose_validation_queue.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase7_pose_validation/pose_validation_full_audit.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase7_pose_validation/pose_validated_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase7_pose_validation/pose_failed_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/outputs/phase7_pose_validation/pose_uncertain_candidates.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/data/results/final_accepted_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/data/results/final_review_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:public_cad_dataset_audit/data/results/final_rejected_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:sw/data/results/final_accepted_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:sw/data/results/final_review_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "production_truth_isolation:sw/data/results/final_rejected_groups.json",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "legacy_12_pool:candidate_accounting",
+      "passed": true,
+      "detail": {
+        "metric": 9668,
+        "accepted": 0,
+        "review": 9167,
+        "rejected": 501
+      }
+    },
+    {
+      "name": "legacy_12_pool:review_state_complete",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "legacy_12_pool:frontier_capacity_never_rejects",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "legacy_12_pool:workload_claim_is_conservative",
+      "passed": true,
+      "detail": {
+        "deferred": 8879,
+        "workload_reduction": null,
+        "status": "not_established_deferred_review_candidates_remain"
+      }
+    },
+    {
+      "name": "legacy_12_pool:semantic_reranking_disabled",
+      "passed": true,
+      "detail": false
+    },
+    {
+      "name": "real_6_pool:candidate_accounting",
+      "passed": true,
+      "detail": {
+        "metric": 1191,
+        "accepted": 0,
+        "review": 1190,
+        "rejected": 1
+      }
+    },
+    {
+      "name": "real_6_pool:review_state_complete",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "real_6_pool:frontier_capacity_never_rejects",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "real_6_pool:workload_claim_is_conservative",
+      "passed": true,
+      "detail": {
+        "deferred": 1179,
+        "workload_reduction": null,
+        "status": "not_established_deferred_review_candidates_remain"
+      }
+    },
+    {
+      "name": "real_6_pool:semantic_reranking_disabled",
+      "passed": true,
+      "detail": false
+    },
+    {
+      "name": "provider_agreement_not_independent_evidence",
+      "passed": true,
+      "detail": {
+        "geometry_accept": 0.8,
+        "geometry_hard_reject": 0.35,
+        "group_consistency_accept": 0.7,
+        "minimum_independent_physical_evidence_per_tree_edge": 2,
+        "provider_agreement_counts_as_independent_evidence": false
+      }
+    }
+  ],
+  "test_results": {
+    "sw_core": "51/51 passed",
+    "public_pipeline": "13/13 passed",
+    "generator": "3/3 passed"
+  },
+  "source_sha256": {
+    "P0_CONSERVATIVE_DELIVERY.md": "99ac62477c1a6cc8a3c87ca6c03966114d375f25cdfa9b83f81d9ce776a139b7",
+    "sw/global_optimizer/group_consistency.py": "cdf629e118df1d3a8f86da0f059e53087cbfde0bfc2cb9fd993907182c51e757",
+    "sw/conservative_pipeline.py": "2a2bd5ca0564eb33f5fc2021b74b26f7148a235cdaa5eb81fc6b835b2dafd4d0",
+    "sw/tests/test_group_consistency.py": "befbbbf1f77fbc12901873744347debd8a68d46a06f9861d2da1fbbe21933949",
+    "sw/tests/test_conservative_pipeline.py": "bb0237e3a9cb80d432b26a3dc514d19669f307d57e5d5eaf3177c6eacec647a2",
+    "sw/configs/conservative_pipeline.json": "21e4f9fabe77527d6b8741c87ef94fa3937553949493d745b667367107741e25",
+    "public_cad_dataset_audit/search_real_mixed_pool_groups.py": "7978306a0f9e27bef9802fccc4edaa9efe9eb658bfb4b4793e7c84f79ba762eb",
+    "public_cad_dataset_audit/tier_real_group_candidates.py": "2daa1521b0b22544079cd96594cfbef2f9d79ff004bfaf402302f244cac74aaa",
+    "public_cad_dataset_audit/run_real_pose_validation.py": "d411f8b16ad482eb070b48bcf76ea1c82df42556da96eb5ffd404287221fcb64",
+    "public_cad_dataset_audit/prepare_real_semantic_evidence.py": "728e8dce95052afed51637253fb2e9a1040ff33081dc16f655080977579b6d2c",
+    "public_cad_dataset_audit/evaluate_conservative_real_benchmark.py": "ed368ec9edfa6490821dff10978e26fb2659296540d9d10546b5feb17fb8b5e8",
+    "public_cad_dataset_audit/tests/test_conservative_real_pipeline.py": "6495416ee66bc44871ec200ba7350a1d71502a76aa3a23bd3ac80fa236e38c23",
+    "public_cad_dataset_audit/freeze_p0_delivery.py": "ad2de3753c5eaeed1889fe78d7a034db15cb850aa7c45387400e119a069ec73f"
+  },
+  "result_sha256": {
+    "sw/data/results/final_accepted_groups.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+    "sw/data/results/final_review_groups.json": "0e6bf38cc4cdc69e4887e913540c040abb7333ef3b1c31504feabef8da7d1e18",
+    "sw/data/results/final_rejected_groups.json": "c5d2e0a3cfcf7f924edbb7a83cf5cf86a72b2df6154dc6814fdcdbebc523957c",
+    "sw/data/results/unresolved_parts.json": "5e62322ba182c608c9532f8e7e10f5629ab134bf476a810da32c6996a6cd5775",
+    "sw/data/results/conservative_metrics.json": "d6926ca3210b63397d2a45ec56cffda769b11f69c396b610791cc5cb75d6086f",
+    "sw/data/results/final_decision_truth_audit.json": "2894c90b8bc4a06ff8a2b317c89b3474d1a1c8036de96cc6245dcbaf80d10481",
+    "public_cad_dataset_audit/outputs/phase5_group_search/group_proposals.json": "3a6c79ad9a1ef091ca9fbdb43da0fa962b73f768ef097a491cd7beb4dc1ce03b",
+    "public_cad_dataset_audit/outputs/phase5_group_search/group_proposal_truth_audit.json": "7eea960f21264037d0bc7be87095c52cb4a6ceca3d79d521b8f329d79da8c2ed",
+    "public_cad_dataset_audit/outputs/phase6_candidate_tiers/geometry_tiering_metrics.json": "5967ebcd439650b9f9270e2e2ff4098b8c282e40106ba71d8dff5090347ef685",
+    "public_cad_dataset_audit/outputs/phase7_pose_validation/pose_validation_full_audit.json": "e9af78c44bfca075fc54242c698d37324238403d5a6dcf20cdd88b7ba141df64",
+    "public_cad_dataset_audit/outputs/phase7_pose_validation/pose_validation_truth_audit.json": "d9caff4ff6f1983fd325ea6337f2c7da1355d92c5d892e74c7896f862f90082c",
+    "public_cad_dataset_audit/outputs/phase8_semantic_gate/semantic_calibration_report.json": "3354ec3e7835b82ab9ebd1873954ebebf28de95cf4a76f28aafca9278f324c29",
+    "public_cad_dataset_audit/data/results/final_accepted_groups.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+    "public_cad_dataset_audit/data/results/final_review_groups.json": "7c878dbb8c28a550523e851754ae01e4a3e296c23377cff497256028ed1ef634",
+    "public_cad_dataset_audit/data/results/final_rejected_groups.json": "6cbab1204a4fffcf94af6c325ec04dcd52db402d0a8bf50ffa4eff525c9a1ab2",
+    "public_cad_dataset_audit/data/results/unresolved_parts.json": "dfba689b3d2df383ddae656b676066a0a7d9e3ba3b54564fc2becebe201e2e6c",
+    "public_cad_dataset_audit/data/results/conservative_metrics.json": "2689ee39c139c61c05dc1d3ef94098b262512a20c4c6573310891878de1ec1eb",
+    "public_cad_dataset_audit/data/results/final_decision_truth_audit.json": "b9f727a34c68c14d34d6e7133104102f368f88550219d225911593b00111bd1b"
+  },
+  "metrics": {
+    "legacy_12_pool": {
+      "schema_version": "1.0.0",
+      "auto_accept_precision": null,
+      "accepted_group_count": 0,
+      "accepted_true_positive_count": 0,
+      "false_positive_count": 0,
+      "review_group_count": 9167,
+      "review_rate": 0.9481795614398014,
+      "review_frontier_group_count": 288,
+      "deferred_review_group_count": 8879,
+      "operator_queue_rate": 0.029788994621431527,
+      "review_frontier_compression": 0.9702110053785685,
+      "rejected_group_count": 501,
+      "unresolved_parts_count": 110,
+      "workload_reduction": null,
+      "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+      "rejected_reason_coverage": 1.0,
+      "candidate_count": 9668,
+      "semantic_reranking_enabled": false,
+      "precision_target": 0.9,
+      "precision_target_status": "not_estimable_no_auto_accepts",
+      "baseline_comparison": {
+        "before": {
+          "accepted_group_count": 40,
+          "accepted_true_positive_count": 1,
+          "auto_accept_precision": 0.025,
+          "false_positive_count": 39,
+          "review_group_count": 0,
+          "unresolved_parts_count": 6
+        },
+        "after": {
+          "schema_version": "1.0.0",
+          "auto_accept_precision": null,
+          "accepted_group_count": 0,
+          "accepted_true_positive_count": 0,
+          "false_positive_count": 0,
+          "review_group_count": 9167,
+          "review_rate": 0.9481795614398014,
+          "review_frontier_group_count": 288,
+          "deferred_review_group_count": 8879,
+          "operator_queue_rate": 0.029788994621431527,
+          "review_frontier_compression": 0.9702110053785685,
+          "rejected_group_count": 501,
+          "unresolved_parts_count": 110,
+          "workload_reduction": null,
+          "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+          "rejected_reason_coverage": 1.0,
+          "candidate_count": 9668,
+          "semantic_reranking_enabled": false,
+          "precision_target": 0.9,
+          "precision_target_status": "not_estimable_no_auto_accepts"
+        },
+        "false_positive_reduction": 39
+      }
+    },
+    "real_6_pool": {
+      "schema_version": "1.0.0",
+      "benchmark": "fusion360_real_mixed_pools_6_pool_v1",
+      "pool_count": 6,
+      "input_part_count": 49,
+      "candidate_count": 1191,
+      "true_group_count": 16,
+      "candidate_generation_true_group_recall": 1.0,
+      "accepted_group_count": 0,
+      "accepted_true_positive_count": 0,
+      "auto_accept_precision": null,
+      "auto_accept_precision_status": "not_estimable_no_auto_accepts",
+      "false_positive_count": 0,
+      "review_group_count": 1190,
+      "review_true_group_count": 15,
+      "review_true_group_recall": 0.9375,
+      "review_rate": 0.9991603694374476,
+      "review_frontier_group_count": 11,
+      "review_frontier_true_group_count": 2,
+      "review_frontier_true_group_recall": 0.125,
+      "deferred_review_group_count": 1179,
+      "operator_queue_rate": 0.009235936188077247,
+      "review_frontier_compression": 0.9907640638119227,
+      "rejected_candidate_count": 1,
+      "unresolved_parts_count": 49,
+      "workload_reduction": null,
+      "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+      "rejected_reason_coverage": 1.0,
+      "semantic_reranking_enabled": false,
+      "naive_score_only_top1_per_pool": {
+        "accepted_count": 6,
+        "true_positive_count": 0,
+        "false_positive_count": 6,
+        "precision": 0.0,
+        "warning": "Evaluation-only counterfactual; not a historical baseline."
+      },
+      "limitations": [
+        "Source assembly provenance is not functional semantic truth.",
+        "No auto-accepted groups means precision cannot be estimated.",
+        "Deferred review candidates prevent a workload-reduction claim.",
+        "Semantic calibration is disabled."
+      ]
+    }
+  },
+  "known_limits": [
+    "D0 functional CAD dataset repair is not part of P0.",
+    "Source provenance is still not functional validity truth.",
+    "Zero auto-accepts leave accepted precision unestimable.",
+    "Deferred review candidates prevent a workload-reduction claim."
+  ]
+}

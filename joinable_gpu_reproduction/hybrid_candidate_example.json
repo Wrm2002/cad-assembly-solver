@@ -1,0 +1,1376 @@
+{
+  "schema_version": "1.0.0",
+  "predictor": "conservative_rule_pretrained_union",
+  "source_rule_prediction": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_gpu_reproduction\\rule_step_baseline\\predictions\\joint_set_00000.json",
+  "source_pretrained_prediction": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_gpu_reproduction\\official_step_predictions\\joint_set_00000.prediction.json",
+  "rule_k": 10,
+  "pretrained_k": 10,
+  "candidate_budget_upper_bound": 20,
+  "candidate_count_after_deduplication": 16,
+  "dual_provider_candidate_count": 4,
+  "candidates": [
+    {
+      "candidate_id": "face_000001__face_000001",
+      "part_a_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 141.8780941472986,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          6.3500002
+        ],
+        "salience": 4.9619917782045295
+      },
+      "part_b_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 70.93904707364987,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          3.1750001999999995
+        ],
+        "salience": 4.275819192053112
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 1,
+          "score": 0.9787393240466055,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.5747864809321854
+          }
+        },
+        "pretrained_joinable": {
+          "rank": 5,
+          "score": 3.4737393856048584,
+          "softmax_probability": 0.06566803902387619,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 2,
+      "has_rule_support": true,
+      "has_pretrained_support": true,
+      "best_provider_rank": 1,
+      "rank_sum": 6,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 1
+    },
+    {
+      "candidate_id": "edge_000003__edge_000003",
+      "part_a_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          6.3500000000000005
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          6.35
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          6.349999899999999
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2.0000000056086265e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          3.1749999999999994
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          3.1749999
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          1.9999999967268423e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 2,
+          "score": 0.973371994102895,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        },
+        "pretrained_joinable": {
+          "rank": 8,
+          "score": 2.6429991722106934,
+          "softmax_probability": 0.028613312169909477,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 2,
+      "has_rule_support": true,
+      "has_pretrained_support": true,
+      "best_provider_rank": 2,
+      "rank_sum": 10,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 2
+    },
+    {
+      "candidate_id": "face_000004__face_000004",
+      "part_a_entity": {
+        "entity_id": "face_000004",
+        "entity_type": "face",
+        "topology_index": 4,
+        "geometry_type": "plane",
+        "measure": 925.2478568320307,
+        "characteristic_size": 30.417887119785796,
+        "radius": null,
+        "centroid": [
+          -51.8137421270919,
+          545.251236733721,
+          0.0
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -69.33974222709189,
+          527.7252366337211,
+          -1e-07
+        ],
+        "bbox_max": [
+          -34.2877420270919,
+          562.777236833721,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          35.05200019999999,
+          35.05200019999984,
+          2e-07
+        ],
+        "salience": 6.831141862796047
+      },
+      "part_b_entity": {
+        "entity_id": "face_000004",
+        "entity_type": "face",
+        "topology_index": 4,
+        "geometry_type": "plane",
+        "measure": 1290.0772417822293,
+        "characteristic_size": 35.91764527056624,
+        "radius": null,
+        "centroid": [
+          -54.028625071876284,
+          588.734454166775,
+          0.0
+        ],
+        "axis_origin": [
+          -54.028625071876284,
+          588.734454166775,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -74.6026251718763,
+          568.1604540667751,
+          -1e-07
+        ],
+        "bbox_max": [
+          -33.45462497187629,
+          609.3084542667749,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          41.148000200000006,
+          41.14800019999984,
+          2e-07
+        ],
+        "salience": 7.16323222002681
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 10,
+          "score": 0.9290605306258124,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.8468786550635217,
+            "radius_compatibility": 0.0,
+            "interface_salience": 0.7449328340334833
+          }
+        },
+        "pretrained_joinable": {
+          "rank": 3,
+          "score": 4.299704074859619,
+          "softmax_probability": 0.1499912440776825,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 2,
+      "has_rule_support": true,
+      "has_pretrained_support": true,
+      "best_provider_rank": 3,
+      "rank_sum": 13,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 3
+    },
+    {
+      "candidate_id": "edge_000002__edge_000003",
+      "part_a_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          0.0
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          3.1749999999999994
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          3.1749999
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          1.9999999967268423e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 4,
+          "score": 0.973371994102895,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        },
+        "pretrained_joinable": {
+          "rank": 9,
+          "score": 2.554978132247925,
+          "softmax_probability": 0.026202399283647537,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 2,
+      "has_rule_support": true,
+      "has_pretrained_support": true,
+      "best_provider_rank": 4,
+      "rank_sum": 13,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 4
+    },
+    {
+      "candidate_id": "face_000003__face_000004",
+      "part_a_entity": {
+        "entity_id": "face_000003",
+        "entity_type": "face",
+        "topology_index": 3,
+        "joinable_node_index": 2,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "4817b8a53022ebe0f997",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "face_000004",
+        "entity_type": "face",
+        "topology_index": 4,
+        "joinable_node_index": 3,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "9337fc7c93c196a647d1",
+        "orientation": "reversed",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 1,
+          "score": 4.412987232208252,
+          "softmax_probability": 0.1679825484752655,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 1,
+      "rank_sum": 1,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 5
+    },
+    {
+      "candidate_id": "face_000003__face_000003",
+      "part_a_entity": {
+        "entity_id": "face_000003",
+        "entity_type": "face",
+        "topology_index": 3,
+        "joinable_node_index": 2,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "4817b8a53022ebe0f997",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "face_000003",
+        "entity_type": "face",
+        "topology_index": 3,
+        "joinable_node_index": 2,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "acc9750fcd5668cf358f",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 2,
+          "score": 4.339872360229492,
+          "softmax_probability": 0.15613877773284912,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 2,
+      "rank_sum": 2,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 6
+    },
+    {
+      "candidate_id": "edge_000003__edge_000002",
+      "part_a_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          6.3500000000000005
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          6.35
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          6.349999899999999
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2.0000000056086265e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          0.0
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          2e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 3,
+          "score": 0.973371994102895,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 3,
+      "rank_sum": 3,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 7
+    },
+    {
+      "candidate_id": "face_000004__face_000003",
+      "part_a_entity": {
+        "entity_id": "face_000004",
+        "entity_type": "face",
+        "topology_index": 4,
+        "joinable_node_index": 3,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "4b0daf39fc92789e06a7",
+        "orientation": "reversed",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "face_000003",
+        "entity_type": "face",
+        "topology_index": 3,
+        "joinable_node_index": 2,
+        "joinable_entity_type": "PlaneSurfaceType",
+        "joinable_entity_type_index": 0,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "plane",
+        "geometry_signature": "acc9750fcd5668cf358f",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 4,
+          "score": 4.039973735809326,
+          "softmax_probability": 0.11568218469619751,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 4,
+      "rank_sum": 4,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 8
+    },
+    {
+      "candidate_id": "edge_000002__edge_000002",
+      "part_a_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          0.0
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          0.0
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          2e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 5,
+          "score": 0.973371994102895,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 1.0,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 5,
+      "rank_sum": 5,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 9
+    },
+    {
+      "candidate_id": "edge_000004__edge_000004",
+      "part_a_entity": {
+        "entity_id": "edge_000004",
+        "entity_type": "edge",
+        "topology_index": 4,
+        "joinable_node_index": 7,
+        "joinable_entity_type": "Circle3DCurveType",
+        "joinable_entity_type_index": 10,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "circle",
+        "geometry_signature": "c4eb124af95e74434dc0",
+        "orientation": "reversed",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000004",
+        "entity_type": "edge",
+        "topology_index": 4,
+        "joinable_node_index": 7,
+        "joinable_entity_type": "Circle3DCurveType",
+        "joinable_entity_type_index": 10,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "circle",
+        "geometry_signature": "6153e739ba303ad1997a",
+        "orientation": "reversed",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 6,
+          "score": 2.939431667327881,
+          "softmax_probability": 0.038486383855342865,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 6,
+      "rank_sum": 6,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 10
+    },
+    {
+      "candidate_id": "face_000001__edge_000003",
+      "part_a_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 141.8780941472986,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          6.3500002
+        ],
+        "salience": 4.9619917782045295
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          3.1749999999999994
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          3.1749999
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          1.9999999967268423e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 6,
+          "score": 0.9341719941028951,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 0.92,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797704
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 6,
+      "rank_sum": 6,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 11
+    },
+    {
+      "candidate_id": "edge_000004__edge_000006",
+      "part_a_entity": {
+        "entity_id": "edge_000004",
+        "entity_type": "edge",
+        "topology_index": 4,
+        "joinable_node_index": 7,
+        "joinable_entity_type": "Circle3DCurveType",
+        "joinable_entity_type_index": 10,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "circle",
+        "geometry_signature": "c4eb124af95e74434dc0",
+        "orientation": "reversed",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000006",
+        "entity_type": "edge",
+        "topology_index": 6,
+        "joinable_node_index": 9,
+        "joinable_entity_type": "Circle3DCurveType",
+        "joinable_entity_type_index": 10,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "circle",
+        "geometry_signature": "a5a1840b5191f2d46fd1",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 7,
+          "score": 2.6878790855407715,
+          "softmax_probability": 0.0299267265945673,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 7,
+      "rank_sum": 7,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 12
+    },
+    {
+      "candidate_id": "face_000001__edge_000002",
+      "part_a_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 141.8780941472986,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          3.175
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          6.3500002
+        ],
+        "salience": 4.9619917782045295
+      },
+      "part_b_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.343006952330672,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.02862507187631,
+          588.734454166775,
+          0.0
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          2e-07
+        ],
+        "salience": 3.150297451136499
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 7,
+          "score": 0.9341719941028951,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 0.92,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797704
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 7,
+      "rank_sum": 7,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 13
+    },
+    {
+      "candidate_id": "edge_000003__face_000001",
+      "part_a_entity": {
+        "entity_id": "edge_000003",
+        "entity_type": "edge",
+        "topology_index": 3,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          6.3500000000000005
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          6.35
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          6.349999899999999
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          6.3500001
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2.0000000056086265e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 70.93904707364987,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          3.1750001999999995
+        ],
+        "salience": 4.275819192053112
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 8,
+          "score": 0.9341719941028951,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 0.92,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 8,
+      "rank_sum": 8,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 14
+    },
+    {
+      "candidate_id": "edge_000002__face_000001",
+      "part_a_entity": {
+        "entity_id": "edge_000002",
+        "entity_type": "edge",
+        "topology_index": 2,
+        "geometry_type": "circle",
+        "measure": 22.34300695233048,
+        "characteristic_size": 3.55599999999998,
+        "radius": 3.55599999999998,
+        "centroid": [
+          -51.81374212709192,
+          545.251236733721,
+          0.0
+        ],
+        "axis_origin": [
+          -51.8137421270919,
+          545.251236733721,
+          0.0
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox_min": [
+          -55.36974222709188,
+          541.6952366337212,
+          -1e-07
+        ],
+        "bbox_max": [
+          -48.257742027091915,
+          548.8072368337209,
+          1e-07
+        ],
+        "bbox_dimensions": [
+          7.112000199999969,
+          7.112000199999784,
+          2e-07
+        ],
+        "salience": 3.150297451136491
+      },
+      "part_b_entity": {
+        "entity_id": "face_000001",
+        "entity_type": "face",
+        "topology_index": 1,
+        "geometry_type": "cylinder",
+        "measure": 70.93904707364987,
+        "characteristic_size": 3.55600000000001,
+        "radius": 3.55600000000001,
+        "centroid": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "axis_origin": [
+          -54.0286250718763,
+          588.734454166775,
+          1.5875
+        ],
+        "direction": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox_min": [
+          -57.58462517187631,
+          585.178454066775,
+          -1e-07
+        ],
+        "bbox_max": [
+          -50.472624971876286,
+          592.290454266775,
+          3.1750000999999997
+        ],
+        "bbox_dimensions": [
+          7.1120002000000255,
+          7.112000200000011,
+          3.1750001999999995
+        ],
+        "salience": 4.275819192053112
+      },
+      "provider_evidence": {
+        "rule": {
+          "rank": 9,
+          "score": 0.9341719941028951,
+          "softmax_probability": null,
+          "score_evidence": {
+            "type_compatibility": 0.92,
+            "characteristic_size_compatibility": 0.9999999999999917,
+            "radius_compatibility": 0.9999999999999917,
+            "interface_salience": 0.46743988205797615
+          }
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": true,
+      "has_pretrained_support": false,
+      "best_provider_rank": 9,
+      "rank_sum": 9,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 15
+    },
+    {
+      "candidate_id": "face_000002__face_000002",
+      "part_a_entity": {
+        "entity_id": "face_000002",
+        "entity_type": "face",
+        "topology_index": 2,
+        "joinable_node_index": 1,
+        "joinable_entity_type": "CylinderSurfaceType",
+        "joinable_entity_type_index": 1,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "cylinder",
+        "geometry_signature": "e9f2ce4681224fcc1a08",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "part_b_entity": {
+        "entity_id": "face_000002",
+        "entity_type": "face",
+        "topology_index": 2,
+        "joinable_node_index": 1,
+        "joinable_entity_type": "CylinderSurfaceType",
+        "joinable_entity_type_index": 1,
+        "joinable_entity_type_mapping_quality": "exact",
+        "geometry_type": "cylinder",
+        "geometry_signature": "ad2e9732079f7a50cf5b",
+        "orientation": "forward",
+        "scaled_length": null
+      },
+      "provider_evidence": {
+        "pretrained_joinable": {
+          "rank": 10,
+          "score": 2.509815216064453,
+          "softmax_probability": 0.025045348331332207,
+          "score_evidence": null
+        }
+      },
+      "independent_provider_count": 1,
+      "has_rule_support": false,
+      "has_pretrained_support": true,
+      "best_provider_rank": 10,
+      "rank_sum": 10,
+      "review_required": true,
+      "can_auto_accept": false,
+      "review_reason": "Interface candidate evidence must pass pose, collision, multi-evidence, and group-consistency gates.",
+      "merged_rank": 16
+    }
+  ],
+  "gate_policy": {
+    "shadow_mode": true,
+    "provider_score_can_auto_accept": false,
+    "requires_pose_validation": true,
+    "requires_exact_collision_validation": true,
+    "requires_group_consistency": true,
+    "single_provider_candidates_default_to_review": true
+  },
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "functional_assembly_validity",
+    "final_pose_without_external_solver"
+  ]
+}

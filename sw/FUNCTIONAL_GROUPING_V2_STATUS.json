@@ -1,0 +1,525 @@
+{
+  "schema_version": "1.0.0",
+  "route": "conservative_functional_mixed_pool_grouping_v2",
+  "implementation_status": "complete_with_auto_accept_gate_closed",
+  "normal_functional_benchmark": {
+    "schema_version": "1.0.0",
+    "benchmark": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_mixed_pools_topology_v1",
+    "truth_basis": "functional_validity",
+    "evaluation_semantics_used_for_inference": false,
+    "semantic_reranking_enabled": false,
+    "pool_count": 3,
+    "true_group_count": 9,
+    "proposal_count": 957,
+    "proposal_true_group_count": 9,
+    "proposal_true_group_recall": 1.0,
+    "review_frontier_limit_per_pool": 20,
+    "review_frontier_count": 60,
+    "review_frontier_true_group_count": 9,
+    "review_frontier_recall": 1.0,
+    "review_frontier_precision": 0.15,
+    "accepted_group_count": 0,
+    "false_positive_count": 0,
+    "auto_accept_precision": null,
+    "review_group_count": 60,
+    "unresolved_parts_count": 42,
+    "failure_stage_counts": {
+      "none": 9
+    },
+    "hard_negative_review_count": 0,
+    "baseline_comparison": {
+      "before": {
+        "proposal_count": 9668,
+        "review_frontier_count": 72,
+        "review_frontier_true_group_count": 2,
+        "review_frontier_recall": 0.2222222222222222,
+        "review_frontier_precision": 0.027777777777777776,
+        "false_positive_count": 0
+      },
+      "after": {
+        "proposal_count": 957,
+        "review_frontier_count": 60,
+        "review_frontier_true_group_count": 9,
+        "review_frontier_recall": 1.0,
+        "review_frontier_precision": 0.15,
+        "false_positive_count": 0
+      }
+    },
+    "pools": [
+      {
+        "pool_id": "functional_pool_001",
+        "split": "train",
+        "part_count": 14,
+        "pair_edge_count": 48,
+        "joinable_provider_available": false,
+        "proposal_count": 316,
+        "cluster_count": 3,
+        "review_frontier_count": 20,
+        "true_group_count": 3,
+        "proposal_true_group_count": 3,
+        "frontier_true_group_count": 3,
+        "frontier_false_group_count": 17,
+        "hard_negative_frontier": []
+      },
+      {
+        "pool_id": "functional_pool_002",
+        "split": "calibration",
+        "part_count": 14,
+        "pair_edge_count": 49,
+        "joinable_provider_available": false,
+        "proposal_count": 318,
+        "cluster_count": 3,
+        "review_frontier_count": 20,
+        "true_group_count": 3,
+        "proposal_true_group_count": 3,
+        "frontier_true_group_count": 3,
+        "frontier_false_group_count": 17,
+        "hard_negative_frontier": []
+      },
+      {
+        "pool_id": "functional_pool_003",
+        "split": "test",
+        "part_count": 14,
+        "pair_edge_count": 49,
+        "joinable_provider_available": false,
+        "proposal_count": 323,
+        "cluster_count": 3,
+        "review_frontier_count": 20,
+        "true_group_count": 3,
+        "proposal_true_group_count": 3,
+        "frontier_true_group_count": 3,
+        "frontier_false_group_count": 17,
+        "hard_negative_frontier": []
+      }
+    ]
+  },
+  "locked_harder_holdout": {
+    "schema_version": "1.0.0",
+    "benchmark": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_cad_holdout_pools_v1",
+    "truth_basis": "functional_validity",
+    "evaluation_semantics_used_for_inference": false,
+    "semantic_reranking_enabled": false,
+    "pool_count": 3,
+    "true_group_count": 4,
+    "proposal_count": 135,
+    "proposal_true_group_count": 4,
+    "proposal_true_group_recall": 1.0,
+    "review_frontier_limit_per_pool": 20,
+    "review_frontier_count": 40,
+    "review_frontier_true_group_count": 4,
+    "review_frontier_recall": 1.0,
+    "review_frontier_precision": 0.1,
+    "accepted_group_count": 0,
+    "false_positive_count": 0,
+    "auto_accept_precision": null,
+    "review_group_count": 40,
+    "unresolved_parts_count": 21,
+    "failure_stage_counts": {
+      "none": 2,
+      "pose_uncertain": 2
+    },
+    "hard_negative_review_count": 0,
+    "baseline_comparison": {
+      "before": {
+        "proposal_count": 9668,
+        "review_frontier_count": 72,
+        "review_frontier_true_group_count": 2,
+        "review_frontier_recall": 0.2222222222222222,
+        "review_frontier_precision": 0.027777777777777776,
+        "false_positive_count": 0
+      },
+      "after": {
+        "proposal_count": 135,
+        "review_frontier_count": 40,
+        "review_frontier_true_group_count": 4,
+        "review_frontier_recall": 1.0,
+        "review_frontier_precision": 0.1,
+        "false_positive_count": 0
+      }
+    },
+    "pools": [
+      {
+        "pool_id": "holdout_pool_001",
+        "split": "locked_holdout",
+        "part_count": 6,
+        "pair_edge_count": 15,
+        "joinable_provider_available": true,
+        "proposal_count": 15,
+        "cluster_count": 2,
+        "review_frontier_count": 12,
+        "true_group_count": 1,
+        "proposal_true_group_count": 1,
+        "frontier_true_group_count": 1,
+        "frontier_false_group_count": 11,
+        "hard_negative_frontier": []
+      },
+      {
+        "pool_id": "holdout_pool_002",
+        "split": "locked_holdout",
+        "part_count": 7,
+        "pair_edge_count": 20,
+        "joinable_provider_available": true,
+        "proposal_count": 52,
+        "cluster_count": 3,
+        "review_frontier_count": 20,
+        "true_group_count": 2,
+        "proposal_true_group_count": 2,
+        "frontier_true_group_count": 2,
+        "frontier_false_group_count": 18,
+        "hard_negative_frontier": []
+      },
+      {
+        "pool_id": "holdout_pool_003",
+        "split": "locked_holdout",
+        "part_count": 8,
+        "pair_edge_count": 27,
+        "joinable_provider_available": true,
+        "proposal_count": 68,
+        "cluster_count": 1,
+        "review_frontier_count": 8,
+        "true_group_count": 1,
+        "proposal_true_group_count": 1,
+        "frontier_true_group_count": 1,
+        "frontier_false_group_count": 7,
+        "hard_negative_frontier": []
+      }
+    ]
+  },
+  "normal_pose_experiment": {
+    "schema_version": "1.0.0",
+    "truth_basis": "functional_validity_evaluation_only",
+    "accepted_group_count": 0,
+    "accepted_true_positive_count": 0,
+    "auto_accept_precision": null,
+    "false_positive_count": 0,
+    "review_group_count": 58,
+    "rejected_group_count": 2,
+    "unresolved_parts_count": 4,
+    "pose_valid_count": 58,
+    "pose_failed_count": 2,
+    "pose_uncertain_count": 0,
+    "semantic_reranking_enabled": false,
+    "role_template_calibration_passed": false,
+    "role_template_gate_decision": "closed_after_2_of_2_final_provisional_auto_accepts_were_false_on_locked_holdout",
+    "decision_rule": "multi_condition_gate_with_pose_valid_cluster_conflict_abstention"
+  },
+  "harder_pose_experiment": {
+    "schema_version": "1.0.0",
+    "truth_basis": "functional_validity_evaluation_only",
+    "accepted_group_count": 0,
+    "accepted_true_positive_count": 0,
+    "auto_accept_precision": null,
+    "false_positive_count": 0,
+    "review_group_count": 24,
+    "rejected_group_count": 16,
+    "unresolved_parts_count": 2,
+    "pose_valid_count": 23,
+    "pose_failed_count": 16,
+    "pose_uncertain_count": 1,
+    "semantic_reranking_enabled": false,
+    "role_template_calibration_passed": false,
+    "role_template_gate_decision": "closed_after_2_of_2_final_provisional_auto_accepts_were_false_on_locked_holdout",
+    "decision_rule": "multi_condition_gate_with_pose_valid_cluster_conflict_abstention"
+  },
+  "functional_dataset_audit": {
+    "schema_version": "1.0.0",
+    "dataset_root": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_dataset_v1",
+    "case_count": 9,
+    "family_counts": {
+      "bearing_housing": 3,
+      "cover_base": 3,
+      "shaft_hub_key": 3
+    },
+    "expected_families": [
+      "bearing_housing",
+      "cover_base",
+      "shaft_hub_key"
+    ],
+    "all_families_present": true,
+    "invalid_case_count": 0,
+    "negative_type_coverage_ok": true,
+    "generic_geometry_stack_positive_count": 0,
+    "generic_geometry_stack_positive_cases": [],
+    "source_id_used_as_production_truth": false,
+    "status": "pass",
+    "cases": [
+      {
+        "case_id": "bearing_housing_01",
+        "assembly_family": "bearing_housing",
+        "engineering_name": "Shaft bearing support with registered end cover",
+        "part_count": 4,
+        "roles": [
+          "housing",
+          "bearing",
+          "shaft",
+          "end_cover"
+        ],
+        "functional_mate_count": 3,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "bearing_housing_02",
+        "assembly_family": "bearing_housing",
+        "engineering_name": "Shaft bearing support with registered end cover",
+        "part_count": 4,
+        "roles": [
+          "housing",
+          "bearing",
+          "shaft",
+          "end_cover"
+        ],
+        "functional_mate_count": 3,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "bearing_housing_03",
+        "assembly_family": "bearing_housing",
+        "engineering_name": "Shaft bearing support with registered end cover",
+        "part_count": 4,
+        "roles": [
+          "housing",
+          "bearing",
+          "shaft",
+          "end_cover"
+        ],
+        "functional_mate_count": 3,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "cover_base_01",
+        "assembly_family": "cover_base",
+        "engineering_name": "Dowel-located fastened enclosure cover",
+        "part_count": 4,
+        "roles": [
+          "base",
+          "cover",
+          "locating_pin",
+          "locating_pin"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "cover_base_02",
+        "assembly_family": "cover_base",
+        "engineering_name": "Dowel-located fastened enclosure cover",
+        "part_count": 4,
+        "roles": [
+          "base",
+          "cover",
+          "locating_pin",
+          "locating_pin"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "cover_base_03",
+        "assembly_family": "cover_base",
+        "engineering_name": "Dowel-located fastened enclosure cover",
+        "part_count": 4,
+        "roles": [
+          "base",
+          "cover",
+          "locating_pin",
+          "locating_pin"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "shaft_hub_key_01",
+        "assembly_family": "shaft_hub_key",
+        "engineering_name": "Parallel-key shaft and hub torque drive",
+        "part_count": 3,
+        "roles": [
+          "shaft",
+          "hub",
+          "key"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "shaft_hub_key_02",
+        "assembly_family": "shaft_hub_key",
+        "engineering_name": "Parallel-key shaft and hub torque drive",
+        "part_count": 3,
+        "roles": [
+          "shaft",
+          "hub",
+          "key"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      },
+      {
+        "case_id": "shaft_hub_key_03",
+        "assembly_family": "shaft_hub_key",
+        "engineering_name": "Parallel-key shaft and hub torque drive",
+        "part_count": 3,
+        "roles": [
+          "shaft",
+          "hub",
+          "key"
+        ],
+        "functional_mate_count": 2,
+        "weak_mate_indices": [],
+        "negative_types": [
+          "easy_negative",
+          "geometric_hard_negative",
+          "semantic_hard_negative"
+        ],
+        "source_id_is_production_truth": false,
+        "errors": []
+      }
+    ]
+  },
+  "ablations": {
+    "analytic_only": {
+      "proposal_count": 118,
+      "proposal_true_group_recall": 1.0,
+      "review_frontier_count": 30,
+      "review_frontier_recall": 0.75,
+      "review_frontier_precision": 0.1,
+      "false_positive_count": 0
+    },
+    "analytic_joinable": {
+      "proposal_count": 121,
+      "proposal_true_group_recall": 1.0,
+      "review_frontier_count": 33,
+      "review_frontier_recall": 0.75,
+      "review_frontier_precision": 0.09090909090909091,
+      "false_positive_count": 0
+    },
+    "analytic_joinable_union": {
+      "proposal_count": 121,
+      "proposal_true_group_recall": 1.0,
+      "review_frontier_count": 33,
+      "review_frontier_recall": 0.75,
+      "review_frontier_precision": 0.09090909090909091,
+      "false_positive_count": 0
+    },
+    "queue_5": {
+      "proposal_count": 135,
+      "proposal_true_group_recall": 1.0,
+      "review_frontier_count": 15,
+      "review_frontier_recall": 0.75,
+      "review_frontier_precision": 0.2,
+      "false_positive_count": 0
+    },
+    "queue_10": {
+      "proposal_count": 135,
+      "proposal_true_group_recall": 1.0,
+      "review_frontier_count": 28,
+      "review_frontier_recall": 1.0,
+      "review_frontier_precision": 0.14285714285714285,
+      "false_positive_count": 0
+    }
+  },
+  "unsafe_provisional_accepts_transferred_to_review": [
+    {
+      "pool_id": "holdout_pool_002",
+      "group_id": "G_ee0a2fdd5011",
+      "parts": [
+        "part_9511fa078af1.step",
+        "part_9b22586894ce.step",
+        "part_a646e8a7cc74.step",
+        "part_f24aa88fb0f3.step"
+      ],
+      "assembly_family": "bearing_housing",
+      "is_true_group": false,
+      "initial_decision": "accepted_before_role_template_calibration_gate",
+      "final_decision": "review",
+      "transfer_reason": "locked holdout showed every final provisional accept was false"
+    },
+    {
+      "pool_id": "holdout_pool_002",
+      "group_id": "G_480b0cd1e060",
+      "parts": [
+        "part_8e79b8fcb8dd.step",
+        "part_9511fa078af1.step",
+        "part_a646e8a7cc74.step",
+        "part_f24aa88fb0f3.step"
+      ],
+      "assembly_family": "shaft_hub_key",
+      "is_true_group": false,
+      "initial_decision": "accepted_before_role_template_calibration_gate",
+      "final_decision": "review",
+      "transfer_reason": "locked holdout showed every final provisional accept was false"
+    }
+  ],
+  "external_method_alignment": {
+    "joinable_paper": "https://arxiv.org/abs/2111.12772",
+    "joinable_code": "https://github.com/AutodeskAILab/JoinABLe",
+    "fusion360_dataset": "https://github.com/AutodeskAILab/Fusion360GalleryDataset",
+    "conclusion": "JoinABLe predicts pair-level B-Rep joint entities/axes and pose; it is a core PairEdge provider, not proof of complete functional grouping."
+  },
+  "training_decision": {
+    "gpu_training_started": false,
+    "reason": "Locked holdout proposal recall is already 4/4; remaining failure is functional ambiguity and pose-valid false groups, not learned pair recall."
+  },
+  "known_limits": [
+    "Locked harder holdout still lacks mechanical-engineer signoff.",
+    "Role/template calibration gate failed because all 3 provisional accepts were false.",
+    "Auto-accept precision is not estimable while accepted_group_count is zero.",
+    "Two provisional true groups failed exact pose and were rejected under D5 rules.",
+    "JoinABLe union did not improve locked-holdout frontier recall over analytic-only in this four-group sample."
+  ]
+}

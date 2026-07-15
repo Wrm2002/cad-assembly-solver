@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-07",
+  "status": "phase1_integration_complete",
+  "role": "core learned candidate provider at detailed analytic candidate recall",
+  "automatic_acceptance_authority": false,
+  "functional_mixed_pool_benchmark": {
+    "pool_count": 3,
+    "part_count": 42,
+    "pair_count": 273,
+    "graph_extraction_success": 42,
+    "graph_extraction_failure": 0,
+    "cpu_inference_success": 273,
+    "cpu_inference_failure": 0,
+    "cpu_inference_seconds": 5.04,
+    "rescued_prescreen_pairs": 6,
+    "rescued_true_mates": 0,
+    "rescued_functionally_wrong_pairs": 6,
+    "generated_candidate_delta": 15,
+    "kept_candidate_delta": 3,
+    "kept_true_mate_pair_delta": 0
+  },
+  "interpretation": [
+    "The integration is operational and preserves the analytic candidate frontier.",
+    "This benchmark already had complete analytic true-pair recall, so it cannot demonstrate JoinABLe recall gain.",
+    "The released checkpoint has no no-joint class and nominated false pairs; conservative downstream gates remain mandatory.",
+    "The next measurement target is a harder holdout with documented analytic prescreen misses."
+  ],
+  "gpu": {
+    "rental_required_now": false,
+    "local_cuda_available": true,
+    "local_cuda_batch_status": "unreliable",
+    "local_cuda_failure": "CUDA illegal instruction during final synchronization",
+    "cpu_is_sufficient_for_current_small_benchmark": true,
+    "rent_or_repair_gpu_trigger": "larger batch inference after the hard-holdout graph set and ablation command are frozen"
+  }
+}

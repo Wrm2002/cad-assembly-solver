@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "case_id": "1",
+      "part_count": 2,
+      "pair_count": 1,
+      "human_labels": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_1\\human_labels.json",
+      "system_prediction": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_1\\system_prediction.json",
+      "parts_tray": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_1\\parts_tray.png"
+    },
+    {
+      "case_id": "2",
+      "part_count": 4,
+      "pair_count": 6,
+      "human_labels": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_2\\human_labels.json",
+      "system_prediction": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_2\\system_prediction.json",
+      "parts_tray": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_2\\parts_tray.png"
+    },
+    {
+      "case_id": "3",
+      "part_count": 2,
+      "pair_count": 1,
+      "human_labels": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_3\\human_labels.json",
+      "system_prediction": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_3\\system_prediction.json",
+      "parts_tray": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_3\\parts_tray.png"
+    },
+    {
+      "case_id": "4",
+      "part_count": 3,
+      "pair_count": 3,
+      "human_labels": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_4\\human_labels.json",
+      "system_prediction": null,
+      "parts_tray": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_4\\parts_tray.png"
+    },
+    {
+      "case_id": "5",
+      "part_count": 3,
+      "pair_count": 3,
+      "human_labels": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_5\\human_labels.json",
+      "system_prediction": null,
+      "parts_tray": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\phase5_annotation_pack\\case_5\\parts_tray.png"
+    }
+  ]
+}

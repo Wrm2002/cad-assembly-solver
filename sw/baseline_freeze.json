@@ -1,0 +1,35 @@
+{
+  "created_at": "2026-07-02T04:05:12.243447+00:00",
+  "api_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "git_revision": null,
+  "python": "3.10.20 | packaged by conda-forge | (main, Jun 11 2026, 03:28:51) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "conventions": {
+    "length_unit": "mm",
+    "angle_unit": "degree",
+    "coordinate_frame": "local_part",
+    "part_id": "stable pool-local identifier; never inferred from function"
+  },
+  "core_file_sha256": {
+    "features.py": "676b27162a87032e353d548ad445228100b61d25d6ce54d505cfa6c4d02fb557",
+    "constraints.py": "a47f4b48c70c9c775097a4611820cf53a8358f9f94bf43fa4d793d733642f7a3",
+    "coordinate_solver.py": "486e8bd2ffc434fd7a36f55f85551cabe5e93f0cd6815879d45f4ec1c56f84d0",
+    "refinement.py": "1cb05d27084c84b4f6971f555377dcb721e8a992920e0efb55959c736c34fcbc",
+    "match_scoring.py": "3ecff859b3eeaae5ddd40530400af25a26d2ec68b7dd6e360cb1adaf2ed62e69",
+    "match_pruning.py": "7ae84b993cb3c54f19a81ef290faae7a3785eed7a528fb84f3062c1a84ed24af",
+    "small_assembly_solver.py": "dcf7d809c5507ae23774ac3a7339c39074f4558005009645e70a9fccb2dd64d1",
+    "placement_validation.py": "8740b1f233222c1f6eb16e2a19dd92b0186c384e452ad4158309a15ee41559a3",
+    "compute_manifest.py": "806b9a87d3905bc367e1e3af57a4be38bf89a4b9ba1bfd641a5fd4bc20eb1ba2",
+    "pipeline_api.py": "62e9dc72d9f943ffcd4b05f4aa9c6a849da7e01594127b796a54d21c7d2a845d",
+    "contracts.py": "b5ae0ce29f1fa8ccbd6ea3cb5da7b5622674d429a64e70039b08817a9d11786f",
+    "configs/pool_pipeline.json": "f7872ae98161e9892a1bc081d166af7f007d24de736b91ee9d34e2f60e04c1dc"
+  },
+  "known_limitations": [
+    "Synthetic v0 cases share one incremental parameterized family.",
+    "Hole and hole-pattern classification is heuristic and labelled as such.",
+    "Bounding-box collision is a conservative precheck, not exact penetration.",
+    "Pool prescreen prioritizes recall and does not decide final grouping.",
+    "No LLM, learned scorer, global grouping, or Agent action is used in D1-D3."
+  ]
+}
