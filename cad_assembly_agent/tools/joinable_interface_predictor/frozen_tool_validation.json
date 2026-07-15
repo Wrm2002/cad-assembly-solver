@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "tool_id": "joinable_pair_interface_predictor",
+  "tool_version": "1.0.0-frozen",
+  "status": "passed",
+  "checked_files": [
+    {
+      "kind": "checkpoint",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\vendor\\JoinABLe\\pretrained\\paper\\last_run_0.ckpt",
+      "exists": true,
+      "expected_sha256": "c2d2eebd8c5a5cea19d8118b12a2e8a5dead84f57f85ba2e1068127cc7dc0bdf",
+      "actual_sha256": "c2d2eebd8c5a5cea19d8118b12a2e8a5dead84f57f85ba2e1068127cc7dc0bdf",
+      "hash_matches": true
+    },
+    {
+      "kind": "source",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\cad_assembly_agent\\tools\\joinable_interface_predictor\\pretrained_joinable_predictor.py",
+      "exists": true,
+      "expected_sha256": "4d6c94b554d91cb91b85f5f64ae5e402462115fca47caf7148c3a65b520d7202",
+      "actual_sha256": "4d6c94b554d91cb91b85f5f64ae5e402462115fca47caf7148c3a65b520d7202",
+      "hash_matches": true
+    },
+    {
+      "kind": "source",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_gpu_reproduction\\joinable_compat.py",
+      "exists": true,
+      "expected_sha256": "e9e8ef10cdd1382e063e2d6f22cefaf6f67dd11bbf07b334005b11ea06c5534c",
+      "actual_sha256": "e9e8ef10cdd1382e063e2d6f22cefaf6f67dd11bbf07b334005b11ea06c5534c",
+      "hash_matches": true
+    },
+    {
+      "kind": "source",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\cad_assembly_agent\\tools\\joinable_interface_predictor\\JOINABLE_TOOL_CONTRACT.md",
+      "exists": true,
+      "expected_sha256": "b89c11f28d20be9d806308fa1dc345f73e707c68e1ccba0d2a11403e0f6e7227",
+      "actual_sha256": "b89c11f28d20be9d806308fa1dc345f73e707c68e1ccba0d2a11403e0f6e7227",
+      "hash_matches": true
+    },
+    {
+      "kind": "source",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\vendor\\JoinABLe\\models\\__init__.py",
+      "exists": true,
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hash_matches": true
+    },
+    {
+      "kind": "source",
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\vendor\\JoinABLe\\models\\joinable.py",
+      "exists": true,
+      "expected_sha256": "c1e1252d4c80451c2e1dc1d3f815c8a0a76d27640ffedb50ae5a95570f227318",
+      "actual_sha256": "c1e1252d4c80451c2e1dc1d3f815c8a0a76d27640ffedb50ae5a95570f227318",
+      "hash_matches": true
+    }
+  ],
+  "reference_report": {
+    "path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_gpu_reproduction\\official_inference_full_report.json",
+    "exists": true,
+    "expected_sha256": "7f7d01bf35e014b3dcaf46dd1688cc28230480ef0deedf6190157af8cc6971b0",
+    "actual_sha256": "7f7d01bf35e014b3dcaf46dd1688cc28230480ef0deedf6190157af8cc6971b0",
+    "hash_matches": true,
+    "metrics_gate_passed": true
+  },
+  "pair_interface_smoke_evidence": {
+    "path": "C:\\Users\\11049\\Desktop\\Model_match\\cad_assembly_agent\\tools\\joinable_interface_predictor\\frozen_tool_smoke_prediction.json",
+    "exists": true,
+    "expected_sha256": "902dc8076b90483bdbe6157863d8bdbb0b9052d75db86113eee4cd0088532411",
+    "actual_sha256": "902dc8076b90483bdbe6157863d8bdbb0b9052d75db86113eee4cd0088532411",
+    "valid": true
+  },
+  "gate_policy_verified": true,
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "fresh_full_test_inference_not_run_by_lightweight_validator"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "python": "3.10.20",
+  "python_executable": "C:\\Users\\11049\\miniforge3\\envs\\cad_asm\\python.exe",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "pythonocc": true,
+  "numpy": true,
+  "scipy": true,
+  "pandas": true,
+  "networkx": true,
+  "pywin32": true,
+  "solidworks_com": true,
+  "solidworks_version": "34.2.1",
+  "solidworks_error": null,
+  "numerical_runtime": true,
+  "numerical_runtime_returncode": 0,
+  "numerical_runtime_error": null,
+  "torch": false,
+  "torch_version": null,
+  "cuda": false,
+  "device": "cpu",
+  "nvidia_driver_detected": true,
+  "gpu_name": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "workdir": {
+    "path": "C:\\Users\\11049\\Desktop\\Model_match\\sw",
+    "readable": true,
+    "writable": true,
+    "error": null
+  },
+  "step_file_count": 14,
+  "step_files": [
+    "1\\flange_part_a.step",
+    "1\\flange_part_b.step",
+    "2\\flange_a_pipe_X_fan15deg.step",
+    "2\\flange_b_pipe_Y_fan20deg.step",
+    "2\\key.step",
+    "2\\shaft_with_keyway.step",
+    "3\\01_FAN-CAGE-MODULE-R620-NH.stp",
+    "3\\01_FAN-MODULE-SUNON-6056(1).stp",
+    "4\\01-62DC24-MLB-PCBA.stp",
+    "4\\5-rd_rc_a_2rx4_1_ddrv.stp",
+    "4\\Hygon-7400-3D.stp",
+    "5\\01-ASSY-CHASSIS-EAR-L-R620.stp",
+    "5\\01-ASSY-CHASSIS-MODULE-R6250H0.stp",
+    "5\\5-CRPS1300NC.stp"
+  ],
+  "module_details": {
+    "pythonocc": {
+      "available": true,
+      "version": null,
+      "error": null
+    },
+    "numpy": {
+      "available": true,
+      "version": "2.2.6",
+      "error": null
+    },
+    "scipy": {
+      "available": true,
+      "version": "1.15.2",
+      "error": null
+    },
+    "pandas": {
+      "available": true,
+      "version": "2.3.3",
+      "error": null
+    },
+    "networkx": {
+      "available": true,
+      "version": "3.4.2",
+      "error": null
+    },
+    "pywin32": {
+      "available": true,
+      "version": null,
+      "error": null
+    }
+  }
+}

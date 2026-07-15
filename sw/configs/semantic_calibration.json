@@ -1,0 +1,250 @@
+{
+  "schema_version": "1.0.0",
+  "calibration_pools": [
+    "pool_001",
+    "pool_002",
+    "pool_003"
+  ],
+  "holdout_pools": [
+    "pool_004",
+    "pool_005",
+    "pool_006",
+    "pool_007",
+    "pool_008",
+    "pool_009",
+    "pool_010",
+    "pool_011",
+    "pool_012"
+  ],
+  "review_count": 18,
+  "positive_count": 2,
+  "negative_count": 16,
+  "geometry_auc": 0.8125,
+  "semantic_auc": 0.5,
+  "semantic_brier_score": 0.7322222222222222,
+  "geometry_brier_score": 0.7780912106332436,
+  "semantic_score_range": 0.45999999999999996,
+  "verdicts": [
+    "abstain",
+    "accept"
+  ],
+  "total_tokens": 25674,
+  "semantic_reranking_enabled": false,
+  "semantic_application_mode": "explanation_only",
+  "holdout_safety": {
+    "auto_accept_precision_not_decreased": false,
+    "false_positive_count_not_increased": false,
+    "reason": "not demonstrated"
+  },
+  "gate_rules": {
+    "minimum_semantic_auc": 0.7,
+    "brier_must_improve_over_geometry": true,
+    "required_verdicts": [
+      "accept",
+      "reject",
+      "abstain"
+    ],
+    "holdout_auto_accept_precision_not_decreased": true,
+    "holdout_false_positive_count_not_increased": true
+  },
+  "rows": [
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_42cf8d39a232",
+      "label": 0,
+      "geometry_score": 0.9502299999999999,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.9,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1070
+    },
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_74b08db16500",
+      "label": 0,
+      "geometry_score": 0.8888878833333334,
+      "semantic_score": 0.85,
+      "semantic_confidence": 0.8,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1591
+    },
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_656f3d1f8e40",
+      "label": 1,
+      "geometry_score": 0.9612145,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1044
+    },
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_d7e5a3191954",
+      "label": 0,
+      "geometry_score": 0.9469136666666665,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1528
+    },
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_154148d546ac",
+      "label": 0,
+      "geometry_score": 0.9439802666666667,
+      "semantic_score": 0.94,
+      "semantic_confidence": 0.95,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 2285
+    },
+    {
+      "pool_id": "pool_001",
+      "proposal_id": "G_84b99236bd5b",
+      "label": 0,
+      "geometry_score": 0.9432378499999999,
+      "semantic_score": 0.94,
+      "semantic_confidence": 0.95,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1661
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_9db19ac65031",
+      "label": 0,
+      "geometry_score": 0.9496665999999999,
+      "semantic_score": 0.94,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1021
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_9e0813a5d217",
+      "label": 0,
+      "geometry_score": 0.9129230249999999,
+      "semantic_score": 0.91,
+      "semantic_confidence": 0.9,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 3222
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_baa0d4ed1e20",
+      "label": 0,
+      "geometry_score": 0.9750826,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1038
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_04b930980341",
+      "label": 0,
+      "geometry_score": 0.9625614999999998,
+      "semantic_score": 0.96,
+      "semantic_confidence": 0.9,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1545
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_455ea6ec47b4",
+      "label": 1,
+      "geometry_score": 0.9619011999999999,
+      "semantic_score": 0.9,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1005
+    },
+    {
+      "pool_id": "pool_002",
+      "proposal_id": "G_886842d1f56b",
+      "label": 0,
+      "geometry_score": 0.9610367666666666,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1541
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_ba52532200c2",
+      "label": 0,
+      "geometry_score": 0.9759133,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1039
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_581df58cedf3",
+      "label": 0,
+      "geometry_score": 0.8907453999999999,
+      "semantic_score": 0.89,
+      "semantic_confidence": 0.9,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1004
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_f9b0350cb3c3",
+      "label": 0,
+      "geometry_score": 0.8447626333333333,
+      "semantic_score": 0.5,
+      "semantic_confidence": 0.6,
+      "verdict": "abstain",
+      "cache_hit": true,
+      "tokens": 1555
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_3f45734884a5",
+      "label": 0,
+      "geometry_score": 0.9518983333333333,
+      "semantic_score": 0.95,
+      "semantic_confidence": 0.9,
+      "verdict": "accept",
+      "cache_hit": true,
+      "tokens": 1501
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_ff47f427a104",
+      "label": 0,
+      "geometry_score": 0.9315882999999999,
+      "semantic_score": 0.85,
+      "semantic_confidence": 0.8,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1021
+    },
+    {
+      "pool_id": "pool_003",
+      "proposal_id": "G_f8d477d69025",
+      "label": 0,
+      "geometry_score": 0.9287424999999999,
+      "semantic_score": 0.93,
+      "semantic_confidence": 0.85,
+      "verdict": "accept",
+      "cache_hit": false,
+      "tokens": 1003
+    }
+  ]
+}

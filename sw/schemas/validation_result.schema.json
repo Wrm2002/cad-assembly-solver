@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "ValidationStatus": {
+      "enum": [
+        "success",
+        "partial_success",
+        "failed"
+      ],
+      "title": "ValidationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ValidationStatus"
+    },
+    "num_parts": {
+      "minimum": 1,
+      "title": "Num Parts",
+      "type": "integer"
+    },
+    "solved_parts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Solved Parts",
+      "type": "array"
+    },
+    "unsolved_parts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unsolved Parts",
+      "type": "array"
+    },
+    "max_constraint_residual": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Constraint Residual"
+    },
+    "collision_count": {
+      "minimum": 0,
+      "title": "Collision Count",
+      "type": "integer"
+    },
+    "severe_penetration_count": {
+      "minimum": 0,
+      "title": "Severe Penetration Count",
+      "type": "integer"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "metrics": {
+      "additionalProperties": true,
+      "title": "Metrics",
+      "type": "object"
+    }
+  },
+  "required": [
+    "subject_id",
+    "status",
+    "num_parts",
+    "solved_parts",
+    "unsolved_parts",
+    "collision_count",
+    "severe_penetration_count",
+    "warnings",
+    "metrics"
+  ],
+  "title": "ValidationResult",
+  "type": "object"
+}

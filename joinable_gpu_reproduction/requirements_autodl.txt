@@ -1,0 +1,9 @@
+numpy==1.26.4
+scipy==1.13.1
+scikit-learn==1.5.2
+matplotlib==3.9.2
+trimesh==4.7.4
+torch-geometric==2.6.1
+pytorch-lightning==1.9.5
+torchmetrics==0.11.4
+setuptools==80.9.0

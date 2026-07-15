@@ -1,0 +1,427 @@
+{
+  "schema_version": "1.0.0",
+  "part_id": "25370_adbde9bf_0025_2",
+  "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\25370_adbde9bf_0025_2.step",
+  "source_geometry_sha256": "31ae00c2c6acab1f4a387290b528ec32da23d5350f4dfb102fd40983ff882944",
+  "nodes": [
+    {
+      "node_id": "face_000001",
+      "entity_type": "face",
+      "occt_topology_index": 1,
+      "joinable_node_index": 0,
+      "joinable_entity_type": "CylinderSurfaceType",
+      "joinable_entity_type_index": 1,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 1,
+      "length": 0.0,
+      "face_reversed": 1,
+      "edge_reversed": 0,
+      "surface_type": "cylinder",
+      "area": 70.93904707364987,
+      "normal": [
+        -1.0,
+        -0.0,
+        0.0
+      ],
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        1.5875
+      ],
+      "orientation": "reversed",
+      "geometry_signature": "88f21d4a53947d377627",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "face_000002",
+      "entity_type": "face",
+      "occt_topology_index": 2,
+      "joinable_node_index": 1,
+      "joinable_entity_type": "CylinderSurfaceType",
+      "joinable_entity_type_index": 1,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 1,
+      "length": 0.0,
+      "face_reversed": 0,
+      "edge_reversed": 0,
+      "surface_type": "cylinder",
+      "area": 410.4330580689732,
+      "normal": [
+        1.0,
+        0.0,
+        -0.0
+      ],
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        1.5875
+      ],
+      "orientation": "forward",
+      "geometry_signature": "ad2e9732079f7a50cf5b",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "face_000003",
+      "entity_type": "face",
+      "occt_topology_index": 3,
+      "joinable_node_index": 2,
+      "joinable_entity_type": "PlaneSurfaceType",
+      "joinable_entity_type_index": 0,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 1,
+      "length": 0.0,
+      "face_reversed": 0,
+      "edge_reversed": 0,
+      "surface_type": "plane",
+      "area": 1290.0772417822293,
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        3.175
+      ],
+      "orientation": "forward",
+      "geometry_signature": "acc9750fcd5668cf358f",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "face_000004",
+      "entity_type": "face",
+      "occt_topology_index": 4,
+      "joinable_node_index": 3,
+      "joinable_entity_type": "PlaneSurfaceType",
+      "joinable_entity_type_index": 0,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 1,
+      "length": 0.0,
+      "face_reversed": 1,
+      "edge_reversed": 0,
+      "surface_type": "plane",
+      "area": 1290.0772417822293,
+      "normal": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        0.0
+      ],
+      "orientation": "reversed",
+      "geometry_signature": "9337fc7c93c196a647d1",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000001",
+      "entity_type": "edge",
+      "occt_topology_index": 1,
+      "joinable_node_index": 4,
+      "joinable_entity_type": "Line3DCurveType",
+      "joinable_entity_type_index": 8,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 1,
+      "curve_type": "line",
+      "length": 3.175,
+      "radius": null,
+      "centroid": [
+        -57.584625071876,
+        588.734454166775,
+        1.5875
+      ],
+      "orientation": "reversed",
+      "geometry_signature": "75bba016ef255b9bee30",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000002",
+      "entity_type": "edge",
+      "occt_topology_index": 2,
+      "joinable_node_index": 5,
+      "joinable_entity_type": "Circle3DCurveType",
+      "joinable_entity_type_index": 10,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 0,
+      "curve_type": "circle",
+      "length": 22.343006952330672,
+      "radius": 3.55600000000001,
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        0.0
+      ],
+      "orientation": "forward",
+      "geometry_signature": "d3d5a1f583b06070fd84",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000003",
+      "entity_type": "edge",
+      "occt_topology_index": 3,
+      "joinable_node_index": 6,
+      "joinable_entity_type": "Circle3DCurveType",
+      "joinable_entity_type_index": 10,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 1,
+      "curve_type": "circle",
+      "length": 22.343006952330672,
+      "radius": 3.55600000000001,
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        3.175
+      ],
+      "orientation": "reversed",
+      "geometry_signature": "d44d95df66df12325137",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000004",
+      "entity_type": "edge",
+      "occt_topology_index": 4,
+      "joinable_node_index": 7,
+      "joinable_entity_type": "Circle3DCurveType",
+      "joinable_entity_type_index": 10,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 1,
+      "curve_type": "circle",
+      "length": 129.27025450991283,
+      "radius": 20.574,
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        3.175
+      ],
+      "orientation": "reversed",
+      "geometry_signature": "6153e739ba303ad1997a",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000005",
+      "entity_type": "edge",
+      "occt_topology_index": 5,
+      "joinable_node_index": 8,
+      "joinable_entity_type": "Line3DCurveType",
+      "joinable_entity_type_index": 8,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 0,
+      "curve_type": "line",
+      "length": 3.175,
+      "radius": null,
+      "centroid": [
+        -74.602625071876,
+        588.734454166775,
+        1.5875
+      ],
+      "orientation": "forward",
+      "geometry_signature": "94a4a7e787e3f8288b93",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "node_id": "edge_000006",
+      "entity_type": "edge",
+      "occt_topology_index": 6,
+      "joinable_node_index": 9,
+      "joinable_entity_type": "Circle3DCurveType",
+      "joinable_entity_type_index": 10,
+      "joinable_entity_type_mapping_quality": "exact",
+      "is_face": 0,
+      "face_reversed": 0,
+      "edge_reversed": 0,
+      "curve_type": "circle",
+      "length": 129.27025450991283,
+      "radius": 20.574,
+      "centroid": [
+        -54.028625071876,
+        588.734454166775,
+        0.0
+      ],
+      "orientation": "forward",
+      "geometry_signature": "a5a1840b5191f2d46fd1",
+      "reverse_lookup_available_in_worker": true,
+      "failure_reasons": [],
+      "unavailable_fields": []
+    }
+  ],
+  "edges": [
+    {
+      "src": "face_000001",
+      "dst": "edge_000001",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000001",
+      "dst": "edge_000002",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000001",
+      "dst": "edge_000003",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000002",
+      "dst": "edge_000004",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000002",
+      "dst": "edge_000005",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000002",
+      "dst": "edge_000006",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000003",
+      "dst": "edge_000003",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000003",
+      "dst": "edge_000004",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000004",
+      "dst": "edge_000002",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    },
+    {
+      "src": "face_000004",
+      "dst": "edge_000006",
+      "relation": "face_edge_adjacency",
+      "failure_reasons": [],
+      "unavailable_fields": []
+    }
+  ],
+  "metadata": {
+    "unit": "STEP_declared_or_importer_interpreted",
+    "bounding_box": {
+      "min": [
+        -74.6026251718763,
+        568.1604540667751,
+        -1e-07
+      ],
+      "max": [
+        -33.45462497187629,
+        609.3084542667749,
+        3.1750000999999997
+      ],
+      "center": [
+        -54.02862507187629,
+        588.734454166775,
+        1.5875
+      ],
+      "half_extents": [
+        20.574000100000003,
+        20.57400009999992,
+        1.5875000999999997
+      ]
+    },
+    "checkpoint_pair_normalization_extent": 20.574000100000003,
+    "num_faces": 4,
+    "num_edges": 6,
+    "num_solids": 1,
+    "num_face_edge_adjacencies": 10,
+    "extraction_status": "success",
+    "failure_reason": null,
+    "id_scheme": "1-based OCCT IndexedMap order per entity type",
+    "id_stability_scope": "same input hash, OCCT build, import settings and process",
+    "stable_across_step_rewrite_or_healing": false,
+    "reverse_lookup_scope": "exact in worker via IndexedMap.FindKey(index); after serialization requires deterministic re-import",
+    "joinable_feature_gaps": [
+      "face UV point/normal/trimming-mask grids",
+      "edge point/tangent grids",
+      "edge convexity",
+      "dihedral angle",
+      "designer-selected joint labels",
+      "contact labels",
+      "hole labels",
+      "assembly transforms and hierarchy"
+    ],
+    "released_checkpoint_input_features": [
+      "entity_types",
+      "length",
+      "face_reversed",
+      "edge_reversed"
+    ],
+    "released_checkpoint_minimal_features_available": true,
+    "released_checkpoint_approximated_entity_mappings": [],
+    "released_checkpoint_requires_uv_or_curve_grids": false,
+    "failure_reasons": [],
+    "unavailable_fields": [
+      "assembly transforms and hierarchy",
+      "contact labels",
+      "designer-selected joint labels",
+      "dihedral angle",
+      "edge convexity",
+      "edge point/tangent grids",
+      "face UV point/normal/trimming-mask grids",
+      "hole labels"
+    ]
+  },
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "assembly transforms and hierarchy",
+    "contact labels",
+    "designer-selected joint labels",
+    "dihedral angle",
+    "edge convexity",
+    "edge point/tangent grids",
+    "face UV point/normal/trimming-mask grids",
+    "hole labels"
+  ]
+}

@@ -108,7 +108,12 @@ def _detect_all_faces_occt(filepath):
     """
     try:
         from OCC.Core.TopExp import TopExp_Explorer
-        from OCC.Core.TopAbs import TopAbs_FACE, TopAbs_REVERSED
+        from OCC.Core.TopAbs import (
+            TopAbs_FACE,
+            TopAbs_REVERSED,
+            TopAbs_SHELL,
+            TopAbs_SOLID,
+        )
         from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
         from OCC.Core.BRepLProp import BRepLProp_SLProps
         from OCC.Core.GeomAbs import (GeomAbs_Plane, GeomAbs_Cylinder,
@@ -124,8 +129,9 @@ def _detect_all_faces_occt(filepath):
         from OCC.Core.STEPControl import STEPControl_Reader
         from OCC.Core.IFSelect import IFSelect_RetDone
         from OCC.Core.BRepGProp import brepgprop
+        from OCC.Core.BRepTools import breptools
         from OCC.Core.GProp import GProp_GProps
-        from OCC.Core.Bnd import Bnd_Box
+        from OCC.Core.Bnd import Bnd_Box, Bnd_OBB
         from OCC.Core.BRepBndLib import brepbndlib
     except ImportError:
         return None
@@ -136,6 +142,19 @@ def _detect_all_faces_occt(filepath):
     reader.TransferRoots()
     shape = reader.OneShape()
 
+    def _subshape_count(kind):
+        count = 0
+        explorer = TopExp_Explorer(shape, kind)
+        while explorer.More():
+            count += 1
+            explorer.Next()
+        return count
+
+    topology = {
+        'solid_count': _subshape_count(TopAbs_SOLID),
+        'shell_count': _subshape_count(TopAbs_SHELL),
+    }
+
     # Overall bbox from OCCT (more reliable than text points)
     bbox = Bnd_Box()
     bbox.SetGap(0.0)
@@ -145,6 +164,33 @@ def _detect_all_faces_occt(filepath):
         'min': (_snap_scalar(x1), _snap_scalar(y1), _snap_scalar(z1)),
         'max': (_snap_scalar(x2), _snap_scalar(y2), _snap_scalar(z2)),
     }
+    occt_obb = None
+    try:
+        obb = Bnd_OBB()
+        brepbndlib.AddOBB(shape, obb, False, False, False)
+        if not obb.IsVoid():
+            center = obb.Center()
+            directions = (
+                obb.XDirection(), obb.YDirection(), obb.ZDirection()
+            )
+            occt_obb = {
+                'center': [center.X(), center.Y(), center.Z()],
+                'axes': [
+                    list(_snap_direction((axis.X(), axis.Y(), axis.Z())))
+                    for axis in directions
+                ],
+                'dimensions': [
+                    2.0 * float(obb.XHSize()),
+                    2.0 * float(obb.YHSize()),
+                    2.0 * float(obb.ZHSize()),
+                ],
+                'is_axis_aligned': bool(obb.IsAABox()),
+                'method': 'occt_brepbndlib_addobb',
+            }
+    except Exception:
+        # OBB is a candidate-frame aid.  Failure must not remove the existing
+        # high-recall analytic features or silently fabricate an orientation.
+        occt_obb = None
 
     # Classify every face
     result = {
@@ -159,6 +205,8 @@ def _detect_all_faces_occt(filepath):
         'bezier_surfaces': [],
         'other_surfaces': [],
         '_bbox': occt_bbox,
+        '_obb': occt_obb,
+        '_topology': topology,
     }
 
     exp = TopExp_Explorer(shape, TopAbs_FACE)
@@ -178,16 +226,54 @@ def _detect_all_faces_occt(filepath):
             if face.Orientation() == TopAbs_REVERSED:
                 normal.Reverse()
             origin = pln.Location()
-            result['planes'].append({
+            centroid = props.CentreOfMass()
+            plane_row = {
                 'normal': _snap_direction((normal.X(), normal.Y(), normal.Z())),
                 'position': _snap_point((origin.X(), origin.Y(), origin.Z())),
+                'centroid': list(_snap_point((
+                    centroid.X(), centroid.Y(), centroid.Z()
+                ))),
                 'area': area,
                 'surface_orientation': (
                     'reversed'
                     if face.Orientation() == TopAbs_REVERSED
                     else 'forward'
                 ),
-            })
+            }
+            # A planar face area does not determine its aspect ratio.  Preserve
+            # the actual trimmed UV footprint so downstream interface recall
+            # can compare thin-part dimensions without inventing a square.
+            # UV bounds are constant-time and reuse this traversal; unlike a
+            # second vertex walk over a very large STEP they add negligible
+            # overhead.  Older/degenerate bindings simply keep the legacy row.
+            try:
+                u_min, u_max, v_min, v_max = breptools.UVBounds(face)
+                footprint_dimensions = [
+                    abs(float(u_max) - float(u_min)),
+                    abs(float(v_max) - float(v_min)),
+                ]
+                x_direction = pln.XAxis().Direction()
+                y_direction = pln.YAxis().Direction()
+                if (
+                    all(math.isfinite(value) for value in footprint_dimensions)
+                    and min(footprint_dimensions) > 1e-9
+                ):
+                    plane_row['footprint_axes'] = [
+                        list(_snap_direction((
+                            x_direction.X(),
+                            x_direction.Y(),
+                            x_direction.Z(),
+                        ))),
+                        list(_snap_direction((
+                            y_direction.X(),
+                            y_direction.Y(),
+                            y_direction.Z(),
+                        ))),
+                    ]
+                    plane_row['footprint_dimensions'] = footprint_dimensions
+            except Exception:
+                pass
+            result['planes'].append(plane_row)
 
         elif stype == GeomAbs_Cylinder:
             cyl = adaptor.Cylinder()
@@ -382,6 +468,7 @@ def extract_features(filepath, use_occt=True):
             'torii': [],
             'spheres': [],
             'bbox': text_bbox,
+            'obb': None,
             'occt_stats': {'used': False},
         }
 
@@ -430,6 +517,8 @@ def extract_features(filepath, use_occt=True):
         'torii': occt['torii'],
         'spheres': occt['spheres'],
         'bbox': bbox,
+        'obb': occt.get('_obb'),
+        'topology': occt.get('_topology'),
         'occt_stats': {
             'used': True,
             'text_cylinders': len(text_cylinders),
@@ -444,6 +533,7 @@ def extract_features(filepath, use_occt=True):
             'occt_bspline': len(occt['bspline_surfaces']),
             'occt_bezier': len(occt['bezier_surfaces']),
             'occt_other': len(occt['other_surfaces']),
+            'occt_obb_available': occt.get('_obb') is not None,
         },
     }
     return result

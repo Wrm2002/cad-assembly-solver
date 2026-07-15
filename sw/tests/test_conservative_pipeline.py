@@ -1,15 +1,19 @@
 import sys
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from conservative_pipeline import (
+    _route_baseline_audit_rows,
     _passes_final_acceptance,
     bound_review_queue,
     geometry_tiers,
     route_overlapping_accepts_to_review,
 )
+from run_conservative_delivery import write_closed_semantic_gate
 
 
 CONFIG = {
@@ -22,6 +26,61 @@ CONFIG = {
 
 
 class ConservativePipelineTests(unittest.TestCase):
+    def test_closed_semantic_gate_emits_all_d6_artifacts(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            calibration = root / "calibration.json"
+            calibration.write_text(
+                json.dumps(
+                    {
+                        "semantic_auc": 0.5,
+                        "semantic_brier_score": 0.73,
+                        "geometry_brier_score": 0.61,
+                        "verdicts": ["accept", "abstain"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            report = write_closed_semantic_gate(root, calibration)
+
+            self.assertFalse(report["semantic_reranking_enabled"])
+            self.assertFalse(report["provider_called"])
+            self.assertEqual(
+                json.loads((root / "semantic_inputs.json").read_text()), []
+            )
+            for name in (
+                "semantic_reviews.json",
+                "semantic_calibration_report.json",
+                "semantic_gate_decision.md",
+            ):
+                self.assertTrue((root / name).is_file())
+
+    def test_false_positive_audit_contract_is_routable(self):
+        baseline = [
+            {
+                "pool_id": "pool_001",
+                "candidate_id": "G1",
+                "false_positive": True,
+            }
+        ]
+        review = [
+            {
+                "pool_id": "pool_001",
+                "group_id": "G1",
+                "final_decision": "review",
+                "review_queue_state": "selected",
+                "decision_reasons": ["global_conflict"],
+            }
+        ]
+        routed = _route_baseline_audit_rows(
+            baseline, [], review, []
+        )[0]
+        self.assertEqual(routed["post_gate_decision"], "review")
+        self.assertEqual(
+            routed["post_gate_review_queue_state"], "selected"
+        )
+        self.assertEqual(routed["post_gate_reason"], "global_conflict")
+
     def test_low_geometry_rejects_and_single_planar_reviews(self):
         proposals = [
             {

@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "date": "2026-07-07",
+  "gpu_rental_required_now": false,
+  "training_authorized": false,
+  "observed_runtime": {
+    "functional_holdout_pair_count": 64,
+    "cpu_model_seconds": 1.16987730000983,
+    "cuda_model_seconds": 1.7603388999996241,
+    "cpu_wall_seconds": 8.854471899976488,
+    "cuda_wall_seconds": 9.64007429999765,
+    "cuda_peak_allocated_mib": 64.32861328125,
+    "analytic_only_full_pipeline_seconds": 90.6655488999968,
+    "analytic_joinable_full_pipeline_seconds": 90.54760220000753,
+    "bottleneck": "pose_and_collision_validation"
+  },
+  "rental_trigger": {
+    "all_required": [
+      "pair-batched inference is implemented and benchmarked",
+      "expected local end-to-end runtime exceeds two hours or pair count exceeds 50000",
+      "GPU inference, not pose/collision, is measured as at least 30 percent of wall time",
+      "a rented configuration demonstrates at least 3x end-to-end speedup on a representative shard"
+    ],
+    "reason": "The current per-pair implementation is faster on CPU at this scale; a faster rented GPU would not reduce the dominant pose/collision time."
+  },
+  "domain_adaptation_gate": {
+    "decision": "closed",
+    "required_before_reconsideration": [
+      "untouched external holdout with at least 100 engineer-confirmed exact interfaces",
+      "at least 1000 geometry-valid functional hard-negative pairs",
+      "zero increase in false auto accepts",
+      "positive workload-adjusted rescue benefit on the untouched holdout",
+      "checkpoint selection uses validation only and test remains evaluation-only",
+      "at least three of four seeds have non-degraded test Top-10 and mean test Top-10 is positive"
+    ],
+    "existing_training_evidence": {
+      "small_300_multiseed_mean_test_top10_delta": -0.06617647058823531,
+      "small_300_non_degraded_runs_out_of_4": 0,
+      "expanded_2600_multiseed_mean_test_top10_delta": -0.003393665158371084,
+      "expanded_2600_non_degraded_runs_out_of_4": 2
+    },
+    "reason": "Previous domain adaptation did not pass the independent-test promotion gate, and current candidate union already provides recall benefit without retraining."
+  }
+}

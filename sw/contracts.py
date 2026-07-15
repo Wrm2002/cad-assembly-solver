@@ -257,6 +257,13 @@ class DirectAssemblyConnection(StrictModel):
     selection_role: Literal["connected_skeleton", "additional_supported_edge"]
     constraint_closed_in_selected_pose: bool
     review_required: bool
+    closure_evidence: str | None = None
+    axial_compound_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    axial_group_centering_evidence: list[dict[str, Any]] = Field(
+        default_factory=list
+    )
+    enclosure_bay_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    edge_slot_evidence: list[dict[str, Any]] = Field(default_factory=list)
     providers: list[str] = Field(default_factory=list)
     relative_transform_a_to_b: list[list[float]]
     joinable_interface_candidates: list[dict[str, Any]] = Field(default_factory=list)

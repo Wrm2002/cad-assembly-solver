@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "AssemblyConstraint": {
+      "additionalProperties": false,
+      "description": "One labelled geometric constraint supporting a direct connection.",
+      "properties": {
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "connection_id": {
+          "title": "Connection Id",
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Parts",
+          "type": "array"
+        },
+        "relation_type": {
+          "enum": [
+            "coaxial",
+            "clearance",
+            "planar_mate",
+            "planar_align",
+            "pocket_mate"
+          ],
+          "title": "Relation Type",
+          "type": "string"
+        },
+        "interface_a": {
+          "$ref": "#/$defs/AssemblyInterface"
+        },
+        "interface_b": {
+          "$ref": "#/$defs/AssemblyInterface"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        },
+        "providers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Providers",
+          "type": "array"
+        },
+        "used_for_pose": {
+          "default": false,
+          "title": "Used For Pose",
+          "type": "boolean"
+        },
+        "constraint_residual": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Constraint Residual"
+        },
+        "evidence": {
+          "additionalProperties": true,
+          "title": "Evidence",
+          "type": "object"
+        }
+      },
+      "required": [
+        "constraint_id",
+        "connection_id",
+        "parts",
+        "relation_type",
+        "interface_a",
+        "interface_b",
+        "score",
+        "confidence"
+      ],
+      "title": "AssemblyConstraint",
+      "type": "object"
+    },
+    "AssemblyInterface": {
+      "additionalProperties": false,
+      "description": "One localized geometric interface on a part.",
+      "properties": {
+        "feature_kind": {
+          "enum": [
+            "cylinder",
+            "plane",
+            "pocket",
+            "brep_entity",
+            "unknown"
+          ],
+          "title": "Feature Kind",
+          "type": "string"
+        },
+        "feature_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Index"
+        },
+        "feature_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Id"
+        },
+        "geometry": {
+          "additionalProperties": true,
+          "title": "Geometry",
+          "type": "object"
+        }
+      },
+      "required": [
+        "feature_kind"
+      ],
+      "title": "AssemblyInterface",
+      "type": "object"
+    },
+    "DirectAssemblyConnection": {
+      "additionalProperties": false,
+      "description": "A selected direct part-to-part edge, possibly supported by many constraints.",
+      "properties": {
+        "connection_id": {
+          "title": "Connection Id",
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Parts",
+          "type": "array"
+        },
+        "primary_relation_type": {
+          "enum": [
+            "coaxial",
+            "clearance",
+            "planar_mate",
+            "planar_align",
+            "pocket_mate"
+          ],
+          "title": "Primary Relation Type",
+          "type": "string"
+        },
+        "supporting_relation_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Relation Types",
+          "type": "array"
+        },
+        "constraint_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Constraint Ids",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        },
+        "selection_role": {
+          "enum": [
+            "connected_skeleton",
+            "additional_supported_edge"
+          ],
+          "title": "Selection Role",
+          "type": "string"
+        },
+        "constraint_closed_in_selected_pose": {
+          "title": "Constraint Closed In Selected Pose",
+          "type": "boolean"
+        },
+        "review_required": {
+          "title": "Review Required",
+          "type": "boolean"
+        },
+        "providers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Providers",
+          "type": "array"
+        },
+        "relative_transform_a_to_b": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "Relative Transform A To B",
+          "type": "array"
+        },
+        "joinable_interface_candidates": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Joinable Interface Candidates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "connection_id",
+        "parts",
+        "primary_relation_type",
+        "supporting_relation_types",
+        "constraint_ids",
+        "score",
+        "confidence",
+        "selection_role",
+        "constraint_closed_in_selected_pose",
+        "review_required",
+        "relative_transform_a_to_b"
+      ],
+      "title": "DirectAssemblyConnection",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Primary delivery contract for a known-related set of STEP parts.",
+  "properties": {
+    "schema_version": {
+      "const": "2.0.0",
+      "default": "2.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task": {
+      "const": "known_group_assembly_relation_recognition",
+      "default": "known_group_assembly_relation_recognition",
+      "title": "Task",
+      "type": "string"
+    },
+    "assembly_id": {
+      "title": "Assembly Id",
+      "type": "string"
+    },
+    "input_assumption": {
+      "const": "all_parts_belong_to_one_assembly",
+      "default": "all_parts_belong_to_one_assembly",
+      "title": "Input Assumption",
+      "type": "string"
+    },
+    "parts": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Parts",
+      "type": "array"
+    },
+    "reference_part": {
+      "title": "Reference Part",
+      "type": "string"
+    },
+    "assembly_connected": {
+      "title": "Assembly Connected",
+      "type": "boolean"
+    },
+    "pose_status": {
+      "enum": [
+        "valid",
+        "failed",
+        "uncertain"
+      ],
+      "title": "Pose Status",
+      "type": "string"
+    },
+    "direct_connections": {
+      "items": {
+        "$ref": "#/$defs/DirectAssemblyConnection"
+      },
+      "title": "Direct Connections",
+      "type": "array"
+    },
+    "assembly_relations": {
+      "items": {
+        "$ref": "#/$defs/AssemblyConstraint"
+      },
+      "title": "Assembly Relations",
+      "type": "array"
+    },
+    "components": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "unresolved_parts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unresolved Parts",
+      "type": "array"
+    },
+    "collision_validation": {
+      "additionalProperties": true,
+      "title": "Collision Validation",
+      "type": "object"
+    },
+    "candidate_summary": {
+      "additionalProperties": true,
+      "title": "Candidate Summary",
+      "type": "object"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "assembly_id",
+    "parts",
+    "reference_part",
+    "assembly_connected",
+    "pose_status",
+    "direct_connections",
+    "assembly_relations",
+    "components",
+    "collision_validation",
+    "candidate_summary"
+  ],
+  "title": "KnownGroupAssemblyResult",
+  "type": "object"
+}

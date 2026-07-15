@@ -1,0 +1,967 @@
+{
+  "schema_version": "root_cause_route_readiness.v1",
+  "scope": "Fusion-only training readiness; SolidWorks cases are excluded from all model data.",
+  "pure_brep_contract": {
+    "schema_version": "pure_brep_contract_audit.v1",
+    "record_count": 18002,
+    "joint_supervision_count": 29560,
+    "split_counts": {
+      "train": 14231,
+      "dev": 2018,
+      "test": 1753
+    },
+    "auxiliary_joint_type_counts": {
+      "BallJointType": 276,
+      "CylindricalJointType": 2613,
+      "PinSlotJointType": 64,
+      "PlanarJointType": 477,
+      "RevoluteJointType": 8184,
+      "RigidJointType": 16243,
+      "SliderJointType": 1703
+    },
+    "forbidden_model_key_count": 0,
+    "forbidden_model_keys": [],
+    "split_group_overlap_count": 0,
+    "split_group_overlaps": {},
+    "passed": true,
+    "model_input_boundary": "Only project_brep_graph(raw) and model_input.allowed_* fields may reach tensors; storage locators and auxiliary labels are audit/supervision metadata.",
+    "source_joint_file_count": 19156,
+    "conversion_failure_count": 0,
+    "conversion_failures": [],
+    "output_dir": "D:\\Model_match_public_data\\fusion360_pure_brep_v1"
+  },
+  "full_pair_pose_dataset": {
+    "train": {
+      "status": "ok",
+      "examples": 22917,
+      "array_shapes": {
+        "target_pose": [
+          22917,
+          9
+        ],
+        "pair_embedding": [
+          22917,
+          1536
+        ],
+        "contact_reference": [
+          22917,
+          4
+        ],
+        "free_dof_mask": [
+          22917,
+          6
+        ],
+        "patch_b": [
+          22917,
+          32,
+          6
+        ],
+        "patch_a": [
+          22917,
+          32,
+          6
+        ]
+      },
+      "embedding_nonzero_rate": 1.0,
+      "embedding_std": 2.3200440406799316,
+      "free_dof_patterns": {
+        "[0, 0, 0, 0, 0, 0]": 12485,
+        "[0, 0, 0, 0, 0, 1]": 6397,
+        "[0, 0, 0, 1, 1, 1]": 157,
+        "[0, 0, 1, 0, 0, 0]": 1381,
+        "[0, 0, 1, 0, 0, 1]": 2022,
+        "[1, 0, 0, 0, 0, 1]": 56,
+        "[1, 1, 0, 0, 0, 1]": 419
+      },
+      "translation_norm_quantiles": [
+        0.0,
+        0.4828936457633972,
+        2.1101646423339844,
+        12.14901065826416,
+        2132.699462890625
+      ],
+      "contact_bearing_rate": 0.5489811057293712
+    },
+    "dev": {
+      "status": "ok",
+      "examples": 3489,
+      "array_shapes": {
+        "target_pose": [
+          3489,
+          9
+        ],
+        "pair_embedding": [
+          3489,
+          1536
+        ],
+        "contact_reference": [
+          3489,
+          4
+        ],
+        "free_dof_mask": [
+          3489,
+          6
+        ],
+        "patch_b": [
+          3489,
+          32,
+          6
+        ],
+        "patch_a": [
+          3489,
+          32,
+          6
+        ]
+      },
+      "embedding_nonzero_rate": 1.0,
+      "embedding_std": 2.288606882095337,
+      "free_dof_patterns": {
+        "[0, 0, 0, 0, 0, 0]": 2071,
+        "[0, 0, 0, 0, 0, 1]": 921,
+        "[0, 0, 0, 1, 1, 1]": 16,
+        "[0, 0, 1, 0, 0, 0]": 164,
+        "[0, 0, 1, 0, 0, 1]": 277,
+        "[1, 0, 0, 0, 0, 1]": 5,
+        "[1, 1, 0, 0, 0, 1]": 35
+      },
+      "translation_norm_quantiles": [
+        0.0,
+        0.42782148718833923,
+        1.8134418964385988,
+        10.703590393066406,
+        81.20291900634766
+      ],
+      "contact_bearing_rate": 0.5540269418171396
+    },
+    "test": {
+      "status": "ok",
+      "examples": 2901,
+      "array_shapes": {
+        "target_pose": [
+          2901,
+          9
+        ],
+        "pair_embedding": [
+          2901,
+          1536
+        ],
+        "contact_reference": [
+          2901,
+          4
+        ],
+        "free_dof_mask": [
+          2901,
+          6
+        ],
+        "patch_b": [
+          2901,
+          32,
+          6
+        ],
+        "patch_a": [
+          2901,
+          32,
+          6
+        ]
+      },
+      "embedding_nonzero_rate": 1.0,
+      "embedding_std": 2.2347471714019775,
+      "free_dof_patterns": {
+        "[0, 0, 0, 0, 0, 0]": 1557,
+        "[0, 0, 0, 0, 0, 1]": 832,
+        "[0, 0, 0, 1, 1, 1]": 30,
+        "[0, 0, 1, 0, 0, 0]": 148,
+        "[0, 0, 1, 0, 0, 1]": 310,
+        "[1, 0, 0, 0, 0, 1]": 3,
+        "[1, 1, 0, 0, 0, 1]": 21
+      },
+      "translation_norm_quantiles": [
+        0.0,
+        0.46944737434387207,
+        1.824837327003479,
+        10.846940040588379,
+        47.35924530029297
+      ],
+      "contact_bearing_rate": 0.5211995863495347
+    }
+  },
+  "full_training_baseline": {
+    "schema_version": "cad_pair_pose_and_interface_training_report.v1",
+    "device": "cpu",
+    "patch_geometry": true,
+    "contact_target": true,
+    "train_examples": 22851,
+    "dev_examples": 3487,
+    "test_examples": 2898,
+    "excluded_pose_outliers": {
+      "rule": "normalised_local_translation_norm <= 32.000",
+      "train": 66,
+      "dev": 2,
+      "test": 3
+    },
+    "best_epoch": 14,
+    "best_dev": {
+      "loss": 0.6582845141424776,
+      "pose": 0.054890882403325104,
+      "score": 0.17527887201220319,
+      "contact": 0.00039181688338799114,
+      "contact_rank": 0.039523274800947174,
+      "topk_error": 0.18874909060414008,
+      "score_positive_rank1_rate": 0.6317751679920965,
+      "examples": 3487
+    },
+    "test": {
+      "loss": 0.6820925148377507,
+      "pose": 0.051101243412642744,
+      "score": 0.18399764022039825,
+      "contact": 0.0003853879938459826,
+      "contact_rank": 0.04785253194702585,
+      "topk_error": 0.1161246766523298,
+      "score_positive_rank1_rate": 0.5973084904639123,
+      "examples": 2898
+    },
+    "history": [
+      {
+        "epoch": 1,
+        "train": {
+          "loss": 1.2965246555810528,
+          "pose": 0.464643574557593,
+          "score": 0.27561197610168736,
+          "contact": 0.021904397504904267,
+          "contact_rank": 0.1447669594034257,
+          "topk_error": 2.712124550641483,
+          "score_positive_rank1_rate": 0.47166426008543005,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 1.1336137772563675,
+          "pose": 0.3644172028412202,
+          "score": 0.3102781393482174,
+          "contact": 0.004954052526810414,
+          "contact_rank": 0.08300924232987575,
+          "topk_error": 2.111899947655177,
+          "score_positive_rank1_rate": 0.512761691057959,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 2,
+        "train": {
+          "loss": 0.9467755049971813,
+          "pose": 0.320311095710813,
+          "score": 0.23562898972113647,
+          "contact": 0.005066835132947279,
+          "contact_rank": 0.08179876696500814,
+          "topk_error": 1.883021600469135,
+          "score_positive_rank1_rate": 0.5003282125421564,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7886014272190965,
+          "pose": 0.22366727842859324,
+          "score": 0.22715691092245416,
+          "contact": 0.0034110916720755057,
+          "contact_rank": 0.06987993025808784,
+          "topk_error": 1.2191557707812541,
+          "score_positive_rank1_rate": 0.523372517074457,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 3,
+        "train": {
+          "loss": 0.7452304969861218,
+          "pose": 0.18642030583661076,
+          "score": 0.22613190441396397,
+          "contact": 0.0024375913611236503,
+          "contact_rank": 0.07459332773312036,
+          "topk_error": 1.010500181841462,
+          "score_positive_rank1_rate": 0.5115312217640974,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6818522339329393,
+          "pose": 0.12638205810761705,
+          "score": 0.23161705909604016,
+          "contact": 0.0014221202192845686,
+          "contact_rank": 0.08241516699763947,
+          "topk_error": 0.6450710931051964,
+          "score_positive_rank1_rate": 0.5385718356410925,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 4,
+        "train": {
+          "loss": 0.6651619274393692,
+          "pose": 0.1297851248531927,
+          "score": 0.21465262599476245,
+          "contact": 0.002188677751104968,
+          "contact_rank": 0.06853767052963836,
+          "topk_error": 0.5303845344688677,
+          "score_positive_rank1_rate": 0.5221653319342612,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6938431857819881,
+          "pose": 0.11187199239731518,
+          "score": 0.2740469281733942,
+          "contact": 0.0011831050476148524,
+          "contact_rank": 0.059672109481424804,
+          "topk_error": 0.5089800999247998,
+          "score_positive_rank1_rate": 0.5411528500199215,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 5,
+        "train": {
+          "loss": 0.642632217533682,
+          "pose": 0.10737592723424531,
+          "score": 0.20883635066970996,
+          "contact": 0.0012663106651655382,
+          "contact_rank": 0.06421788622601574,
+          "topk_error": 0.3654693758490049,
+          "score_positive_rank1_rate": 0.5345499112926256,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.669148101466824,
+          "pose": 0.11432162130634525,
+          "score": 0.2018447310407626,
+          "contact": 0.0014102375946761648,
+          "contact_rank": 0.05871670771361354,
+          "topk_error": 0.43805354109697914,
+          "score_positive_rank1_rate": 0.5500430145611009,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 6,
+        "train": {
+          "loss": 0.6652313113267362,
+          "pose": 0.09584338309357521,
+          "score": 0.2016719615888264,
+          "contact": 0.0012297446007731028,
+          "contact_rank": 0.06028694841572769,
+          "topk_error": 0.30699897131560916,
+          "score_positive_rank1_rate": 0.5455778728042263,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6901215443407391,
+          "pose": 0.09847389893183778,
+          "score": 0.2078744742259755,
+          "contact": 0.0014147879225638587,
+          "contact_rank": 0.05546653685449768,
+          "topk_error": 0.36376558528405945,
+          "score_positive_rank1_rate": 0.5563521677660744,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 7,
+        "train": {
+          "loss": 0.6643594249631064,
+          "pose": 0.08710025931313953,
+          "score": 0.19754101109071182,
+          "contact": 0.0013022930987958866,
+          "contact_rank": 0.05695938895001285,
+          "topk_error": 0.24802271007427287,
+          "score_positive_rank1_rate": 0.560850727631693,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6825556658830142,
+          "pose": 0.0984637382586364,
+          "score": 0.19738542950696922,
+          "contact": 0.0010323094596748717,
+          "contact_rank": 0.05464975283742122,
+          "topk_error": 0.346314246927321,
+          "score_positive_rank1_rate": 0.5663894490796377,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 8,
+        "train": {
+          "loss": 0.6569272350557555,
+          "pose": 0.08215147143410066,
+          "score": 0.1932459138749512,
+          "contact": 0.001074377830542313,
+          "contact_rank": 0.053971484935360345,
+          "topk_error": 0.2164040746164123,
+          "score_positive_rank1_rate": 0.5683777506886403,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6713945125487393,
+          "pose": 0.09311167917374318,
+          "score": 0.1947979259138843,
+          "contact": 0.0007093792301083182,
+          "contact_rank": 0.05100460047319484,
+          "topk_error": 0.33506456403804774,
+          "score_positive_rank1_rate": 0.5810151974827368,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 9,
+        "train": {
+          "loss": 0.6458858975286448,
+          "pose": 0.07604389212750709,
+          "score": 0.18784125270345195,
+          "contact": 0.0007754906783220578,
+          "contact_rank": 0.051067706636201214,
+          "topk_error": 0.1902942492485876,
+          "score_positive_rank1_rate": 0.578968095672996,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6659361530177601,
+          "pose": 0.07764543224353657,
+          "score": 0.21270611949301327,
+          "contact": 0.0006540307671577914,
+          "contact_rank": 0.04647031646827623,
+          "topk_error": 0.26123295247486406,
+          "score_positive_rank1_rate": 0.5767135161501581,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 10,
+        "train": {
+          "loss": 0.6471043223703692,
+          "pose": 0.06828322917877971,
+          "score": 0.18697614534110618,
+          "contact": 0.0007245554974149752,
+          "contact_rank": 0.049512119920481934,
+          "topk_error": 0.1656498931702537,
+          "score_positive_rank1_rate": 0.5855761229154615,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6765340050414808,
+          "pose": 0.05926676862559313,
+          "score": 0.18451256993629203,
+          "contact": 0.0006344493194826424,
+          "contact_rank": 0.04771086638662478,
+          "topk_error": 0.20486009056199955,
+          "score_positive_rank1_rate": 0.5936335000295778,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 11,
+        "train": {
+          "loss": 0.6625396294341526,
+          "pose": 0.0520456902623114,
+          "score": 0.18179550189052932,
+          "contact": 0.0007422890873942307,
+          "contact_rank": 0.04619377966516832,
+          "topk_error": 0.12226947227871228,
+          "score_positive_rank1_rate": 0.5958601354934482,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6732060326899503,
+          "pose": 0.05244888985117698,
+          "score": 0.182383947187657,
+          "contact": 0.0006952137522522818,
+          "contact_rank": 0.04223271772470555,
+          "topk_error": 0.19245717352497088,
+          "score_positive_rank1_rate": 0.5962145119469591,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 12,
+        "train": {
+          "loss": 0.6623047023945098,
+          "pose": 0.050438475243779514,
+          "score": 0.17638998914808837,
+          "contact": 0.0006772406529221922,
+          "contact_rank": 0.044175573560968386,
+          "topk_error": 0.12327431696159595,
+          "score_positive_rank1_rate": 0.6058378177465722,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6931452702956313,
+          "pose": 0.060969509923649544,
+          "score": 0.204542585428786,
+          "contact": 0.0007446317405574523,
+          "contact_rank": 0.04230514138078054,
+          "topk_error": 0.18963641236376755,
+          "score_positive_rank1_rate": 0.6025236574770011,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 13,
+        "train": {
+          "loss": 0.6620542083698041,
+          "pose": 0.05050667183143825,
+          "score": 0.17484485321319118,
+          "contact": 0.0006066817139783766,
+          "contact_rank": 0.04198620409004266,
+          "topk_error": 0.12051899128862374,
+          "score_positive_rank1_rate": 0.6164281660722938,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6911968932748012,
+          "pose": 0.06588418843293552,
+          "score": 0.1802477856522684,
+          "contact": 0.0005495292668667915,
+          "contact_rank": 0.046709533804316625,
+          "topk_error": 0.19597197634496216,
+          "score_positive_rank1_rate": 0.6214511006309885,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 14,
+        "train": {
+          "loss": 0.6547077218973215,
+          "pose": 0.04827645328372729,
+          "score": 0.1768551639399692,
+          "contact": 0.0004199463035527703,
+          "contact_rank": 0.04168896949109684,
+          "topk_error": 0.11584359165772579,
+          "score_positive_rank1_rate": 0.6237363819924493,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6582845141424776,
+          "pose": 0.054890882403325104,
+          "score": 0.17527887201220319,
+          "contact": 0.00039181688338799114,
+          "contact_rank": 0.039523274800947174,
+          "topk_error": 0.18874909060414008,
+          "score_positive_rank1_rate": 0.6317751679920965,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 15,
+        "train": {
+          "loss": 0.639239429684156,
+          "pose": 0.04216692006163856,
+          "score": 0.16803126929781953,
+          "contact": 0.000367673988940766,
+          "contact_rank": 0.039023756683537913,
+          "topk_error": 0.09837534858968544,
+          "score_positive_rank1_rate": 0.6315259722738703,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6836058662551024,
+          "pose": 0.0535767052909143,
+          "score": 0.17596518739113537,
+          "contact": 0.0003681269721947995,
+          "contact_rank": 0.03983555393464968,
+          "topk_error": 0.1896935807712481,
+          "score_positive_rank1_rate": 0.6160022910392691,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 16,
+        "train": {
+          "loss": 0.6339726962019049,
+          "pose": 0.042186677829556006,
+          "score": 0.16339656572314062,
+          "contact": 0.0003069749066817353,
+          "contact_rank": 0.03774130433598293,
+          "topk_error": 0.096705890924924,
+          "score_positive_rank1_rate": 0.6342392017854799,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6979664583106351,
+          "pose": 0.05094987384447198,
+          "score": 0.17683501954847192,
+          "contact": 0.00029584156745220266,
+          "contact_rank": 0.038094638105656005,
+          "topk_error": 0.15775920443636385,
+          "score_positive_rank1_rate": 0.6174361883551267,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 17,
+        "train": {
+          "loss": 0.6285892667397279,
+          "pose": 0.04226842404203679,
+          "score": 0.1591746464422545,
+          "contact": 0.000257153034389054,
+          "contact_rank": 0.03583656500467904,
+          "topk_error": 0.09487243312122089,
+          "score_positive_rank1_rate": 0.6390967585916233,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6817247079579031,
+          "pose": 0.056667186826219657,
+          "score": 0.17084057727822746,
+          "contact": 0.00030045840942765847,
+          "contact_rank": 0.03634337589875449,
+          "topk_error": 0.23661821162697233,
+          "score_positive_rank1_rate": 0.6332090598551633,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 18,
+        "train": {
+          "loss": 0.6226380124201029,
+          "pose": 0.040025163987338214,
+          "score": 0.15684568744900582,
+          "contact": 0.00030042831768286097,
+          "contact_rank": 0.03560601242323849,
+          "topk_error": 0.09052952319247658,
+          "score_positive_rank1_rate": 0.6424664125145773,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.6982129221834971,
+          "pose": 0.051527197655169645,
+          "score": 0.17909336894759142,
+          "contact": 0.00030270742552872005,
+          "contact_rank": 0.04545420487359239,
+          "topk_error": 0.1580065442769993,
+          "score_positive_rank1_rate": 0.6323487260877009,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 19,
+        "train": {
+          "loss": 0.6575715056285154,
+          "pose": 0.037841010783970536,
+          "score": 0.1618896484388694,
+          "contact": 0.00036489188294783523,
+          "contact_rank": 0.035768800963719434,
+          "topk_error": 0.08459198692131499,
+          "score_positive_rank1_rate": 0.645310928647218,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7137881701847938,
+          "pose": 0.04040953905193724,
+          "score": 0.16933373543229527,
+          "contact": 0.0003312230122521101,
+          "contact_rank": 0.036994355798284716,
+          "topk_error": 0.1414134496812804,
+          "score_positive_rank1_rate": 0.6317751627786131,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 20,
+        "train": {
+          "loss": 0.6596873558160747,
+          "pose": 0.0314148288561053,
+          "score": 0.15441801129120517,
+          "contact": 0.000273822170090592,
+          "contact_rank": 0.03375460847369075,
+          "topk_error": 0.07257874882039678,
+          "score_positive_rank1_rate": 0.6519189548880562,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7350899435265685,
+          "pose": 0.040974258953998685,
+          "score": 0.17421154006952402,
+          "contact": 0.0002110827646173437,
+          "contact_rank": 0.03637030121213579,
+          "topk_error": 0.18195856985955755,
+          "score_positive_rank1_rate": 0.6320619542789486,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 21,
+        "train": {
+          "loss": 0.6571506818354685,
+          "pose": 0.031752839051377775,
+          "score": 0.1516459717147382,
+          "contact": 0.0002931969274268008,
+          "contact_rank": 0.0335156795420452,
+          "topk_error": 0.07424062077047491,
+          "score_positive_rank1_rate": 0.6509124318829074,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.689549283376901,
+          "pose": 0.03705046362779631,
+          "score": 0.15460553755895573,
+          "contact": 0.0002694306586904984,
+          "contact_rank": 0.031851129844338175,
+          "topk_error": 0.12762862486443755,
+          "score_positive_rank1_rate": 0.6443934669664195,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 22,
+        "train": {
+          "loss": 0.6469249105584954,
+          "pose": 0.029891766301844477,
+          "score": 0.14732395938465692,
+          "contact": 0.00021135251305213048,
+          "contact_rank": 0.032639747876045476,
+          "topk_error": 0.06775991791032486,
+          "score_positive_rank1_rate": 0.6548947554702316,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.721570239355614,
+          "pose": 0.03517245358443206,
+          "score": 0.16777674877305135,
+          "contact": 0.00015263741710238614,
+          "contact_rank": 0.0363003320170442,
+          "topk_error": 0.1370290538853241,
+          "score_positive_rank1_rate": 0.6337826179507676,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 23,
+        "train": {
+          "loss": 0.6426444891025909,
+          "pose": 0.03149849100795743,
+          "score": 0.14520072864726316,
+          "contact": 0.0002051874060328866,
+          "contact_rank": 0.031171775253892368,
+          "topk_error": 0.07410397438790457,
+          "score_positive_rank1_rate": 0.6622467286414294,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7113100401234551,
+          "pose": 0.03884333356518372,
+          "score": 0.1614032818486843,
+          "contact": 0.00018699511246877777,
+          "contact_rank": 0.03304592125408366,
+          "topk_error": 0.15681604460706539,
+          "score_positive_rank1_rate": 0.643246346912105,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 24,
+        "train": {
+          "loss": 0.635645404323061,
+          "pose": 0.029558927438946805,
+          "score": 0.14151658536028766,
+          "contact": 0.00026812307719722696,
+          "contact_rank": 0.029754893742506627,
+          "topk_error": 0.06769205062302044,
+          "score_positive_rank1_rate": 0.6649161945596617,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7201231181501898,
+          "pose": 0.0340300103078471,
+          "score": 0.1578535104006452,
+          "contact": 0.0002380345283518325,
+          "contact_rank": 0.03684195571672252,
+          "topk_error": 0.1282748660531535,
+          "score_positive_rank1_rate": 0.6334958395781543,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 25,
+        "train": {
+          "loss": 0.6337178747837384,
+          "pose": 0.029907710784458107,
+          "score": 0.14131486601124946,
+          "contact": 0.00019992378095079428,
+          "contact_rank": 0.029698035019627547,
+          "topk_error": 0.0678726000051314,
+          "score_positive_rank1_rate": 0.667016762259502,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7471281437228394,
+          "pose": 0.035587777951179414,
+          "score": 0.183421544843907,
+          "contact": 0.00018612932475112274,
+          "contact_rank": 0.03555732077547967,
+          "topk_error": 0.1057417022787058,
+          "score_positive_rank1_rate": 0.6406653251489323,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 26,
+        "train": {
+          "loss": 0.6273252658953861,
+          "pose": 0.029281533102532908,
+          "score": 0.14007883615844618,
+          "contact": 0.0001674664498851779,
+          "contact_rank": 0.02874500182289393,
+          "topk_error": 0.06432015612893598,
+          "score_positive_rank1_rate": 0.6679795189950509,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7274192354553984,
+          "pose": 0.03407614876000424,
+          "score": 0.17146794517196828,
+          "contact": 0.00013195948410043553,
+          "contact_rank": 0.03607753960077592,
+          "topk_error": 0.13912082118002775,
+          "score_positive_rank1_rate": 0.6403785402124579,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 27,
+        "train": {
+          "loss": 0.6204529809986213,
+          "pose": 0.027669205415900514,
+          "score": 0.13888579830615339,
+          "contact": 0.00019293014021051208,
+          "contact_rank": 0.02843457377456188,
+          "topk_error": 0.0629793360956024,
+          "score_positive_rank1_rate": 0.6706927480097594,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7144039635129052,
+          "pose": 0.03518412883866472,
+          "score": 0.156364014348192,
+          "contact": 0.00027266421478432915,
+          "contact_rank": 0.032573442204778195,
+          "topk_error": 0.15367030215606944,
+          "score_positive_rank1_rate": 0.6610266757551565,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 28,
+        "train": {
+          "loss": 0.6176219648837229,
+          "pose": 0.02796989668845872,
+          "score": 0.13799878068095167,
+          "contact": 0.00018454282286202813,
+          "contact_rank": 0.028260449599731435,
+          "topk_error": 0.06385821597184803,
+          "score_positive_rank1_rate": 0.6753314973426269,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7374516623834502,
+          "pose": 0.04132716905337403,
+          "score": 0.16730010209502003,
+          "contact": 0.00013237073219610698,
+          "contact_rank": 0.03589589712948487,
+          "topk_error": 0.16952552656013575,
+          "score_positive_rank1_rate": 0.6550043036748319,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 29,
+        "train": {
+          "loss": 0.6110571668391248,
+          "pose": 0.02848981407130971,
+          "score": 0.136118959034422,
+          "contact": 0.00019590776011590047,
+          "contact_rank": 0.026560395024839124,
+          "topk_error": 0.062071889157650176,
+          "score_positive_rank1_rate": 0.6775195813873895,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7215747446599511,
+          "pose": 0.03345022187628341,
+          "score": 0.15220635345220088,
+          "contact": 0.00014095922818618145,
+          "contact_rank": 0.03864976255757858,
+          "topk_error": 0.12075216410740898,
+          "score_positive_rank1_rate": 0.64037855334018,
+          "examples": 3487
+        }
+      },
+      {
+        "epoch": 30,
+        "train": {
+          "loss": 0.6100619819293549,
+          "pose": 0.02615239921110175,
+          "score": 0.13522583480204936,
+          "contact": 0.00016424141050619254,
+          "contact_rank": 0.026678416623176514,
+          "topk_error": 0.05691876547484201,
+          "score_positive_rank1_rate": 0.676950678661675,
+          "examples": 22851
+        },
+        "dev": {
+          "loss": 0.7300972862984821,
+          "pose": 0.03240877013693045,
+          "score": 0.15503632149263546,
+          "contact": 0.0002514423068447489,
+          "contact_rank": 0.032497961421323295,
+          "topk_error": 0.12601674857392056,
+          "score_positive_rank1_rate": 0.6461141372020996,
+          "examples": 3487
+        }
+      }
+    ],
+    "interpretation": {
+      "topk_error": "minimum normalised local-frame SE(3) proxy error among proposal modes; lower is better",
+      "score": "binary loss separating recorded pose from generic local SE(3) hard perturbations; lower is better",
+      "contact": "regression loss for B-Rep local gap, coverage and normal mismatch; lower is better",
+      "not_a_claim": "Contact supervision improves physical fit ranking but does not by itself prove functional semantic correctness on SolidWorks exams."
+    }
+  },
+  "strong_contact_baseline": {
+    "schema_version": "strong_contact_holdout.v1",
+    "unit_of_split": "assembly_id",
+    "examples": 350,
+    "candidate_contract": "recorded contact pose vs generic small-gap/slip/flip/penetration local SE(3) perturbations",
+    "overall": {
+      "true_contact_rank1_rate": 0.9685714285714285,
+      "mean_true_contact_rank": 1.04,
+      "top3_rate": 1.0
+    },
+    "dense_contact_subset": {
+      "examples": 306,
+      "true_contact_rank1_rate": 0.9901960784313726,
+      "mean_true_contact_rank": 1.0098039215686274,
+      "gap_threshold_normalised": 0.01
+    },
+    "interpretation": "A high rank-1 rate establishes local physical-contact discrimination on unseen assemblies only. It does not establish functional semantics or guarantee a SolidWorks case pose."
+  },
+  "runtime": {
+    "torch": "2.5.1+cu124",
+    "cuda_available": true,
+    "cuda_version": "12.4",
+    "device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "python": "D:\\Model_match_envs\\joinable_gpu\\python.exe"
+  },
+  "gates": {
+    "leakage_safe_assembly_split": true,
+    "nonzero_joinable_embeddings": true,
+    "dof_supervision_present": true,
+    "full_baseline_ready_for_exam": false,
+    "cuda_training_ready": true,
+    "external_solidworks_pose_ground_truth_available": false,
+    "functional_semantic_labels_available": false
+  },
+  "verdict": {
+    "route_feasible": true,
+    "ready_to_claim_case_generalization": false,
+    "next_required_work": [
+      "build symmetry/continuous-DOF equivalence sets from recorded Fusion occurrences",
+      "build geometry-valid-but-wrong hard negatives from same-assembly distractors and measured SE(3) perturbations",
+      "add learned/derived interface-closure targets before changing the global solver",
+      "create a separate CUDA training environment",
+      "obtain or create an evaluation-only SolidWorks ground-truth Pose benchmark"
+    ]
+  }
+}

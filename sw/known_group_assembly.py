@@ -7,12 +7,16 @@ semantic-review, and forced partitioning logic.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import os
 import shutil
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from build_assembly import build_assembly
 from constraints import (
@@ -37,8 +41,21 @@ from placement_validation import (
     bbox_collisions,
     constraint_residual,
     exact_shape_collisions,
+    exact_shape_collisions_solid_broadphase,
     transform_point,
     transform_vector,
+)
+from pose_search import (
+    compose_group_pose_hypotheses,
+    enumerate_axis_role_frames,
+    load_joinable_pair_pose_candidate_directory,
+    matrix_to_placement,
+    placement_to_matrix,
+    recall_edge_slot_interface_proposals,
+    propose_enclosure_bay_placements,
+    recall_axial_compound_candidates,
+    recall_planar_footprint_proposals,
+    validate_axial_compound_pose,
 )
 from small_assembly_solver import solve_small_assembly
 
@@ -57,6 +74,100 @@ FEATURE_KIND = {
     PLANAR_ALIGN: "plane",
     POCKET_MATE: "pocket",
 }
+
+
+# Pair-level planar summaries are invariant across the retained topology
+# frontier.  Cache them for one known-group run so a 100k-face carrier is not
+# re-normalised once per topology.  ``run_known_group_assembly`` clears this
+# private cache before extracting a new input group.
+_PLANAR_FOOTPRINT_RECALL_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+_AXIAL_COMPOUND_RECALL_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+_ENCLOSURE_BAY_RECALL_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+_EDGE_SLOT_RECALL_CACHE: dict[tuple[int, int], dict[str, Any]] = {}
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _attach_brep_graph_sidecars(
+    features: dict[str, dict[str, Any]],
+    step_files: list[Path],
+    graph_dir: str | Path | None,
+) -> dict[str, Any]:
+    """Attach hash-verified topology evidence without using names as labels.
+
+    Filenames only locate a sidecar for the corresponding input STEP.  The
+    STEP SHA-256 must be declared and match.  An unverified same-stem sidecar
+    is never allowed to contribute topology evidence; all downstream phase
+    evidence comes from anonymous B-Rep nodes and local topology.
+    """
+
+    audit = {
+        "status": "not_provided" if graph_dir is None else "loaded",
+        "graph_dir": None if graph_dir is None else str(Path(graph_dir).resolve()),
+        "loaded_parts": [],
+        "missing_parts": [],
+        "rejected_parts": [],
+    }
+    if graph_dir is None:
+        return audit
+    root = Path(graph_dir).resolve()
+    if not root.is_dir():
+        audit["status"] = "unavailable"
+        audit["reason"] = "B-Rep graph sidecar directory does not exist."
+        return audit
+    for step_path in step_files:
+        candidates = [
+            root / f"{step_path.stem}.brep_graph.json",
+            root / f"{step_path.stem}_graph.json",
+            root / f"{step_path.stem}.json",
+        ]
+        graph_path = next((path for path in candidates if path.is_file()), None)
+        if graph_path is None:
+            audit["missing_parts"].append(step_path.name)
+            continue
+        try:
+            payload = json.loads(graph_path.read_text(encoding="utf-8"))
+            declared_hash = payload.get("source_geometry_sha256")
+            if not declared_hash:
+                raise ValueError("source_geometry_sha256_missing")
+            if str(declared_hash).lower() != _file_sha256(step_path):
+                raise ValueError("source_geometry_sha256_mismatch")
+            topology = (payload.get("metadata") or {}).get(
+                "edge_topology_features"
+            ) or {}
+            if topology.get("available") is not True:
+                raise ValueError("edge_topology_features_unavailable")
+            nodes = list(payload.get("nodes") or [])
+            if not nodes:
+                raise ValueError("brep_graph_nodes_missing")
+            features[step_path.name]["nodes"] = nodes
+            features[step_path.name]["metadata"] = payload.get("metadata") or {}
+            features[step_path.name]["brep_graph_sidecar"] = {
+                "path": str(graph_path),
+                "hash_verified": True,
+                "schema_version": payload.get("schema_version"),
+            }
+            audit["loaded_parts"].append(step_path.name)
+        except Exception as exc:
+            audit["rejected_parts"].append({
+                "part": step_path.name,
+                "graph": str(graph_path),
+                "reason": str(exc),
+                "exception_type": type(exc).__name__,
+            })
+    if audit["rejected_parts"]:
+        audit["status"] = "partial"
+    elif audit["missing_parts"]:
+        audit["status"] = "partial"
+    elif len(audit["loaded_parts"]) != len(step_files):
+        audit["status"] = "partial"
+    return audit
 
 def _bbox_diagonal_from_features(part_features: dict[str, Any]) -> float:
     bbox = part_features.get("bbox") or {}
@@ -509,10 +620,15 @@ def _constraint_satisfied(match: dict[str, Any], record: dict[str, Any]) -> bool
     if not record.get("valid"):
         return False
     relation = match["type"]
+    dominant_axis_guard_satisfied = (
+        not bool(record.get("dominant_axis_guard_required"))
+        or record.get("dominant_axis_guard_passed") is True
+    )
     if relation == COAXIAL:
         return (
             float(record.get("axis_angle_deg", 999.0)) <= 2.0
             and float(record.get("radial_distance", 999.0)) <= 1.0
+            and dominant_axis_guard_satisfied
         )
     if relation == CLEARANCE:
         axial_overlap_ratio = record.get("axial_overlap_ratio")
@@ -521,11 +637,18 @@ def _constraint_satisfied(match: dict[str, Any], record: dict[str, Any]) -> bool
             and float(record.get("radial_distance", 999.0)) <= 1.0
             and axial_overlap_ratio is not None
             and float(axial_overlap_ratio) >= 0.15
+            and dominant_axis_guard_satisfied
         )
     if relation in {PLANAR_MATE, PLANAR_ALIGN}:
+        bounded_overlap_ratio = record.get("bounded_overlap_ratio")
+        bounded_overlap_satisfied = (
+            bounded_overlap_ratio is None
+            or float(bounded_overlap_ratio) >= 0.01
+        )
         return (
             float(record.get("normal_angle_deg", 999.0)) <= 5.0
             and float(record.get("plane_distance", 999.0)) <= 5.0
+            and bounded_overlap_satisfied
         )
     if relation == POCKET_MATE:
         return float(record.get("pocket_center_distance", 999.0)) <= 2.0
@@ -534,9 +657,353 @@ def _constraint_satisfied(match: dict[str, Any], record: dict[str, Any]) -> bool
 
 def _pose_closure(candidate: dict, graph: dict, features: dict) -> dict[str, Any]:
     placements = candidate["placements"]
+    footprint_history = list(candidate.get("planar_footprint_history") or [])
+    if not footprint_history and candidate.get("planar_footprint"):
+        footprint_history = [candidate["planar_footprint"]]
+    footprint_by_connection: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in footprint_history:
+        connection_id = row.get("connection_id")
+        if connection_id is not None:
+            footprint_by_connection[str(connection_id)].append(row)
+    compound_history = list(candidate.get("axial_compound_history") or [])
+    if not compound_history and candidate.get("axial_compound_interface"):
+        compound_history = [candidate["axial_compound_interface"]]
+    compound_by_connection: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in compound_history:
+        connection_id = row.get("connection_id")
+        if connection_id is not None:
+            compound_by_connection[str(connection_id)].append(row)
+    centering_history = list(
+        candidate.get("axial_group_centering_history") or []
+    )
+    if not centering_history and candidate.get("axial_group_centering"):
+        centering_history = [candidate["axial_group_centering"]]
+    centering_by_connection: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in centering_history:
+        connection_id = row.get("connection_id")
+        if connection_id is not None:
+            centering_by_connection[str(connection_id)].append(row)
+    centering_required_connection_ids = {
+        str(value) for value in (
+            candidate.get(
+                "axial_group_centering_required_connection_ids"
+            ) or []
+        )
+    }
+    enclosure_history = list(candidate.get("enclosure_bay_history") or [])
+    if not enclosure_history and candidate.get("enclosure_bay"):
+        enclosure_history = [candidate["enclosure_bay"]]
+    enclosure_by_connection: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in enclosure_history:
+        connection_id = row.get("connection_id")
+        if connection_id is not None:
+            enclosure_by_connection[str(connection_id)].append(row)
+    edge_slot_history = list(candidate.get("edge_slot_history") or [])
+    if not edge_slot_history and candidate.get("edge_slot_interface"):
+        edge_slot_history = [candidate["edge_slot_interface"]]
+    edge_slot_by_connection: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in edge_slot_history:
+        connection_id = row.get("connection_id")
+        if connection_id is not None:
+            edge_slot_by_connection[str(connection_id)].append(row)
+    containment_pairs = {
+        canonical_pair(row.get("parts") or [])
+        for row in bbox_collisions(features, placements)
+        if row.get("is_strict_containment")
+    }
     connection_rows = []
     fully_closed = True
+    review_required = False
     for connection in graph["selected"]:
+        footprint_rows = footprint_by_connection.get(
+            str(connection.get("connection_id")), []
+        )
+        footprint_supported = any(
+            row.get("has_multi_evidence_support") is True
+            and int(row.get("independent_evidence_count", 0)) >= 2
+            and row.get("proposal_only") is True
+            and row.get("can_auto_accept") is False
+            for row in footprint_rows
+        )
+        enclosure_rows = enclosure_by_connection.get(
+            str(connection.get("connection_id")), []
+        )
+        current_enclosure_rows = []
+        for row in enclosure_rows:
+            stationary = row.get("stationary_part")
+            movable = row.get("movable_part")
+            expected_transform = row.get("transform_4x4")
+            pose_preserved = False
+            translation_residual = None
+            rotation_residual_degrees = None
+            if (
+                stationary in placements
+                and movable in placements
+                and expected_transform is not None
+            ):
+                try:
+                    stationary_world = placement_to_matrix(
+                        placements[stationary]
+                    )
+                    movable_world = placement_to_matrix(placements[movable])
+                    current_relative = np.linalg.inv(
+                        stationary_world
+                    ) @ movable_world
+                    expected = np.asarray(expected_transform, dtype=float)
+                    translation_residual = float(np.linalg.norm(
+                        current_relative[:3, 3] - expected[:3, 3]
+                    ))
+                    rotation_delta = (
+                        expected[:3, :3].T @ current_relative[:3, :3]
+                    )
+                    cosine = max(-1.0, min(
+                        1.0,
+                        (float(np.trace(rotation_delta)) - 1.0) * 0.5,
+                    ))
+                    rotation_residual_degrees = math.degrees(
+                        math.acos(cosine)
+                    )
+                    pose_preserved = (
+                        translation_residual <= 1e-3
+                        and rotation_residual_degrees <= 0.05
+                    )
+                except Exception:
+                    pose_preserved = False
+            supported = (
+                pose_preserved
+                and int(row.get("independent_evidence_count", 0)) >= 4
+                and row.get("proposal_only") is True
+                and row.get("can_auto_accept") is False
+            )
+            current_enclosure_rows.append({
+                "candidate_id": row.get("candidate_id"),
+                "slot_index": row.get("slot_index"),
+                "depth_polarity": row.get("depth_polarity"),
+                "independent_evidence_count": row.get(
+                    "independent_evidence_count"
+                ),
+                "evidence": row.get("evidence") or [],
+                "functional_body_derivation_status": row.get(
+                    "functional_body_derivation_status"
+                ),
+                "functional_body_excluded_protrusion_risk": row.get(
+                    "functional_body_excluded_protrusion_risk"
+                ),
+                "proposal_only": bool(row.get("proposal_only")),
+                "review_required": bool(row.get("review_required")),
+                "pose_preserved": pose_preserved,
+                "translation_residual_mm": translation_residual,
+                "rotation_residual_degrees": rotation_residual_degrees,
+                "supported": supported,
+            })
+        enclosure_supported = any(
+            row["supported"] for row in current_enclosure_rows
+        )
+        edge_slot_rows = edge_slot_by_connection.get(
+            str(connection.get("connection_id")), []
+        )
+        current_edge_slot_rows = []
+        for row in edge_slot_rows:
+            stationary = row.get("stationary_part")
+            movable = row.get("movable_part")
+            expected_transform = row.get("transform_matrix")
+            pose_preserved = False
+            translation_residual = None
+            rotation_residual_degrees = None
+            if (
+                stationary in placements
+                and movable in placements
+                and expected_transform is not None
+            ):
+                try:
+                    stationary_world = placement_to_matrix(placements[stationary])
+                    movable_world = placement_to_matrix(placements[movable])
+                    current_relative = np.linalg.inv(stationary_world) @ movable_world
+                    expected = np.asarray(expected_transform, dtype=float)
+                    translation_residual = float(np.linalg.norm(
+                        current_relative[:3, 3] - expected[:3, 3]
+                    ))
+                    rotation_delta = expected[:3, :3].T @ current_relative[:3, :3]
+                    cosine = max(-1.0, min(
+                        1.0,
+                        (float(np.trace(rotation_delta)) - 1.0) * 0.5,
+                    ))
+                    rotation_residual_degrees = math.degrees(math.acos(cosine))
+                    pose_preserved = (
+                        translation_residual <= 1e-3
+                        and rotation_residual_degrees <= 0.05
+                    )
+                except Exception:
+                    pose_preserved = False
+            supported = (
+                pose_preserved
+                and int(row.get("independent_evidence_count", 0)) >= 4
+                and row.get("has_multi_evidence_support") is True
+                and row.get("proposal_only") is True
+                and row.get("review_required") is True
+                and row.get("can_auto_accept") is False
+            )
+            current_edge_slot_rows.append({
+                "slot_family_id": row.get("slot_family_id"),
+                "slot_family_size": row.get("slot_family_size"),
+                "slot_rank": row.get("slot_rank"),
+                "floor_plane_index": row.get("floor_plane_index"),
+                "wall_plane_indices": row.get("wall_plane_indices") or [],
+                "channel_gap": row.get("channel_gap"),
+                "slot_pitch": row.get("slot_pitch"),
+                "independent_evidence_count": row.get(
+                    "independent_evidence_count"
+                ),
+                "evidence_families": row.get("evidence_families") or [],
+                "proposal_only": bool(row.get("proposal_only")),
+                "review_required": bool(row.get("review_required")),
+                "pose_preserved": pose_preserved,
+                "translation_residual_mm": translation_residual,
+                "rotation_residual_degrees": rotation_residual_degrees,
+                "supported": supported,
+            })
+        edge_slot_supported = any(
+            row["supported"] for row in current_edge_slot_rows
+        )
+        compound_rows = compound_by_connection.get(
+            str(connection.get("connection_id")), []
+        )
+        current_compound_rows: list[dict[str, Any]] = []
+        for row in compound_rows:
+            fixed = row.get("fixed_part")
+            moving = row.get("moving_part")
+            interface = row.get("compound_candidate")
+            proposal = row.get("compound_proposal")
+            if (
+                fixed not in placements
+                or moving not in placements
+                or not isinstance(interface, dict)
+                or not isinstance(proposal, dict)
+            ):
+                continue
+            try:
+                fixed_world = placement_to_matrix(placements[fixed])
+                moving_world = placement_to_matrix(placements[moving])
+                relative = np.linalg.inv(fixed_world) @ moving_world
+                validation = validate_axial_compound_pose(
+                    interface,
+                    proposal,
+                    collision_free=True,
+                    transform=relative,
+                )
+                validation["collision_free"] = None
+                validation["collision_scope"] = "deferred_to_exact_occt"
+                validation["is_closed"] = False
+                physical_closed = _compound_physical_constraints_satisfied(
+                    validation, proposal
+                )
+            except Exception as exc:
+                validation = {
+                    "compound_constraints_satisfied": False,
+                    "error": str(exc),
+                    "exception_type": type(exc).__name__,
+                }
+                physical_closed = False
+            current_compound_rows.append({
+                "candidate_id": row.get("candidate_id"),
+                "proposal_id": row.get("proposal_id"),
+                "axis_polarity": row.get("axis_polarity"),
+                "phase_convention": row.get("phase_convention"),
+                "phase_orbit_degrees": row.get("phase_orbit_degrees"),
+                "whole_part_symmetry_order": row.get(
+                    "whole_part_symmetry_order"
+                ),
+                "phase_status": row.get("phase_status"),
+                "phase_witness": row.get("phase_witness") or [],
+                "proposal_only": bool(row.get("proposal_only")),
+                "review_required": bool(row.get("review_required")),
+                "compound_constraints_satisfied": physical_closed,
+                "current_pose_validation": validation,
+            })
+        centering_rows = centering_by_connection.get(
+            str(connection.get("connection_id")), []
+        )
+        current_centering_rows: list[dict[str, Any]] = []
+        for row in centering_rows:
+            support_rows = compound_by_connection.get(
+                str(row.get("support_connection_id")), []
+            )
+            shaft_rows = compound_by_connection.get(
+                str(row.get("connection_id")), []
+            )
+            support_rows = [
+                candidate_row for candidate_row in support_rows
+                if candidate_row.get("candidate_id")
+                == row.get("support_candidate_id")
+                and candidate_row.get("proposal_id")
+                == row.get("support_proposal_id")
+                and candidate_row.get("fixed_part")
+                in set(row.get("support_parts") or [])
+                and candidate_row.get("moving_part")
+                in set(row.get("support_parts") or [])
+            ]
+            shaft_rows = [
+                candidate_row for candidate_row in shaft_rows
+                if candidate_row.get("candidate_id")
+                == row.get("shaft_candidate_id")
+                and candidate_row.get("proposal_id")
+                == row.get("shaft_proposal_id")
+                and row.get("shaft_part")
+                in {
+                    candidate_row.get("fixed_part"),
+                    candidate_row.get("moving_part"),
+                }
+            ]
+            diagnostics = None
+            for support_row in support_rows:
+                for shaft_row in shaft_rows:
+                    current = _axial_group_centering_diagnostics(
+                        support_row,
+                        shaft_row,
+                        placements,
+                        features,
+                        graph,
+                    )
+                    if diagnostics is None or current.get("supported") is True:
+                        diagnostics = current
+                    if current.get("supported") is True:
+                        break
+                if diagnostics and diagnostics.get("supported") is True:
+                    break
+            if diagnostics is None:
+                diagnostics = {
+                    "schema_version": "axial_group_centering.v1",
+                    "pattern_detected": False,
+                    "supported": False,
+                    "reason": "referenced_compound_history_missing",
+                    "proposal_only": True,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                }
+            current_centering_rows.append({
+                **diagnostics,
+                "propagated_rigid_dependents": row.get(
+                    "propagated_rigid_dependents"
+                ) or [],
+            })
+        group_centering_supported = any(
+            row.get("supported") is True for row in current_centering_rows
+        )
+        supported_compound_rows = [
+            row for row in current_compound_rows
+            if row["compound_constraints_satisfied"]
+        ]
+        compound_supported = bool(supported_compound_rows)
+        compound_review_required = bool(
+            compound_rows
+            and (
+                not compound_supported
+                or all(
+                    row["proposal_only"] or row["review_required"]
+                    for row in supported_compound_rows
+                )
+            )
+        )
         by_type: dict[str, bool] = defaultdict(bool)
         for match in connection["matches"]:
             record = _residual_record(match, features, placements)
@@ -549,26 +1016,160 @@ def _pose_closure(candidate: dict, graph: dict, features: dict) -> dict[str, Any
         planar_satisfied = any(by_type[kind] for kind in {PLANAR_MATE, PLANAR_ALIGN})
         pocket_satisfied = bool(by_type[POCKET_MATE])
         any_satisfied = any(by_type.values())
+        compound_clearance_overlap_supported = bool(
+            CLEARANCE not in available or by_type[CLEARANCE]
+        )
+        pair = canonical_pair(connection.get("parts") or [])
+        planar_evidence_count = sum(
+            bool(by_type[kind]) for kind in {PLANAR_MATE, PLANAR_ALIGN}
+        )
+        containment_fallback = (
+            pair in containment_pairs
+            and planar_evidence_count >= 2
+        )
         # When pocket evidence is part of the selected relation, planar contact
         # alone is not enough; otherwise a fan/block can sit near a face and be
         # incorrectly accepted as inserted.
         if pocket_available:
-            closed = pocket_satisfied and (not planar_available or planar_satisfied)
+            closed = (
+                pocket_satisfied and (not planar_available or planar_satisfied)
+            ) or containment_fallback
+            connection_review_required = containment_fallback and not pocket_satisfied
         # When both axial and seating evidence exist, both must close.  This
         # prevents a coaxial-but-separated flange pose from being called valid.
         elif axial_available and planar_available:
             closed = axial_satisfied and planar_satisfied
+            connection_review_required = False
         else:
             closed = any_satisfied
+            connection_review_required = False
+        if footprint_supported:
+            # A dimension-matched support face plus a co-centred parallel
+            # layer is sufficient to send this pose to exact physical
+            # validation.  It is never an automatic semantic/functional
+            # acceptance: the source proposal guard forces human review.
+            closed = True
+            connection_review_required = True
+        centering_required = (
+            str(connection.get("connection_id"))
+            in centering_required_connection_ids
+            or bool(centering_rows)
+        )
+        if compound_rows and centering_required:
+            # A small axial body spanning two mirrored/opposed supports must
+            # retain group-level centre and two-sided overlap evidence.  Its
+            # original one-end-face compound stop is intentionally stale after
+            # centring and must not be used as a fallback closure.
+            closed = group_centering_supported
+            connection_review_required = True
+        elif compound_rows:
+            # The candidate was generated from a compound interface, so later
+            # residual refinements must preserve all of its axis/end-face/phase
+            # constraints.  Never fall back to an axial-only closure if the
+            # compound residual has become stale.
+            # A compound end-face stop does not by itself prove that a
+            # clearance/shaft-hole relation is inserted.  The selected
+            # clearance edge must also retain finite axial overlap.
+            closed = (
+                compound_supported
+                and compound_clearance_overlap_supported
+            )
+            connection_review_required = bool(
+                compound_review_required
+                or not compound_clearance_overlap_supported
+            )
+        elif centering_required:
+            closed = False
+            connection_review_required = True
+        if enclosure_rows:
+            # Repeated opposing walls, repeated rails/supports and a derived
+            # functional-body fit can close this physical insertion edge for
+            # exact validation.  The transform must still be the recalled
+            # transform; later generic refinements cannot inherit stale bay
+            # evidence.  Functional correctness remains review-only.
+            closed = enclosure_supported
+            connection_review_required = True
+        if edge_slot_rows:
+            # Repeated bounded channel floors and mirrored walls support a
+            # physical edge insertion proposal.  Functional correctness is
+            # deliberately not inferred, so this path is always review-only.
+            closed = edge_slot_supported
+            connection_review_required = True
         fully_closed = fully_closed and closed
+        review_required = review_required or connection_review_required
+        satisfied_relation_types = sorted(
+            kind for kind, satisfied in by_type.items() if satisfied
+        )
+        if footprint_supported:
+            satisfied_relation_types.append(
+                "planar_footprint_multi_evidence"
+            )
+        if compound_supported:
+            satisfied_relation_types.append(
+                "compound_coaxial_radial_end_face_phase"
+            )
+        if group_centering_supported:
+            satisfied_relation_types.append(
+                "group_centered_two_sided_axial_insertion"
+            )
+        if enclosure_supported:
+            satisfied_relation_types.append(
+                "repeated_enclosure_bay_multi_evidence"
+            )
+        if edge_slot_supported:
+            satisfied_relation_types.append(
+                "repeated_bounded_edge_slot_multi_evidence"
+            )
         connection_rows.append({
             "connection_id": connection["connection_id"],
             "parts": connection["parts"],
             "closed": closed,
-            "satisfied_relation_types": sorted(
-                kind for kind, satisfied in by_type.items() if satisfied
-            ),
+            "satisfied_relation_types": satisfied_relation_types,
             "available_relation_types": sorted(available),
+            "closure_evidence": (
+                "axial_group_centered_two_sided_insertion"
+                if group_centering_supported
+                else "axial_group_centering_residual_failed"
+                if centering_required
+                else "axial_compound_interface"
+                if compound_supported and compound_clearance_overlap_supported
+                else "axial_compound_clearance_overlap_failed"
+                if compound_supported
+                else "axial_compound_residual_failed"
+                if compound_rows
+                else "repeated_enclosure_bay_multi_evidence"
+                if enclosure_supported
+                else "enclosure_bay_pose_residual_failed"
+                if enclosure_rows
+                else "repeated_bounded_edge_slot_multi_evidence"
+                if edge_slot_supported
+                else "edge_slot_pose_residual_failed"
+                if edge_slot_rows
+                else "planar_footprint_multi_evidence_proposal"
+                if footprint_supported
+                else "multi_planar_plus_strict_containment"
+                if connection_review_required
+                else "selected_interface_residuals"
+            ),
+            "review_required": connection_review_required,
+            "planar_footprint_evidence": [
+                {
+                    "proposal_id": row.get("proposal_id"),
+                    "equivalence_class_id": row.get(
+                        "equivalence_class_id"
+                    ),
+                    "independent_evidence_count": row.get(
+                        "independent_evidence_count"
+                    ),
+                    "phase_degrees": row.get("phase_degrees"),
+                    "support_polarity": row.get("support_polarity"),
+                }
+                for row in footprint_rows
+            ],
+            "axial_compound_evidence": current_compound_rows,
+            "axial_group_centering_evidence": current_centering_rows,
+            "enclosure_bay_evidence": current_enclosure_rows,
+            "edge_slot_evidence": current_edge_slot_rows,
         })
     closed_count = sum(row["closed"] for row in connection_rows)
     return {
@@ -577,6 +1178,7 @@ def _pose_closure(candidate: dict, graph: dict, features: dict) -> dict[str, Any
         "connection_count": len(connection_rows),
         "closure_ratio": closed_count / max(1, len(connection_rows)),
         "connections": connection_rows,
+        "review_required": review_required,
     }
 
 
@@ -682,10 +1284,17 @@ def _pose_overlap_cost(candidate: dict, graph: dict, features: dict) -> dict[str
         pair = canonical_pair(item.get("parts", []))
         ratio = float(item.get("minimum_part_volume_ratio", 0.0))
         if pair in selected_pairs:
-            # Closed selected pairs can have AABB overlap for valid insertion.
-            weight = 0.15 if pair in closed_pairs else 0.60
+            # A strict small-in-large containment is an insertion proposal, not
+            # a material collision.  It receives only a tiny ranking cost and
+            # still requires exact OCCT plus the downstream precision gate.
+            if item.get("is_strict_containment"):
+                weight = 0.02
+                kind = "selected_pair_containment"
+            else:
+                # Closed selected pairs can have AABB overlap for valid insertion.
+                weight = 0.15 if pair in closed_pairs else 0.60
+                kind = "selected_pair_overlap"
             selected_overlap += weight * min(1.0, ratio)
-            kind = "selected_pair_overlap"
         else:
             weight = 2.0
             non_edge_overlap += weight * min(1.0, ratio)
@@ -712,17 +1321,26 @@ def _pose_precheck(
     contact = _pose_contact_support(candidate, graph, features)
     overlap = _pose_overlap_cost(candidate, graph, features)
     closure_ratio = float(closure.get("closure_ratio", 0.0))
+    side_consistency = candidate.get("carrier_open_side_consistency") or {}
+    # This is only a bounded ranking preference between otherwise feasible
+    # review candidates.  It is intentionally not an acceptance condition and
+    # cannot compensate for missing closure, contact, or exact validation.
+    side_consistency_bonus = (
+        0.12 if side_consistency.get("supported") is True else 0.0
+    )
     score = (
         4.0 * closure_ratio
         + 1.5 * float(contact.get("contact_support_score", 0.0))
         - 1.2 * float(overlap.get("bbox_overlap_cost", 0.0))
         + 0.05 * float(candidate.get("total_score", 0.0))
+        + side_consistency_bonus
     )
     return {
         "constraint_closure": closure,
         "contact_objective": contact,
         "overlap_objective": overlap,
         "group_pose_precheck_score": score,
+        "carrier_open_side_consistency_bonus": side_consistency_bonus,
     }
 
 
@@ -732,6 +1350,52 @@ def _exact_status_rank(exact: dict[str, Any]) -> int:
     if exact.get("status") == "success":
         return 1
     return 0
+
+
+def _exact_collision_risk(exact: dict[str, Any]) -> tuple[float, int, float]:
+    collisions = exact.get("collisions") or []
+    return (
+        sum(
+            max(0.0, float(row.get("minimum_part_volume_ratio", 0.0)))
+            for row in collisions
+        ),
+        sum(
+            max(1, int(row.get("solid_intersection_count", 1)))
+            for row in collisions
+        ),
+        sum(
+            max(0.0, float(row.get("intersection_volume_mm3", 0.0)))
+            for row in collisions
+        ),
+    )
+
+
+def _localized_interference_review(
+    exact: dict[str, Any],
+    closure: dict[str, Any],
+) -> dict[str, Any]:
+    ratio, pair_count, volume = _exact_collision_risk(exact)
+    eligible = (
+        exact.get("status") == "success"
+        and bool(exact.get("collisions"))
+        and bool(closure.get("fully_closed"))
+        and bool(closure.get("review_required"))
+        and ratio <= 0.002
+        and pair_count <= 2
+    )
+    return {
+        "eligible_for_review": eligible,
+        "component_volume_ratio_sum": ratio,
+        "positive_solid_pair_count": pair_count,
+        "intersection_volume_mm3": volume,
+        "reason": (
+            "Localized low-ratio interference on a containment-derived pose; "
+            "possible compliant clip or CAD interference remains human-review only."
+            if eligible
+            else "Collision exceeds the localized-interference review gate."
+        ),
+        "can_auto_accept": False,
+    }
 
 
 def _group_pose_final_score(
@@ -798,6 +1462,15 @@ def _conservative_pose_output(
         (row for row in pose_audit if row.get("rank") == selected_rank),
         {},
     )
+    precision = result.get("precision_pose_validation")
+    if not isinstance(precision, dict):
+        precision = selected.get("precision_pose_validation")
+    if not isinstance(precision, dict):
+        precision = {
+            "precision_status": "not_checked",
+            "review_required": True,
+            "reason": "precision_pose_validation_missing",
+        }
     group_record = {
         "assembly_id": result.get("assembly_id"),
         "parts": result.get("parts", []),
@@ -805,11 +1478,51 @@ def _conservative_pose_output(
         "assembly_connected": result.get("assembly_connected"),
         "selected_pose_rank": selected_rank,
         "selected_candidate_origin": selected.get("candidate_origin"),
+        "selected_candidate_proposal_only": bool(
+            selected.get("proposal_only")
+        ),
+        "selected_candidate_review_required": bool(
+            selected.get("review_required")
+        ),
+        "selected_candidate_can_auto_accept": selected.get(
+            "can_auto_accept"
+        ),
+        "obb_insertion": selected.get("obb_insertion"),
+        "obb_insertion_history": selected.get("obb_insertion_history"),
+        "planar_footprint": selected.get("planar_footprint"),
+        "planar_footprint_history": selected.get(
+            "planar_footprint_history"
+        ),
+        "axial_compound_interface": selected.get(
+            "axial_compound_interface"
+        ),
+        "axial_compound_history": selected.get(
+            "axial_compound_history"
+        ),
+        "axial_group_centering": selected.get(
+            "axial_group_centering"
+        ),
+        "axial_group_centering_history": selected.get(
+            "axial_group_centering_history"
+        ),
+        "enclosure_bay": selected.get("enclosure_bay"),
+        "enclosure_bay_history": selected.get(
+            "enclosure_bay_history"
+        ),
+        "edge_slot_interface": selected.get("edge_slot_interface"),
+        "edge_slot_history": selected.get("edge_slot_history"),
+        "carrier_open_side_consistency": selected.get(
+            "carrier_open_side_consistency"
+        ),
+        "carrier_open_side_consistency_history": selected.get(
+            "carrier_open_side_consistency_history"
+        ),
         "group_pose_final_score": selected.get("group_pose_final_score"),
         "closure": selected.get("constraint_closure"),
         "contact_objective": selected.get("contact_objective"),
         "overlap_objective": selected.get("overlap_objective"),
         "collision_validation": result.get("collision_validation", {}),
+        "precision_pose_validation": precision,
         "direct_connections": [
             {
                 "connection_id": row.get("connection_id"),
@@ -817,6 +1530,16 @@ def _conservative_pose_output(
                 "primary_relation_type": row.get("primary_relation_type"),
                 "assembly_method_relation_types": row.get("assembly_method_relation_types"),
                 "constraint_closed_in_selected_pose": row.get("constraint_closed_in_selected_pose"),
+                "closure_evidence": row.get("closure_evidence"),
+                "axial_compound_evidence": row.get(
+                    "axial_compound_evidence"
+                ) or [],
+                "axial_group_centering_evidence": row.get(
+                    "axial_group_centering_evidence"
+                ) or [],
+                "enclosure_bay_evidence": row.get(
+                    "enclosure_bay_evidence"
+                ) or [],
                 "review_required": row.get("review_required"),
             }
             for row in result.get("direct_connections", [])
@@ -825,12 +1548,42 @@ def _conservative_pose_output(
     accepted, review, rejected = [], [], []
     reasons = []
     collision = result.get("collision_validation", {})
+    proposal_guard = bool(
+        selected.get("proposal_only")
+        or selected.get("review_required")
+        or selected.get("can_auto_accept") is False
+        or (selected.get("obb_insertion") or {}).get("review_required")
+        or (selected.get("planar_footprint") or {}).get(
+            "review_required"
+        )
+        or (selected.get("axial_compound_interface") or {}).get(
+            "review_required"
+        )
+        or (selected.get("enclosure_bay") or {}).get(
+            "review_required"
+        )
+        or (selected.get("constraint_closure") or {}).get(
+            "review_required"
+        )
+    )
     if not result.get("assembly_connected"):
         review.append(group_record)
         reasons.append("assembly_graph_not_connected")
-    elif result.get("pose_status") == "valid":
+    elif proposal_guard:
+        review.append(group_record)
+        reasons.append("proposal_only_pose_requires_human_review")
+    elif (
+        result.get("pose_status") == "valid"
+        and precision.get("precision_status", precision.get("status"))
+        == "valid"
+    ):
         accepted.append(group_record)
-        reasons.append("full_closure_and_exact_collision_free")
+        reasons.append("full_closure_exact_collision_and_precision_gate_valid")
+    elif result.get("pose_status") == "valid":
+        review.append(group_record)
+        reasons.append(
+            str(precision.get("reason") or "precision_pose_validation_not_valid")
+        )
     elif result.get("pose_status") == "failed":
         rejected.append(group_record)
         reasons.append("exact_collision_or_pose_failure")
@@ -847,7 +1600,10 @@ def _conservative_pose_output(
     group_record["decision_reasons"] = reasons
     return {
         "schema_version": "known_group_conservative_pose.v1",
-        "policy": "accepted_requires_connected_full_closure_and_exact_collision_free",
+        "policy": (
+            "accepted_requires_connected_full_closure_exact_collision_and_"
+            "multi_evidence_precision_gate"
+        ),
         "accepted_groups": accepted,
         "review_groups": review,
         "rejected_groups": rejected,
@@ -863,11 +1619,29 @@ def _conservative_pose_output(
     }
 
 
-def _portable_components(components: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _portable_components(
+    components: list[dict[str, Any]],
+    source_dir: str | Path,
+    manifest_dir: str | Path,
+) -> list[dict[str, Any]]:
+    """Make component sources portable from the actual manifest directory.
+
+    The previous implementation assumed every output directory was a direct
+    child of the input case and blindly emitted ``../<part>``.  Independent
+    frozen-exam directories therefore pointed at nonexistent STEP files.
+    """
+
+    source_root = Path(source_dir).resolve()
+    manifest_root = Path(manifest_dir).resolve()
     result = []
     for component in components:
         item = dict(component)
-        item["source"] = f"../{Path(item['source']).name}"
+        source = Path(str(item["source"]))
+        if not source.is_absolute():
+            source = source_root / source.name
+        item["source"] = Path(
+            os.path.relpath(source.resolve(), manifest_root)
+        ).as_posix()
         result.append(item)
     return result
 
@@ -911,6 +1685,237 @@ def _shift_placement_along_axis(
         for index in range(3)
     ]
     return shifted
+
+
+def _rigid_attachment_cluster(
+    root: str,
+    graph: dict[str, Any],
+    *,
+    blocked: set[str] | None = None,
+) -> list[str]:
+    """Return the bounded non-axial attachment subtree rooted at ``root``.
+
+    Pose recall often moves an axial carrier after a small prismatic child has
+    already been seated on it.  Moving only the carrier destroys that relative
+    placement.  We therefore propagate the same world-space rigid delta across
+    edges supported exclusively by planar/pocket evidence.  Axial edges are
+    never crossed, and callers can block other independently sampled roots.
+
+    A single planar edge is still weak evidence: propagation only preserves a
+    proposal and does not make the edge accepted.  The group closure gate keeps
+    such a connection review-only.
+    """
+
+    blocked = set(blocked or set())
+    blocked.discard(root)
+    adjacency: dict[str, set[str]] = defaultdict(set)
+    for connection in graph.get("selected") or []:
+        parts = list(connection.get("parts") or [])
+        relation_types = set(connection.get("relation_types") or [])
+        if len(parts) != 2:
+            continue
+        if relation_types & {COAXIAL, CLEARANCE}:
+            continue
+        if not relation_types & {PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE}:
+            continue
+        left, right = parts
+        adjacency[left].add(right)
+        adjacency[right].add(left)
+
+    cluster: list[str] = []
+    pending = [root]
+    visited = set(blocked)
+    while pending:
+        part = pending.pop()
+        if part in visited:
+            continue
+        visited.add(part)
+        cluster.append(part)
+        pending.extend(sorted(adjacency.get(part, set()) - visited, reverse=True))
+    return cluster
+
+
+def _set_placement_with_rigid_dependents(
+    placements: dict[str, Any],
+    root: str,
+    new_root_placement: dict[str, Any],
+    graph: dict[str, Any],
+    *,
+    blocked: set[str] | None = None,
+) -> list[str]:
+    """Set one root placement and apply its world delta to attached children."""
+
+    if root not in placements:
+        return []
+    old_root = placement_to_matrix(placements[root])
+    new_root = placement_to_matrix(new_root_placement)
+    delta = new_root @ np.linalg.inv(old_root)
+    cluster = _rigid_attachment_cluster(root, graph, blocked=blocked)
+    for part in cluster:
+        if part not in placements:
+            continue
+        if part == root:
+            placements[part] = json.loads(json.dumps(new_root_placement))
+            continue
+        placements[part] = matrix_to_placement(
+            delta @ placement_to_matrix(placements[part])
+        )
+    return cluster
+
+
+def _main_cylinder_radius(part_features: dict[str, Any]) -> float | None:
+    cylinders = list(part_features.get("cylinders") or [])
+    if not cylinders:
+        return None
+    radius = max(float(row.get("radius", 0.0)) for row in cylinders)
+    return radius if radius > 0.0 else None
+
+
+def _world_bbox_axis_interval(
+    part_features: dict[str, Any],
+    placement: dict[str, Any],
+    axis_world: list[float],
+) -> tuple[float, float] | None:
+    """Project all transformed AABB corners onto one world-space axis."""
+
+    bbox = part_features.get("bbox") or {}
+    low = bbox.get("min")
+    high = bbox.get("max")
+    if not low or not high or len(low) != 3 or len(high) != 3:
+        return None
+    axis = np.asarray(_unit(axis_world), dtype=float)
+    values = []
+    for x in (float(low[0]), float(high[0])):
+        for y in (float(low[1]), float(high[1])):
+            for z in (float(low[2]), float(high[2])):
+                point = np.asarray(
+                    transform_point([x, y, z], placement), dtype=float
+                )
+                values.append(float(np.dot(point, axis)))
+    return min(values), max(values)
+
+
+def _axial_terminal_face_interval(
+    part_features: dict[str, Any],
+    placement: dict[str, Any],
+    axis_world: list[float],
+) -> tuple[float, float] | None:
+    """Find a conservative pair of opposed terminal faces for a shaft-like part.
+
+    Only planes normal to the dominant cylinder axis are considered.  The pair
+    must have opposed normals, comparable areas, and substantial separation.
+    This deliberately abstains on ambiguous stepped bodies instead of treating
+    a shoulder or keyway end wall as a terminal face.
+    """
+
+    local_axis = _main_cylinder_axis(part_features)
+    if local_axis is None:
+        return None
+    local_axis_np = np.asarray(_unit(local_axis), dtype=float)
+    aligned: list[dict[str, Any]] = []
+    for plane in part_features.get("planes") or []:
+        normal = plane.get("normal")
+        position = plane.get("position") or plane.get("centroid")
+        area = float(plane.get("area", 0.0))
+        if not normal or not position or area <= 0.0:
+            continue
+        normal_np = np.asarray(_unit(normal), dtype=float)
+        if abs(float(np.dot(normal_np, local_axis_np))) < math.cos(
+            math.radians(2.0)
+        ):
+            continue
+        aligned.append({
+            "normal": normal_np,
+            "position": np.asarray(position, dtype=float),
+            "area": area,
+        })
+    if len(aligned) < 2:
+        return None
+    max_area = max(row["area"] for row in aligned)
+    eligible = [row for row in aligned if row["area"] >= 0.25 * max_area]
+    if len(eligible) < 2:
+        return None
+    coordinates = [
+        float(np.dot(row["position"], local_axis_np)) for row in eligible
+    ]
+    minimum = min(coordinates)
+    maximum = max(coordinates)
+    if maximum - minimum <= 1e-3:
+        return None
+    tolerance = max(1e-6, 1e-5 * (maximum - minimum))
+    low_rows = [
+        row for row, coordinate in zip(eligible, coordinates)
+        if abs(coordinate - minimum) <= tolerance
+    ]
+    high_rows = [
+        row for row, coordinate in zip(eligible, coordinates)
+        if abs(coordinate - maximum) <= tolerance
+    ]
+    left = max(low_rows, key=lambda row: row["area"])
+    right = max(high_rows, key=lambda row: row["area"])
+    if float(np.dot(left["normal"], right["normal"])) > -math.cos(
+        math.radians(2.0)
+    ):
+        return None
+    area_ratio = min(left["area"], right["area"]) / max(
+        left["area"], right["area"]
+    )
+    if area_ratio < 0.80:
+        return None
+    axis = np.asarray(_unit(axis_world), dtype=float)
+    projected = [
+        float(np.dot(
+            np.asarray(transform_point(row["position"].tolist(), placement)),
+            axis,
+        ))
+        for row in (left, right)
+    ]
+    return min(projected), max(projected)
+
+
+def _axial_support_face_interval(
+    part_features: dict[str, Any],
+    placement: dict[str, Any],
+    axis_world: list[float],
+) -> tuple[float, float] | None:
+    """Project significant dominant-axis end/shoulder planes for a support."""
+
+    local_axis = _main_cylinder_axis(part_features)
+    if local_axis is None:
+        return None
+    local_axis_np = np.asarray(_unit(local_axis), dtype=float)
+    aligned = []
+    for plane in part_features.get("planes") or []:
+        normal = plane.get("normal")
+        position = plane.get("position") or plane.get("centroid")
+        area = float(plane.get("area", 0.0))
+        if not normal or not position or area <= 0.0:
+            continue
+        if abs(float(np.dot(
+            np.asarray(_unit(normal), dtype=float), local_axis_np
+        ))) < math.cos(math.radians(2.0)):
+            continue
+        aligned.append((area, position))
+    if len(aligned) < 2:
+        return None
+    max_area = max(area for area, _ in aligned)
+    significant = [
+        position for area, position in aligned
+        if area >= max(1.0, 0.08 * max_area)
+    ]
+    if len(significant) < 2:
+        return None
+    axis = np.asarray(_unit(axis_world), dtype=float)
+    values = [
+        float(np.dot(
+            np.asarray(transform_point(position, placement), dtype=float),
+            axis,
+        ))
+        for position in significant
+    ]
+    if max(values) - min(values) <= 1e-3:
+        return None
+    return min(values), max(values)
 
 
 def _dot(a: list[float], b: list[float]) -> float:
@@ -1028,6 +2033,35 @@ def _candidate_from_placements(
     score_penalty: float,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
+    inherited_proposal_guard = {
+        key: source_candidate[key]
+        for key in (
+            "proposal_only",
+            "review_required",
+            "can_auto_accept",
+            "obb_insertion",
+            "obb_insertion_history",
+            "obb_refined_connection_ids",
+            "planar_footprint",
+            "planar_footprint_history",
+            "planar_footprint_refined_connection_ids",
+            "axial_compound_interface",
+            "axial_compound_history",
+            "axial_compound_refined_connection_ids",
+            "axial_group_centering",
+            "axial_group_centering_history",
+            "axial_group_centering_required_connection_ids",
+            "enclosure_bay",
+            "enclosure_bay_history",
+            "enclosure_bay_refined_connection_ids",
+            "edge_slot_interface",
+            "edge_slot_history",
+            "edge_slot_refined_connection_ids",
+            "carrier_open_side_consistency",
+            "carrier_open_side_consistency_history",
+        )
+        if key in source_candidate
+    }
     return {
         "placements": placements,
         "components": placements_to_manifest(features, placements),
@@ -1040,8 +2074,76 @@ def _candidate_from_placements(
             f"{origin}_penalty": score_penalty,
         },
         "candidate_origin": origin,
+        **inherited_proposal_guard,
         **extra,
     }
+
+
+def _inject_joinable_group_pose_seed(
+    search: dict[str, Any],
+    features: dict[str, Any],
+    pose_report_root: str | Path | None,
+) -> dict[str, Any]:
+    """Compose cached pair poses into one generic group-pose proposal.
+
+    The proposal is admitted only when all parts are connected and all pair
+    cycles are consistent.  It still goes through the same closure, overlap and
+    exact OCCT checks as every analytic pose candidate.
+    """
+
+    if pose_report_root is None:
+        return search
+    seeds = load_joinable_pair_pose_candidate_directory(
+        pose_report_root, limit_per_pair=8
+    )
+    hypotheses = compose_group_pose_hypotheses(
+        features.keys(),
+        seeds,
+        maximum_candidates_per_pair=4,
+        maximum_combinations=64,
+    )
+    updated = dict(search)
+    updated["joinable_group_pose_composition"] = {
+        "pair_pose_candidate_count": len(seeds),
+        "group_hypothesis_count": len(hypotheses),
+        "complete_hypothesis_count": sum(
+            row["status"] == "complete" for row in hypotheses
+        ),
+        "review_hypothesis_count": sum(
+            row["review_required"] for row in hypotheses
+        ),
+        "hypotheses": hypotheses,
+    }
+    complete = [row for row in hypotheses if row["status"] == "complete"]
+    if not complete:
+        return updated
+    candidates = []
+    for index, composition in enumerate(complete):
+        candidates.append(_candidate_from_placements(
+            features,
+            composition["placements"],
+            search,
+            origin="joinable_pair_pose_composition",
+            score_penalty=0.02 + 0.001 * index,
+            extra={
+                "joinable_group_pose": {
+                    "combination_index": composition["combination_index"],
+                    "reference_part": composition["reference_part"],
+                    "usable_pair_seed_count": composition[
+                        "usable_pair_seed_count"
+                    ],
+                    "pair_seed_sources": composition["pair_seed_sources"],
+                    "pair_seed_score_sum": composition[
+                        "pair_seed_score_sum"
+                    ],
+                    "cycle_checks": composition["cycle_checks"],
+                }
+            },
+        ))
+    updated["pose_candidates"] = (
+        list(search.get("pose_candidates") or []) + candidates
+    )
+    return updated
 
 
 def _axial_slide_pose_candidates(
@@ -1122,12 +2224,24 @@ def _axial_slide_pose_candidates(
             ]
         for grid in offset_grids[:max_candidates]:
             placements = json.loads(json.dumps(base_placements))
+            propagated_dependents: dict[str, list[str]] = {}
+            blocked_roots = set(movable) | {center}
             for part, offset in zip(movable, grid):
                 if part not in placements:
                     continue
-                placements[part] = _shift_placement_along_axis(
+                shifted = _shift_placement_along_axis(
                     placements[part], axis, float(offset)
                 )
+                cluster = _set_placement_with_rigid_dependents(
+                    placements,
+                    part,
+                    shifted,
+                    graph,
+                    blocked=blocked_roots - {part},
+                )
+                propagated_dependents[part] = [
+                    member for member in cluster if member != part
+                ]
             normalized_slide = (
                 sum(abs(float(offset)) for offset in grid)
                 / max(center_diag, 1.0)
@@ -1155,6 +2269,7 @@ def _axial_slide_pose_candidates(
                     "offsets": {
                         part: float(offset) for part, offset in zip(movable, grid)
                     },
+                    "propagated_rigid_dependents": propagated_dependents,
                 },
             })
             # Orientation-consistent variant: satellites placed on opposite
@@ -1180,11 +2295,21 @@ def _axial_slide_pose_candidates(
                 ))
                 side_sign = -1.0 if float(offset) < 0.0 else 1.0
                 if side_sign * _dot(part_axis_world, _unit(axis)) < 0.0:
-                    oriented_placements[part] = _flip_axis_direction(
+                    flipped = _flip_axis_direction(
                         oriented_placements[part],
                         axis,
                         [float(value) for value in pivot_local],
                     )
+                    cluster = _set_placement_with_rigid_dependents(
+                        oriented_placements,
+                        part,
+                        flipped,
+                        graph,
+                        blocked=blocked_roots - {part},
+                    )
+                    propagated_dependents[part] = [
+                        member for member in cluster if member != part
+                    ]
                     flipped_parts.append(part)
             if flipped_parts:
                 candidates.append({
@@ -1211,6 +2336,7 @@ def _axial_slide_pose_candidates(
                             part: float(offset) for part, offset in zip(movable, grid)
                         },
                         "flipped_parts": flipped_parts,
+                        "propagated_rigid_dependents": propagated_dependents,
                     },
                 })
     return candidates
@@ -1489,12 +2615,20 @@ def _joinable_axis_data_for_match(
             if relation_type == PLANAR_MATE else stationary_normal
         )
         target_origin = transform_point(
-            stationary_feature.get("point", [0, 0, 0]),
+            stationary_feature.get("centroid")
+            or stationary_feature.get("point")
+            or stationary_feature.get("position", [0, 0, 0]),
             placements.get(stationary, {}),
         )
         return (
             [float(value) for value in movable_feature.get("normal", [0, 0, 1])],
-            [float(value) for value in movable_feature.get("point", [0, 0, 0])],
+            [
+                float(value) for value in (
+                    movable_feature.get("centroid")
+                    or movable_feature.get("point")
+                    or movable_feature.get("position", [0, 0, 0])
+                )
+            ],
             target_axis,
             target_origin,
             "planar",
@@ -1550,6 +2684,1157 @@ def _joinable_axis_data_for_match(
     return None
 
 
+def _joinable_parameter_jobs(
+    matches: list[dict[str, Any]],
+    offset_factors: list[float],
+    rotation_angles: list[float],
+) -> list[tuple[dict[str, Any], bool, float, float]]:
+    """Interleave feature, offset, flip, and rotation probes fairly.
+
+    A small per-edge quota must still see more than the first flip/rotation
+    stratum.  Ordering the finite lattice by its maximum complexity band gives
+    the best match at the identity parameters first, then quickly introduces a
+    second match, signed offsets, a flip, and a 180-degree rotation.
+    """
+
+    magnitudes = sorted({abs(float(value)) for value in offset_factors})
+    magnitude_band = {value: index for index, value in enumerate(magnitudes)}
+
+    def rotation_band(angle: float) -> int:
+        normalized = abs(float(angle)) % 360.0
+        normalized = min(normalized, 360.0 - normalized)
+        if normalized <= 1e-9:
+            return 0
+        if abs(normalized - 180.0) <= 1e-9:
+            return 1
+        return 2
+
+    jobs = []
+    for match_rank, match in enumerate(matches[:4]):
+        for offset_factor in offset_factors:
+            offset_rank = magnitude_band[abs(float(offset_factor))]
+            for flip in (False, True):
+                flip_rank = int(flip)
+                for rotation_degrees in rotation_angles:
+                    rotate_rank = rotation_band(rotation_degrees)
+                    complexity = max(
+                        match_rank, offset_rank, flip_rank, rotate_rank
+                    )
+                    jobs.append((
+                        (
+                            complexity,
+                            match_rank + offset_rank + flip_rank + rotate_rank,
+                            match_rank,
+                            offset_rank,
+                            flip_rank,
+                            rotate_rank,
+                            abs(float(offset_factor)),
+                            float(offset_factor),
+                            float(rotation_degrees),
+                        ),
+                        match,
+                        flip,
+                        float(offset_factor),
+                        float(rotation_degrees),
+                    ))
+    jobs.sort(key=lambda row: row[0])
+    return [row[1:] for row in jobs]
+
+
+def _joinable_pose_parameter_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Generate a bounded residual-pose frontier for exactly one graph edge."""
+
+    if max_candidates <= 0:
+        return []
+    generated: list[dict[str, Any]] = []
+    axial_degree: dict[str, int] = defaultdict(int)
+    for selected_connection in graph.get("selected") or []:
+        if set(selected_connection.get("relation_types") or []) & {COAXIAL, CLEARANCE}:
+            for part in selected_connection.get("parts") or []:
+                axial_degree[part] += 1
+    central_axial_parts = {
+        part for part, degree in axial_degree.items()
+        if degree >= 2 and _main_cylinder_axis(features.get(part, {}))
+    }
+    active_sources = source_candidates[: min(12, max_candidates)]
+    source_quotas = _fair_quotas(max_candidates, len(active_sources))
+    for source_candidate, source_quota in zip(active_sources, source_quotas):
+        if source_quota <= 0:
+            continue
+        generated_for_source = 0
+        placements = source_candidate.get("placements") or {}
+        parts = list(connection.get("parts") or [])
+        if len(parts) != 2 or any(part not in placements for part in parts):
+            continue
+        diagonals = {
+            part: _bbox_diagonal_from_features(features.get(part, {}))
+            for part in parts
+        }
+        relation_types = set(connection.get("relation_types") or [])
+        if relation_types & {COAXIAL, CLEARANCE}:
+            center_candidates = [part for part in parts if part in central_axial_parts]
+            stationary = center_candidates[0] if center_candidates else min(
+                parts,
+                key=lambda part: (
+                    max((float(row.get("radius", 0.0)) for row in features.get(part, {}).get("cylinders", [])), default=0.0),
+                    diagonals[part],
+                ),
+            )
+            movable = parts[1] if parts[0] == stationary else parts[0]
+            relation_priority = [CLEARANCE, COAXIAL, PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE]
+            offset_scale = max(1.0, min(120.0, 0.6 * (diagonals[stationary] + diagonals[movable])))
+            offset_factors = [0.0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75, -1.0, 1.0]
+            rotation_angles = [0.0, 90.0, 180.0, 270.0]
+        elif POCKET_MATE in relation_types:
+            stationary = max(parts, key=lambda part: diagonals[part])
+            movable = parts[1] if parts[0] == stationary else parts[0]
+            relation_priority = [POCKET_MATE, PLANAR_MATE, PLANAR_ALIGN]
+            offset_scale = max(1.0, min(80.0, 0.5 * diagonals[movable]))
+            offset_factors = [0.0, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 1.0, -1.0]
+            rotation_angles = [0.0, 180.0, 90.0, 270.0]
+        elif relation_types & {PLANAR_MATE, PLANAR_ALIGN}:
+            stationary = max(parts, key=lambda part: diagonals[part])
+            movable = parts[1] if parts[0] == stationary else parts[0]
+            relation_priority = [PLANAR_MATE, PLANAR_ALIGN]
+            offset_scale = max(1.0, min(50.0, 0.25 * diagonals[movable]))
+            offset_factors = [0.0, -0.1, 0.1, -0.25, 0.25]
+            rotation_angles = [0.0, 180.0, 90.0, 270.0]
+        else:
+            continue
+        matches = []
+        for relation_type in relation_priority:
+            matches.extend([
+                match for match in connection.get("matches") or []
+                if match.get("type") == relation_type
+            ])
+        for match, flip, offset_factor, rotation_degrees in _joinable_parameter_jobs(
+            matches, offset_factors, rotation_angles
+        ):
+            axis_data = _joinable_axis_data_for_match(
+                match, stationary, movable, features, placements
+            )
+            if axis_data is None:
+                continue
+            (
+                movable_axis_local,
+                movable_origin_local,
+                target_axis_world,
+                target_origin_world,
+                joint_kind,
+            ) = axis_data
+            flipped_axis = (
+                [-value for value in target_axis_world]
+                if flip else target_axis_world
+            )
+            offset = float(offset_factor) * offset_scale
+            new_placements = json.loads(json.dumps(placements))
+            new_movable_placement = _placement_from_joinable_axis_parameters(
+                movable_axis_local,
+                movable_origin_local,
+                flipped_axis,
+                target_origin_world,
+                offset=offset,
+                rotation_degrees=rotation_degrees,
+            )
+            propagated_cluster = _set_placement_with_rigid_dependents(
+                new_placements,
+                movable,
+                new_movable_placement,
+                graph,
+                blocked={stationary},
+            )
+            normalized_offset = abs(offset) / max(offset_scale, 1.0)
+            detail = {
+                "connection_id": connection["connection_id"],
+                "joint_kind": joint_kind,
+                "stationary_part": stationary,
+                "movable_part": movable,
+                "match_type": match.get("type"),
+                "offset": offset,
+                "offset_scale": offset_scale,
+                "rotation_degrees": rotation_degrees,
+                "flip": flip,
+                "target_axis_world": flipped_axis,
+                "target_origin_world": target_origin_world,
+                "refinement_phase": refinement_phase,
+                "propagated_rigid_dependents": [
+                    part for part in propagated_cluster if part != movable
+                ],
+            }
+            history = list(
+                source_candidate.get("joinable_pose_refinement_history") or []
+            ) + [detail]
+            refined_connection_ids = list(dict.fromkeys(
+                str(row.get("connection_id")) for row in history
+                if row.get("connection_id") is not None
+            ))
+            generated.append(
+                _candidate_from_placements(
+                    features,
+                    new_placements,
+                    source_candidate,
+                    origin=(
+                        "joinable_two_edge_pose_composition"
+                        if len(refined_connection_ids) >= 2
+                        else "joinable_pose_parameter_search"
+                    ),
+                    score_penalty=(
+                        0.14
+                        + 0.03 * normalized_offset
+                        + (0.02 if flip else 0.0)
+                        + (0.01 if rotation_degrees else 0.0)
+                    ),
+                    extra={
+                        "joinable_pose_search": detail,
+                        "joinable_pose_refinement_history": history,
+                        "joinable_pose_refined_connection_ids": refined_connection_ids,
+                    },
+                )
+            )
+            generated_for_source += 1
+            if (
+                len(generated) >= max_candidates
+                or generated_for_source >= source_quota
+            ):
+                break
+        if len(generated) >= max_candidates:
+            return generated
+    return generated
+
+
+def _fair_quotas(total: int, count: int) -> list[int]:
+    if total <= 0 or count <= 0:
+        return [0] * max(0, count)
+    base, remainder = divmod(int(total), int(count))
+    return [base + int(index < remainder) for index in range(count)]
+
+
+def _cached_axial_compound_recall(
+    fixed_features: dict[str, Any],
+    moving_features: dict[str, Any],
+) -> dict[str, Any]:
+    """Recall one anonymous axial/end-face interface once per known group."""
+
+    key = (id(fixed_features), id(moving_features))
+    cached = _AXIAL_COMPOUND_RECALL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    fixed_radius = max(
+        (float(row.get("radius", 0.0)) for row in fixed_features.get("cylinders", [])),
+        default=0.0,
+    )
+    moving_radius = max(
+        (float(row.get("radius", 0.0)) for row in moving_features.get("cylinders", [])),
+        default=0.0,
+    )
+    radius_ratio = (
+        min(fixed_radius, moving_radius) / max(fixed_radius, moving_radius)
+        if min(fixed_radius, moving_radius) > 0.0
+        else 1.0
+    )
+    # A shaft end is expected to be much smaller than a hub/flange seating
+    # face.  Relax only the end-face area recall threshold for that explicit
+    # radius regime; all axis, contact, polarity and phase checks remain.
+    minimum_face_area_ratio = 0.08 if radius_ratio <= 0.75 else 0.35
+    try:
+        result = recall_axial_compound_candidates(
+            fixed_features,
+            moving_features,
+            minimum_face_area_ratio=minimum_face_area_ratio,
+        )
+        result["minimum_face_area_ratio_used"] = minimum_face_area_ratio
+        result["main_radius_ratio"] = radius_ratio
+    except Exception as exc:
+        result = {
+            "schema_version": "axial_compound_interface.v1",
+            "status": "unavailable",
+            "reason": f"axial compound recall failed: {exc}",
+            "exception_type": type(exc).__name__,
+            "candidates": [],
+            "auto_accept": False,
+        }
+    _AXIAL_COMPOUND_RECALL_CACHE[key] = result
+    return result
+
+
+def _compound_physical_constraints_satisfied(
+    validation: dict[str, Any],
+    proposal: dict[str, Any],
+) -> bool:
+    """Separate physical compound closure from phase observability.
+
+    A continuous SO(2) phase has no numerical phase constraint.  It may close
+    the physical axis/end-face relation, but its proposal guard remains set so
+    it cannot be auto-accepted.  A discrete C_n orbit must be satisfied.
+    """
+
+    checks = validation.get("checks") or {}
+    base = all(bool(checks.get(name)) for name in (
+        "proper_rotation",
+        "coaxial_direction",
+        "radial_axis_center",
+        "end_face_contact",
+        "opposed_end_face_normals",
+    ))
+    orbit = list(proposal.get("phase_orbit_degrees") or [])
+    return bool(
+        base
+        and (not orbit or checks.get("phase_in_active_orbit") is True)
+    )
+
+
+def _compound_axis_phase_constraints_satisfied(
+    validation: dict[str, Any],
+    proposal: dict[str, Any],
+) -> bool:
+    """Validate coaxial/phase closure while intentionally ignoring axial stop."""
+
+    checks = validation.get("checks") or {}
+    orbit = list(proposal.get("phase_orbit_degrees") or [])
+    return bool(
+        checks.get("proper_rotation")
+        and checks.get("coaxial_direction")
+        and checks.get("radial_axis_center")
+        and (not orbit or checks.get("phase_in_active_orbit") is True)
+    )
+
+
+def _has_paired_topological_key_slot_witness(
+    row: dict[str, Any],
+    features: dict[str, Any],
+) -> bool:
+    fixed_part = str(row.get("fixed_part") or "")
+    moving_part = str(row.get("moving_part") or "")
+    if not fixed_part or not moving_part:
+        return False
+    for part in (fixed_part, moving_part):
+        sidecar = (features.get(part) or {}).get("brep_graph_sidecar") or {}
+        if sidecar.get("hash_verified") is not True:
+            return False
+    witnesses = list(row.get("phase_witness") or [])
+    if not witnesses:
+        witnesses = list(
+            (row.get("compound_proposal") or {}).get("phase_witness") or []
+        )
+    return any(
+        witness.get("fixed_kind") == "topological_key_slot"
+        and witness.get("moving_kind") == "topological_key_slot"
+        and bool(str(witness.get("fixed_witness_id") or "").strip())
+        and bool(str(witness.get("moving_witness_id") or "").strip())
+        for witness in witnesses
+    )
+
+
+def _current_compound_validation(
+    row: dict[str, Any],
+    placements: dict[str, Any],
+) -> tuple[dict[str, Any], bool]:
+    fixed = row.get("fixed_part")
+    moving = row.get("moving_part")
+    interface = row.get("compound_candidate")
+    proposal = row.get("compound_proposal")
+    if (
+        fixed not in placements
+        or moving not in placements
+        or not isinstance(interface, dict)
+        or not isinstance(proposal, dict)
+    ):
+        return {"error": "compound_pose_inputs_missing", "checks": {}}, False
+    try:
+        fixed_world = placement_to_matrix(placements[fixed])
+        moving_world = placement_to_matrix(placements[moving])
+        relative = np.linalg.inv(fixed_world) @ moving_world
+        validation = validate_axial_compound_pose(
+            interface,
+            proposal,
+            collision_free=True,
+            transform=relative,
+        )
+        validation["collision_free"] = None
+        validation["collision_scope"] = "deferred_to_exact_occt"
+        validation["is_closed"] = False
+        return validation, _compound_physical_constraints_satisfied(
+            validation, proposal
+        )
+    except Exception as exc:
+        return {
+            "compound_constraints_satisfied": False,
+            "error": str(exc),
+            "exception_type": type(exc).__name__,
+            "checks": {},
+        }, False
+
+
+def _axial_group_centering_diagnostics(
+    support_row: dict[str, Any],
+    shaft_row: dict[str, Any],
+    placements: dict[str, Any],
+    features: dict[str, Any],
+    graph: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Check a symmetric two-support / one-shaft geometric arrangement.
+
+    This is an anonymous B-Rep rule.  It only activates when two comparable
+    large-radius axial bodies meet at a compound end-face interface, extend in
+    opposite and similarly sized directions from that interface, and a third
+    smaller-radius axial body is connected to one of them.  The small body must
+    be centred on the support interface and overlap both supports.
+    """
+
+    result: dict[str, Any] = {
+        "schema_version": "axial_group_centering.v1",
+        "pattern_detected": False,
+        "supported": False,
+        "proposal_only": True,
+        "review_required": True,
+        "can_auto_accept": False,
+    }
+    support_parts = [
+        str(support_row.get("fixed_part") or ""),
+        str(support_row.get("moving_part") or ""),
+    ]
+    shaft_edge_parts = [
+        str(shaft_row.get("fixed_part") or ""),
+        str(shaft_row.get("moving_part") or ""),
+    ]
+    if (
+        len(set(support_parts)) != 2
+        or any(part not in features or part not in placements for part in support_parts)
+    ):
+        result["reason"] = "support_pair_missing"
+        return result
+    shared = set(support_parts) & set(shaft_edge_parts)
+    shaft_parts = set(shaft_edge_parts) - set(support_parts)
+    if len(shared) != 1 or len(shaft_parts) != 1:
+        result["reason"] = "axial_edges_do_not_form_support_shaft_chain"
+        return result
+    shaft_part = next(iter(shaft_parts))
+    if shaft_part not in features or shaft_part not in placements:
+        result["reason"] = "shaft_part_missing"
+        return result
+
+    support_radii = [
+        _main_cylinder_radius(features[part]) for part in support_parts
+    ]
+    shaft_radius = _main_cylinder_radius(features[shaft_part])
+    if any(radius is None for radius in support_radii) or shaft_radius is None:
+        result["reason"] = "dominant_cylinder_missing"
+        return result
+    support_radius_ratio = min(support_radii) / max(support_radii)
+    shaft_radius_ratio = shaft_radius / min(support_radii)
+    result.update({
+        "support_parts": support_parts,
+        "shaft_part": shaft_part,
+        "support_connection_id": support_row.get("connection_id"),
+        "connection_id": shaft_row.get("connection_id"),
+        "support_candidate_id": support_row.get("candidate_id"),
+        "support_proposal_id": support_row.get("proposal_id"),
+        "shaft_candidate_id": shaft_row.get("candidate_id"),
+        "shaft_proposal_id": shaft_row.get("proposal_id"),
+        "support_radius_ratio": support_radius_ratio,
+        "shaft_to_support_radius_ratio": shaft_radius_ratio,
+    })
+    if support_radius_ratio < 0.90 or shaft_radius_ratio > 0.75:
+        result["reason"] = "radius_hierarchy_not_symmetric_support_plus_shaft"
+        return result
+
+    if graph is not None:
+        shaft_connection = next((
+            row for row in graph.get("selected") or []
+            if str(row.get("connection_id"))
+            == str(shaft_row.get("connection_id"))
+        ), None)
+        if (
+            shaft_connection is None
+            or CLEARANCE not in set(shaft_connection.get("relation_types") or [])
+        ):
+            result["reason"] = "shaft_edge_is_not_a_selected_clearance_relation"
+            return result
+
+    bore_tolerance = max(1e-6, 0.05 * shaft_radius)
+    support_bore_gaps: dict[str, float] = {}
+    for part in support_parts:
+        support_axis = _main_cylinder_axis(features[part])
+        if support_axis is None:
+            result["reason"] = "support_axis_missing"
+            return result
+        support_axis_np = np.asarray(_unit(support_axis), dtype=float)
+        compatible_gaps = []
+        for cylinder in features[part].get("cylinders") or []:
+            radius = float(cylinder.get("radius", 0.0))
+            cylinder_axis = cylinder.get("axis")
+            if (
+                radius < shaft_radius
+                or not cylinder_axis
+                or cylinder.get("surface_polarity") != "concave"
+            ):
+                continue
+            if abs(float(np.dot(
+                np.asarray(_unit(cylinder_axis), dtype=float),
+                support_axis_np,
+            ))) < math.cos(math.radians(2.0)):
+                continue
+            compatible_gaps.append(abs(radius - shaft_radius))
+        if not compatible_gaps:
+            result["reason"] = "support_has_no_coaxial_shaft_bore"
+            return result
+        support_bore_gaps[part] = min(compatible_gaps)
+    result.update({
+        "support_bore_radius_gap_mm": support_bore_gaps,
+        "support_bore_tolerance_mm": bore_tolerance,
+    })
+    if any(gap > bore_tolerance for gap in support_bore_gaps.values()):
+        result["reason"] = "support_bore_not_clearance_matched_to_shaft"
+        return result
+    support_slot_phase_witness = _has_paired_topological_key_slot_witness(
+        support_row, features
+    )
+    shaft_slot_phase_witness = _has_paired_topological_key_slot_witness(
+        shaft_row, features
+    )
+    result.update({
+        "support_slot_phase_witness": support_slot_phase_witness,
+        "shaft_slot_phase_witness": shaft_slot_phase_witness,
+    })
+    if not (support_slot_phase_witness and shaft_slot_phase_witness):
+        result["reason"] = "complete_topological_key_slot_phase_loop_missing"
+        return result
+
+    support_validation, support_closed = _current_compound_validation(
+        support_row, placements
+    )
+    if not support_closed:
+        result["reason"] = "support_pair_compound_contact_not_closed"
+        result["support_pose_validation"] = support_validation
+        return result
+
+    support_interface = support_row.get("compound_candidate") or {}
+    fixed_face = support_interface.get("fixed_end_face") or {}
+    moving_face = support_interface.get("moving_end_face") or {}
+    if not fixed_face.get("position") or not moving_face.get("position"):
+        result["reason"] = "support_contact_faces_missing"
+        return result
+    fixed_name = str(support_row["fixed_part"])
+    moving_name = str(support_row["moving_part"])
+    fixed_point = np.asarray(transform_point(
+        fixed_face["position"], placements[fixed_name]
+    ), dtype=float)
+    moving_point = np.asarray(transform_point(
+        moving_face["position"], placements[moving_name]
+    ), dtype=float)
+    axis_local = _main_cylinder_axis(features[fixed_name])
+    if axis_local is None:
+        result["reason"] = "support_axis_missing"
+        return result
+    axis_world = _unit(transform_vector(axis_local, placements[fixed_name]))
+    axis_np = np.asarray(axis_world, dtype=float)
+    target_coordinate = float(np.dot(0.5 * (fixed_point + moving_point), axis_np))
+    support_intervals = [
+        _axial_support_face_interval(
+            features[part], placements[part], axis_world
+        )
+        for part in support_parts
+    ]
+    if any(interval is None for interval in support_intervals):
+        result["reason"] = "support_axial_face_interval_missing"
+        return result
+    support_bbox_intervals = [
+        _world_bbox_axis_interval(features[part], placements[part], axis_world)
+        for part in support_parts
+    ]
+
+    side_rows = []
+    for part, interval in zip(support_parts, support_intervals):
+        low, high = interval
+        interval_tolerance = max(1e-6, 0.02 * (high - low))
+        if (
+            target_coordinate < low - interval_tolerance
+            or target_coordinate > high + interval_tolerance
+        ):
+            result["reason"] = "support_contact_plane_outside_support_extent"
+            return result
+        negative_extent = max(0.0, target_coordinate - low)
+        positive_extent = max(0.0, high - target_coordinate)
+        sign = -1 if negative_extent > positive_extent else 1
+        major = max(negative_extent, positive_extent)
+        minor = min(negative_extent, positive_extent)
+        side_rows.append({
+            "part": part,
+            "interval": [low, high],
+            "dominant_side": sign,
+            "major_extent_mm": major,
+            "minor_extent_mm": minor,
+        })
+    if side_rows[0]["dominant_side"] == side_rows[1]["dominant_side"]:
+        result["reason"] = "supports_do_not_extend_to_opposite_sides"
+        return result
+    minimum_support_extent = max(1e-6, 0.05 * max(support_radii))
+    if any(
+        row["major_extent_mm"] < minimum_support_extent
+        or row["minor_extent_mm"]
+        > max(1e-6, 0.05 * row["major_extent_mm"])
+        for row in side_rows
+    ):
+        result["reason"] = "support_side_dominance_is_ambiguous"
+        return result
+    major_ratio = min(row["major_extent_mm"] for row in side_rows) / max(
+        row["major_extent_mm"] for row in side_rows
+    )
+    if major_ratio < 0.80:
+        result["reason"] = "opposed_support_extents_are_not_comparable"
+        return result
+    union_low = min(interval[0] for interval in support_intervals)
+    union_high = max(interval[1] for interval in support_intervals)
+    union_center = 0.5 * (union_low + union_high)
+    union_span = union_high - union_low
+    union_center_tolerance = max(1e-6, 0.02 * union_span)
+    union_center_residual = abs(target_coordinate - union_center)
+    if union_center_residual > union_center_tolerance:
+        result["reason"] = "support_contact_is_not_at_symmetric_union_center"
+        return result
+
+    shaft_interval = _axial_terminal_face_interval(
+        features[shaft_part], placements[shaft_part], axis_world
+    )
+    if shaft_interval is None:
+        result["reason"] = "shaft_terminal_face_interval_ambiguous"
+        return result
+    shaft_low, shaft_high = shaft_interval
+    shaft_length = shaft_high - shaft_low
+    shaft_center = 0.5 * (shaft_low + shaft_high)
+    centering_residual = abs(shaft_center - target_coordinate)
+    overlaps = [
+        max(0.0, min(shaft_high, high) - max(shaft_low, low))
+        for low, high in support_intervals
+    ]
+    minimum_overlap = max(1e-6, 0.15 * shaft_length)
+    overlap_balance = min(overlaps) / max(overlaps) if max(overlaps) > 0 else 0.0
+
+    shaft_validation, _ = _current_compound_validation(shaft_row, placements)
+    shaft_axis_phase_supported = _compound_axis_phase_constraints_satisfied(
+        shaft_validation, shaft_row.get("compound_proposal") or {}
+    )
+    centering_tolerance = max(1e-6, 0.002 * shaft_length)
+    minimum_crossing_extent = max(1e-6, 0.01 * shaft_length)
+    cross_interface_dependents = []
+    if graph is not None:
+        for connection in graph.get("selected") or []:
+            parts = list(connection.get("parts") or [])
+            relation_types = set(connection.get("relation_types") or [])
+            if shaft_part not in parts or len(parts) != 2:
+                continue
+            if relation_types & {COAXIAL, CLEARANCE}:
+                continue
+            if not relation_types & {PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE}:
+                continue
+            dependent = parts[1] if parts[0] == shaft_part else parts[0]
+            if dependent in support_parts or dependent not in placements:
+                continue
+            interval = _world_bbox_axis_interval(
+                features.get(dependent, {}),
+                placements[dependent],
+                axis_world,
+            )
+            if interval is None:
+                continue
+            negative = target_coordinate - interval[0]
+            positive = interval[1] - target_coordinate
+            cross_interface_dependents.append({
+                "part": dependent,
+                "interval": list(interval),
+                "negative_side_extent_mm": negative,
+                "positive_side_extent_mm": positive,
+                "crosses_support_contact_plane": bool(
+                    negative >= minimum_crossing_extent
+                    and positive >= minimum_crossing_extent
+                ),
+            })
+    cross_interface_dependent_supported = any(
+        row["crosses_support_contact_plane"]
+        for row in cross_interface_dependents
+    )
+    result.update({
+        "pattern_detected": True,
+        "axis_world": axis_world,
+        "target_center_coordinate": target_coordinate,
+        "shaft_center_coordinate": shaft_center,
+        "centering_offset_mm": target_coordinate - shaft_center,
+        "centering_residual_mm": centering_residual,
+        "centering_tolerance_mm": centering_tolerance,
+        "shaft_terminal_interval": [shaft_low, shaft_high],
+        "shaft_length_mm": shaft_length,
+        "support_intervals": side_rows,
+        "support_bbox_intervals": support_bbox_intervals,
+        "support_union_center_coordinate": union_center,
+        "support_union_center_residual_mm": union_center_residual,
+        "support_union_center_tolerance_mm": union_center_tolerance,
+        "two_sided_overlap_mm": overlaps,
+        "minimum_overlap_mm": minimum_overlap,
+        "overlap_balance": overlap_balance,
+        "support_extent_balance": major_ratio,
+        "shaft_axis_phase_supported": shaft_axis_phase_supported,
+        "cross_interface_dependents": cross_interface_dependents,
+        "minimum_crossing_extent_mm": minimum_crossing_extent,
+        "cross_interface_dependent_supported": (
+            cross_interface_dependent_supported
+        ),
+        "support_pose_validation": support_validation,
+        "shaft_axis_phase_validation": shaft_validation,
+    })
+    result["supported"] = bool(
+        shaft_axis_phase_supported
+        and cross_interface_dependent_supported
+        and centering_residual <= centering_tolerance
+        and min(overlaps) >= minimum_overlap
+        and overlap_balance >= 0.75
+    )
+    result["reason"] = (
+        "symmetric_support_center_and_two_sided_insertion_satisfied"
+        if result["supported"]
+        else "symmetric_support_requires_centered_two_sided_shaft_insertion"
+    )
+    return result
+
+
+def _axial_group_centering_candidates_for_candidate(
+    source_candidate: dict[str, Any],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Generate a bounded group-centred shaft proposal from compound history."""
+
+    history = list(source_candidate.get("axial_compound_history") or [])
+    if len(history) < 2:
+        return [], []
+    generated: list[dict[str, Any]] = []
+    required_connection_ids: list[str] = []
+    seen = set()
+    for support_row in history:
+        for shaft_row in history:
+            if support_row is shaft_row:
+                continue
+            diagnostics = _axial_group_centering_diagnostics(
+                support_row,
+                shaft_row,
+                source_candidate.get("placements") or {},
+                features,
+                graph,
+            )
+            if diagnostics.get("pattern_detected") is not True:
+                continue
+            connection_id = str(diagnostics.get("connection_id"))
+            required_connection_ids.append(connection_id)
+            key = (
+                str(diagnostics.get("support_connection_id")),
+                connection_id,
+                str(diagnostics.get("shaft_part")),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            offset = float(diagnostics.get("centering_offset_mm", 0.0))
+            placements = json.loads(json.dumps(
+                source_candidate.get("placements") or {}
+            ))
+            shaft_part = str(diagnostics["shaft_part"])
+            current = placements.get(shaft_part)
+            if current is None:
+                continue
+            shifted = _shift_placement_along_axis(
+                current,
+                list(diagnostics["axis_world"]),
+                offset,
+            )
+            propagated = _set_placement_with_rigid_dependents(
+                placements,
+                shaft_part,
+                shifted,
+                graph,
+                blocked=set(diagnostics.get("support_parts") or []),
+            )
+            current_diagnostics = _axial_group_centering_diagnostics(
+                support_row, shaft_row, placements, features, graph
+            )
+            if current_diagnostics.get("supported") is not True:
+                continue
+            detail = {
+                **current_diagnostics,
+                "propagated_rigid_dependents": [
+                    part for part in propagated if part != shaft_part
+                ],
+            }
+            centering_history = list(
+                source_candidate.get("axial_group_centering_history") or []
+            ) + [detail]
+            generated.append(_candidate_from_placements(
+                features,
+                placements,
+                source_candidate,
+                origin="axial_group_symmetric_centering",
+                score_penalty=0.01,
+                extra={
+                    "proposal_only": True,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                    "axial_group_centering": detail,
+                    "axial_group_centering_history": centering_history,
+                    "axial_group_centering_required_connection_ids": sorted(
+                        set(required_connection_ids)
+                    ),
+                },
+            ))
+    return generated, sorted(set(required_connection_ids))
+
+
+def _axial_compound_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Materialise a bounded compound axis/end-face frontier for one edge."""
+
+    if max_candidates <= 0 or not source_candidates:
+        return []
+    parts = list(connection.get("parts") or [])
+    if (
+        len(parts) != 2
+        or not set(connection.get("relation_types") or [])
+        & {COAXIAL, CLEARANCE}
+    ):
+        return []
+    axial_degree: dict[str, int] = defaultdict(int)
+    for selected_connection in graph.get("selected") or []:
+        if set(selected_connection.get("relation_types") or []) & {
+            COAXIAL, CLEARANCE
+        }:
+            for part in selected_connection.get("parts") or []:
+                axial_degree[str(part)] += 1
+    central = [part for part in parts if axial_degree.get(part, 0) >= 2]
+    if len(central) == 1:
+        fixed = central[0]
+        moving = parts[1] if parts[0] == fixed else parts[0]
+    else:
+        fixed, moving = parts
+    recall = _cached_axial_compound_recall(
+        features.get(fixed, {}),
+        features.get(moving, {}),
+    )
+    proposal_rows: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for interface in recall.get("candidates") or []:
+        geometry = {
+            key: value for key, value in interface.items()
+            if key != "proposals"
+        }
+        for proposal in interface.get("proposals") or []:
+            # The end face resolves the unoriented axis-line polarity.  The
+            # other proper-rotation branch remains in the reusable recall
+            # audit but is not a physical face-contact proposal.
+            if proposal.get("end_face_orientation_compatible") is not True:
+                continue
+            proposal_rows.append((geometry, proposal))
+    proposal_rows.sort(key=lambda row: (
+        bool(row[1].get("proposal_only", True)),
+        -float(row[0].get("end_face_area_ratio", 0.0)),
+        abs(float(row[1].get("phase_degrees", 0.0))),
+        float(row[1].get("phase_degrees", 0.0)),
+        str(row[1].get("proposal_id")),
+    ))
+    if not proposal_rows:
+        return []
+
+    generated: list[dict[str, Any]] = []
+    # The first source sees the full phase orbit before another source pose is
+    # expanded.  This preserves symmetry representatives under a small fixed
+    # quota instead of spending the quota on duplicate source variants.
+    active_sources = source_candidates[: min(4, len(source_candidates))]
+    for source_index, source_candidate in enumerate(active_sources):
+        placements = source_candidate.get("placements") or {}
+        if fixed not in placements or moving not in placements:
+            continue
+        fixed_world = placement_to_matrix(placements[fixed])
+        for interface_geometry, proposal in proposal_rows:
+            relative = np.asarray(proposal["transform"], dtype=float)
+            moving_world = fixed_world @ relative
+            new_placements = json.loads(json.dumps(placements))
+            propagated_cluster = _set_placement_with_rigid_dependents(
+                new_placements,
+                moving,
+                matrix_to_placement(moving_world),
+                graph,
+                blocked={fixed},
+            )
+            validation = validate_axial_compound_pose(
+                interface_geometry,
+                proposal,
+                collision_free=True,
+                transform=relative,
+            )
+            validation["collision_free"] = None
+            validation["collision_scope"] = "deferred_to_exact_occt"
+            validation["is_closed"] = False
+            physical_closed = _compound_physical_constraints_satisfied(
+                validation, proposal
+            )
+            if not physical_closed:
+                continue
+            source_guard = bool(
+                source_candidate.get("proposal_only")
+                or source_candidate.get("review_required")
+                or source_candidate.get("can_auto_accept") is False
+            )
+            proposal_guard = bool(
+                proposal.get("proposal_only")
+                or proposal.get("review_required")
+                or len(proposal.get("phase_orbit_degrees") or []) != 1
+                or proposal.get("phase_status")
+                != "resolved_by_asymmetric_witness"
+            )
+            review_required = source_guard or proposal_guard
+            detail = {
+                "connection_id": connection.get("connection_id"),
+                "fixed_part": fixed,
+                "moving_part": moving,
+                "refinement_phase": refinement_phase,
+                "source_candidate_index": source_index,
+                "recall_status": recall.get("status"),
+                "candidate_id": interface_geometry.get("candidate_id"),
+                "proposal_id": proposal.get("proposal_id"),
+                "axis_polarity": proposal.get("axis_polarity"),
+                "phase_convention": proposal.get("phase_convention"),
+                "symmetry_group": proposal.get("symmetry_group"),
+                "interface_symmetry_order": proposal.get(
+                    "interface_symmetry_order"
+                ),
+                "interface_phase_orbit_degrees": proposal.get(
+                    "interface_phase_orbit_degrees"
+                ),
+                "phase_orbit_degrees": proposal.get("phase_orbit_degrees"),
+                "whole_part_symmetry_order": proposal.get(
+                    "whole_part_symmetry_order"
+                ),
+                "phase_status": proposal.get("phase_status"),
+                "phase_degrees": proposal.get("phase_degrees"),
+                "phase_witness": proposal.get("phase_witness") or [],
+                "phase_witness_residual_deg": proposal.get(
+                    "phase_residual_deg"
+                ),
+                "phase_residual_deg": validation.get("phase_residual_deg"),
+                "compound_constraints_satisfied": physical_closed,
+                "constraint_validation": validation,
+                "propagated_rigid_dependents": [
+                    part for part in propagated_cluster if part != moving
+                ],
+                "compound_candidate": interface_geometry,
+                "compound_proposal": proposal,
+                "proposal_only": review_required,
+                "review_required": review_required,
+                "can_auto_accept": False if review_required else None,
+            }
+            history = list(
+                source_candidate.get("axial_compound_history") or []
+            ) + [detail]
+            refined_ids = list(dict.fromkeys(
+                str(row.get("connection_id")) for row in history
+                if row.get("connection_id") is not None
+            ))
+            area_error = 1.0 - float(
+                interface_geometry.get("end_face_area_ratio", 0.0)
+            )
+            generated.append(_candidate_from_placements(
+                features,
+                new_placements,
+                source_candidate,
+                origin="axial_compound_interface_recall",
+                score_penalty=0.08 + 0.03 * max(0.0, area_error),
+                extra={
+                    "proposal_only": review_required,
+                    "review_required": review_required,
+                    "can_auto_accept": (
+                        False if review_required
+                        else source_candidate.get("can_auto_accept")
+                    ),
+                    "axial_compound_interface": detail,
+                    "axial_compound_history": history,
+                    "axial_compound_refined_connection_ids": refined_ids,
+                },
+            ))
+            if len(generated) >= max_candidates:
+                return generated
+    return generated
+
+
+def _axial_compound_pose_candidates(
+    source_candidates: list[dict[str, Any]],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int = 24,
+) -> list[dict[str, Any]]:
+    """Allocate a fixed compound budget and compose two central-axis leaves."""
+
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & {COAXIAL, CLEARANCE})
+    ]
+    if not connections or max_candidates <= 0:
+        return []
+    independent_budget = (
+        max_candidates
+        if len(connections) == 1
+        else max(len(connections), (2 * max_candidates) // 3)
+    )
+    generated: list[dict[str, Any]] = []
+    independent: list[list[dict[str, Any]]] = []
+    for connection, quota in zip(
+        connections, _fair_quotas(independent_budget, len(connections))
+    ):
+        rows = _axial_compound_candidates_for_connection(
+            source_candidates,
+            connection,
+            graph,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        )
+        independent.append(rows)
+        generated.extend(rows)
+
+    remaining = max(0, max_candidates - len(generated))
+    composition_jobs = []
+    for left_index in range(len(connections)):
+        for right_index in range(left_index + 1, len(connections)):
+            for left in independent[left_index]:
+                left_detail = left.get("axial_compound_interface") or {}
+                for right in independent[right_index]:
+                    right_detail = right.get("axial_compound_interface") or {}
+                    fixed = left_detail.get("fixed_part")
+                    if (
+                        not fixed
+                        or fixed != right_detail.get("fixed_part")
+                        or not left_detail.get("moving_part")
+                        or not right_detail.get("moving_part")
+                        or left_detail.get("moving_part")
+                        == right_detail.get("moving_part")
+                    ):
+                        continue
+                    right_proposal = right_detail.get("compound_proposal") or {}
+                    relative = np.asarray(
+                        right_proposal.get("transform"), dtype=float
+                    )
+                    placements = json.loads(json.dumps(
+                        left.get("placements") or {}
+                    ))
+                    if fixed not in placements or relative.shape != (4, 4):
+                        continue
+                    right_moving = str(right_detail["moving_part"])
+                    moving_world = placement_to_matrix(placements[fixed]) @ relative
+                    propagated_cluster = _set_placement_with_rigid_dependents(
+                        placements,
+                        right_moving,
+                        matrix_to_placement(moving_world),
+                        graph,
+                        blocked={
+                            str(fixed),
+                            str(left_detail.get("moving_part") or ""),
+                        },
+                    )
+                    composed_right_detail = {
+                        **right_detail,
+                        "composition_propagated_rigid_dependents": [
+                            part for part in propagated_cluster
+                            if part != right_moving
+                        ],
+                    }
+                    history = list(
+                        left.get("axial_compound_history") or []
+                    ) + [composed_right_detail]
+                    refined_ids = list(dict.fromkeys(
+                        str(row.get("connection_id")) for row in history
+                        if row.get("connection_id") is not None
+                    ))
+                    review_required = any(
+                        bool(row.get("proposal_only") or row.get("review_required"))
+                        for row in history
+                    )
+                    candidate = _candidate_from_placements(
+                        features,
+                        placements,
+                        left,
+                        origin="axial_compound_star_composition",
+                        score_penalty=0.02,
+                        extra={
+                            "proposal_only": review_required,
+                            "review_required": review_required,
+                            "can_auto_accept": (
+                                False
+                                if review_required
+                                else left.get("can_auto_accept")
+                            ),
+                            "axial_compound_interface": composed_right_detail,
+                            "axial_compound_history": history,
+                            "axial_compound_refined_connection_ids": refined_ids,
+                        },
+                    )
+                    centered, required_ids = (
+                        _axial_group_centering_candidates_for_candidate(
+                            candidate, graph, features
+                        )
+                    )
+                    if required_ids:
+                        # A symmetric dual-support pattern makes an arbitrary
+                        # one-end-face shaft stop a known degenerate pose.  The
+                        # raw composition remains in the audit frontier, but it
+                        # cannot claim closure without current group-centering
+                        # evidence.
+                        candidate[
+                            "axial_group_centering_required_connection_ids"
+                        ] = required_ids
+                    for variant in [candidate, *centered]:
+                        precheck = _pose_precheck(variant, graph, features)
+                        closure = precheck["constraint_closure"]
+                        overlap = precheck["overlap_objective"]
+                        composition_jobs.append((
+                            (
+                                -int(closure.get("closed_connection_count", 0)),
+                                -float(closure.get("closure_ratio", 0.0)),
+                                int(overlap.get("severe_non_edge_overlap_count", 0)),
+                                float(overlap.get("bbox_overlap_cost", 0.0)),
+                                tuple(refined_ids),
+                            ),
+                            variant,
+                        ))
+    composition_jobs.sort(key=lambda item: item[0])
+    seen_placements = {
+        json.dumps(row.get("placements") or {}, sort_keys=True)
+        for row in generated
+    }
+    for _, candidate in composition_jobs:
+        if remaining <= 0:
+            break
+        signature = json.dumps(
+            candidate.get("placements") or {}, sort_keys=True
+        )
+        if signature in seen_placements:
+            continue
+        seen_placements.add(signature)
+        generated.append(candidate)
+        remaining -= 1
+    return generated[:max_candidates]
+
+
 def _joinable_pose_parameter_candidates(
     source_candidates: list[dict[str, Any]],
     graph: dict[str, Any],
@@ -1557,133 +3842,1583 @@ def _joinable_pose_parameter_candidates(
     *,
     max_candidates: int = 80,
 ) -> list[dict[str, Any]]:
-    """Discrete reproduction of JoinABLe's joint pose search.
+    """Search residual joint parameters without starving later graph edges.
 
-    We do not use JoinABLe's neural axis predictor here.  Existing analytic
-    pair evidence supplies the top-k joint axes; this routine searches the same
-    residual pose parameters described by the paper/code: axial offset,
-    rotation around the joint axis, and flip of the joint-axis direction.
+    Half of the fixed budget is first distributed across all parameterizable
+    selected edges.  The remainder composes two distinct edge refinements in a
+    bounded coordinate step.  This does not increase the solver beam or bypass
+    closure/collision/precision validation.
     """
+
+    if max_candidates <= 0 or not source_candidates:
+        return []
+    supported = {COAXIAL, CLEARANCE, PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE}
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & supported)
+        and bool(row.get("matches") or [])
+    ]
+    if not connections:
+        return []
+
+    if len(connections) == 1:
+        independent_budget = max_candidates
+    else:
+        independent_budget = min(
+            max_candidates,
+            max(len(connections), max_candidates // 2),
+        )
     generated: list[dict[str, Any]] = []
-    axial_degree: dict[str, int] = defaultdict(int)
-    for connection in graph.get("selected") or []:
-        if set(connection.get("relation_types") or []) & {COAXIAL, CLEARANCE}:
-            for part in connection.get("parts") or []:
-                axial_degree[part] += 1
-    central_axial_parts = {
-        part for part, degree in axial_degree.items()
-        if degree >= 2 and _main_cylinder_axis(features.get(part, {}))
+    independent_by_connection: list[list[dict[str, Any]]] = []
+    for connection, quota in zip(
+        connections, _fair_quotas(independent_budget, len(connections))
+    ):
+        rows = _joinable_pose_parameter_candidates_for_connection(
+            source_candidates,
+            connection,
+            graph,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        )
+        independent_by_connection.append(rows)
+        generated.extend(rows)
+
+    remaining = max(0, max_candidates - len(generated))
+    directions = [
+        (source_index, target_index)
+        for source_index, source_rows in enumerate(independent_by_connection)
+        if source_rows
+        for target_index in range(len(connections))
+        if target_index != source_index
+    ]
+    for (source_index, target_index), quota in zip(
+        directions, _fair_quotas(remaining, len(directions))
+    ):
+        if quota <= 0:
+            continue
+        # Width two is a fixed local coordinate frontier, not an expansion of
+        # solve_small_assembly's beam.  Applying the target edge to an already
+        # refined source-edge pose preserves both leaf transforms.
+        source_rows = independent_by_connection[source_index][:2]
+        rows = _joinable_pose_parameter_candidates_for_connection(
+            source_rows,
+            connections[target_index],
+            graph,
+            features,
+            max_candidates=min(quota, max_candidates - len(generated)),
+            refinement_phase="two_edge_coordinate_composition",
+        )
+        generated.extend(rows)
+        if len(generated) >= max_candidates:
+            break
+    return generated[:max_candidates]
+
+
+def _placed_obb(
+    obb: dict[str, Any], placement: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        **obb,
+        "center": transform_point(obb.get("center", [0, 0, 0]), placement),
+        "axes": [
+            _unit(transform_vector(axis, placement))
+            for axis in obb.get("axes") or []
+        ],
     }
-    for source_candidate in source_candidates[:12]:
-        placements = source_candidate.get("placements") or {}
-        for connection in graph.get("selected") or []:
-            parts = list(connection.get("parts") or [])
-            if len(parts) != 2 or any(part not in placements for part in parts):
+
+
+def _carrier_thin_side(
+    features: dict[str, Any],
+    placements: dict[str, Any],
+    *,
+    carrier: str,
+    moving: str,
+) -> dict[str, Any] | None:
+    """Locate a placed component on one unambiguous side of a thin carrier.
+
+    This deliberately uses only OBB geometry and the already proposed rigid
+    placements.  The sign of an OBB axis is arbitrary, but comparing two
+    moving parts against the *same* carrier makes that sign cancel out.  A
+    near-centre result abstains rather than inventing an accessible side.
+    """
+
+    carrier_obb = (features.get(carrier) or {}).get("obb") or {}
+    moving_obb = (features.get(moving) or {}).get("obb") or {}
+    dimensions = list(carrier_obb.get("dimensions") or [])
+    axes = list(carrier_obb.get("axes") or [])
+    if (
+        carrier not in placements
+        or moving not in placements
+        or len(dimensions) != 3
+        or len(axes) != 3
+        or not moving_obb
+    ):
+        return None
+    try:
+        thin_axis_index = int(np.argmin(np.asarray(dimensions, dtype=float)))
+        carrier_world = _placed_obb(carrier_obb, placements[carrier])
+        moving_world = _placed_obb(moving_obb, placements[moving])
+        thin_axis = _unit(carrier_world["axes"][thin_axis_index])
+        if thin_axis is None:
+            return None
+        offset = float(np.dot(
+            np.asarray(moving_world["center"], dtype=float)
+            - np.asarray(carrier_world["center"], dtype=float),
+            thin_axis,
+        ))
+        # A component whose centre is within one quarter of the carrier's
+        # thin extent cannot reliably tell us which exterior side it uses.
+        minimum_margin = max(
+            1e-6,
+            0.25 * abs(float(dimensions[thin_axis_index])),
+        )
+    except (TypeError, ValueError, KeyError, IndexError):
+        return None
+    if abs(offset) < minimum_margin:
+        return {
+            "side_sign": 0,
+            "offset_mm": offset,
+            "minimum_margin_mm": minimum_margin,
+            "thin_axis_index": thin_axis_index,
+            "thin_axis_world": np.asarray(thin_axis, dtype=float).tolist(),
+            "reason": "moving_center_too_close_to_carrier_midplane",
+        }
+    return {
+        "side_sign": 1 if offset > 0.0 else -1,
+        "offset_mm": offset,
+        "minimum_margin_mm": minimum_margin,
+        "thin_axis_index": thin_axis_index,
+        "thin_axis_world": np.asarray(thin_axis, dtype=float).tolist(),
+        "reason": "unambiguous_thin_carrier_side",
+    }
+
+
+def _edge_slot_open_side(
+    edge_detail: dict[str, Any],
+    features: dict[str, Any],
+    placements: dict[str, Any],
+    *,
+    carrier: str,
+) -> dict[str, Any] | None:
+    """Return the outward channel-mouth side from audited slot geometry.
+
+    ``edge_slot_interface`` records a floor normal that is explicitly oriented
+    from the internal channel floor toward its open mouth.  It is stronger than
+    a card body's centre (which can straddle the carrier during insertion), so
+    use it whenever composing a footprint partner on the same thin carrier.
+    """
+
+    carrier_obb = (features.get(carrier) or {}).get("obb") or {}
+    dimensions = list(carrier_obb.get("dimensions") or [])
+    axes = list(carrier_obb.get("axes") or [])
+    insertion_axis = edge_detail.get("insertion_axis")
+    if (
+        carrier not in placements
+        or len(dimensions) != 3
+        or len(axes) != 3
+        or not isinstance(insertion_axis, list)
+        or len(insertion_axis) != 3
+    ):
+        return None
+    try:
+        thin_axis_index = int(np.argmin(np.asarray(dimensions, dtype=float)))
+        carrier_world = _placed_obb(carrier_obb, placements[carrier])
+        thin_axis = _unit(carrier_world["axes"][thin_axis_index])
+        mouth_axis = _unit(transform_vector(insertion_axis, placements[carrier]))
+        if thin_axis is None or mouth_axis is None:
+            return None
+        alignment = float(np.dot(mouth_axis, thin_axis))
+    except (TypeError, ValueError, KeyError, IndexError):
+        return None
+    # The reusable edge-slot detector already requires a floor normal aligned
+    # with the carrier's thin axis.  Preserve a small numerical margin here
+    # rather than treating an oblique channel as a carrier-side witness.
+    if abs(alignment) < 0.80:
+        return None
+    return {
+        "side_sign": 1 if alignment > 0.0 else -1,
+        "thin_axis_index": thin_axis_index,
+        "thin_axis_world": np.asarray(thin_axis, dtype=float).tolist(),
+        "mouth_axis_world": np.asarray(mouth_axis, dtype=float).tolist(),
+        "thin_axis_alignment": alignment,
+        "reason": "audited_channel_mouth_on_carrier_thin_side",
+    }
+
+
+def _carrier_open_side_consistent_candidates(
+    edge_slot_candidates: list[dict[str, Any]],
+    planar_footprint_candidates: list[dict[str, Any]],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+) -> list[dict[str, Any]]:
+    """Compose a slot-mounted part with a same-side footprint-mounted part.
+
+    A repeated bounded edge slot is stronger evidence of the actively used
+    side of a thin carrier than a free planar footprint polarity.  When both
+    interfaces share the carrier, retain the edge-slot placement verbatim and
+    only compose planar proposals whose moving body lies on that same side.
+    This is a review-only group-consistency refinement; it does not claim that
+    co-sided parts necessarily belong to the same real-world assembly.
+    """
+
+    if max_candidates <= 0:
+        return []
+    jobs: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+    for edge_candidate in edge_slot_candidates:
+        edge_history = list(edge_candidate.get("edge_slot_history") or [])
+        if not edge_history and edge_candidate.get("edge_slot_interface"):
+            edge_history = [edge_candidate["edge_slot_interface"]]
+        for edge_detail in edge_history:
+            carrier = str(edge_detail.get("stationary_part") or "")
+            edge_moving = str(edge_detail.get("movable_part") or "")
+            if not carrier or not edge_moving:
                 continue
-            diagonals = {
-                part: _bbox_diagonal_from_features(features.get(part, {}))
-                for part in parts
-            }
-            relation_types = set(connection.get("relation_types") or [])
-            if relation_types & {COAXIAL, CLEARANCE}:
-                center_candidates = [part for part in parts if part in central_axial_parts]
-                stationary = center_candidates[0] if center_candidates else min(
-                    parts,
-                    key=lambda part: (
-                        max((float(row.get("radius", 0.0)) for row in features.get(part, {}).get("cylinders", [])), default=0.0),
-                        diagonals[part],
-                    ),
-                )
-                movable = parts[1] if parts[0] == stationary else parts[0]
-                relation_priority = [CLEARANCE, COAXIAL, PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE]
-                offset_scale = max(1.0, min(120.0, 0.6 * (diagonals[stationary] + diagonals[movable])))
-                offset_factors = [0.0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75, -1.0, 1.0]
-                rotation_angles = [0.0, 90.0, 180.0, 270.0]
-            elif POCKET_MATE in relation_types:
-                stationary = max(parts, key=lambda part: diagonals[part])
-                movable = parts[1] if parts[0] == stationary else parts[0]
-                relation_priority = [POCKET_MATE, PLANAR_MATE, PLANAR_ALIGN]
-                offset_scale = max(1.0, min(80.0, 0.5 * diagonals[movable]))
-                offset_factors = [0.0, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 1.0, -1.0]
-                rotation_angles = [0.0, 180.0, 90.0, 270.0]
-            elif relation_types & {PLANAR_MATE, PLANAR_ALIGN}:
-                stationary = max(parts, key=lambda part: diagonals[part])
-                movable = parts[1] if parts[0] == stationary else parts[0]
-                relation_priority = [PLANAR_MATE, PLANAR_ALIGN]
-                offset_scale = max(1.0, min(50.0, 0.25 * diagonals[movable]))
-                offset_factors = [0.0, -0.1, 0.1, -0.25, 0.25]
-                rotation_angles = [0.0, 180.0, 90.0, 270.0]
-            else:
+            edge_side = _edge_slot_open_side(
+                edge_detail,
+                features,
+                edge_candidate.get("placements") or {},
+                carrier=carrier,
+            )
+            if not edge_side:
                 continue
-            matches = []
-            for relation_type in relation_priority:
-                matches.extend([
-                    match for match in connection.get("matches") or []
-                    if match.get("type") == relation_type
-                ])
-            for match in matches[:4]:
-                axis_data = _joinable_axis_data_for_match(
-                    match, stationary, movable, features, placements
+            for footprint_candidate in planar_footprint_candidates:
+                footprint_history = list(
+                    footprint_candidate.get("planar_footprint_history") or []
                 )
-                if axis_data is None:
-                    continue
-                (
-                    movable_axis_local,
-                    movable_origin_local,
-                    target_axis_world,
-                    target_origin_world,
-                    joint_kind,
-                ) = axis_data
-                for flip in (False, True):
-                    flipped_axis = (
-                        [-value for value in target_axis_world]
-                        if flip else target_axis_world
+                if not footprint_history and footprint_candidate.get(
+                    "planar_footprint"
+                ):
+                    footprint_history = [
+                        footprint_candidate["planar_footprint"]
+                    ]
+                for footprint_detail in footprint_history:
+                    if str(footprint_detail.get("stationary_part") or "") != carrier:
+                        continue
+                    footprint_moving = str(
+                        footprint_detail.get("movable_part") or ""
                     )
-                    for offset_factor in offset_factors:
-                        offset = float(offset_factor) * offset_scale
-                        for rotation_degrees in rotation_angles:
-                            new_placements = json.loads(json.dumps(placements))
-                            new_placements[movable] = _placement_from_joinable_axis_parameters(
-                                movable_axis_local,
-                                movable_origin_local,
-                                flipped_axis,
-                                target_origin_world,
-                                offset=offset,
-                                rotation_degrees=rotation_degrees,
-                            )
-                            normalized_offset = abs(offset) / max(offset_scale, 1.0)
-                            generated.append(
-                                _candidate_from_placements(
-                                    features,
-                                    new_placements,
-                                    source_candidate,
-                                    origin="joinable_pose_parameter_search",
-                                    score_penalty=(
-                                        0.14
-                                        + 0.03 * normalized_offset
-                                        + (0.02 if flip else 0.0)
-                                        + (0.01 if rotation_degrees else 0.0)
-                                    ),
-                                    extra={
-                                        "joinable_pose_search": {
-                                            "connection_id": connection["connection_id"],
-                                            "joint_kind": joint_kind,
-                                            "stationary_part": stationary,
-                                            "movable_part": movable,
-                                            "match_type": match.get("type"),
-                                            "offset": offset,
-                                            "offset_scale": offset_scale,
-                                            "rotation_degrees": rotation_degrees,
-                                            "flip": flip,
-                                            "target_axis_world": flipped_axis,
-                                            "target_origin_world": target_origin_world,
-                                        }
-                                    },
+                    if not footprint_moving or footprint_moving == edge_moving:
+                        continue
+                    footprint_placement = (
+                        footprint_candidate.get("placements") or {}
+                    ).get(footprint_moving)
+                    if footprint_placement is None:
+                        continue
+                    placements = json.loads(json.dumps(
+                        edge_candidate.get("placements") or {}
+                    ))
+                    placements[footprint_moving] = json.loads(json.dumps(
+                        footprint_placement
+                    ))
+                    footprint_side = _carrier_thin_side(
+                        features,
+                        placements,
+                        carrier=carrier,
+                        moving=footprint_moving,
+                    )
+                    if (
+                        not footprint_side
+                        or int(footprint_side.get("side_sign", 0))
+                        != int(edge_side["side_sign"])
+                    ):
+                        continue
+                    detail = {
+                        "carrier_part": carrier,
+                        "reference_connection_id": edge_detail.get(
+                            "connection_id"
+                        ),
+                        "target_connection_id": footprint_detail.get(
+                            "connection_id"
+                        ),
+                        "reference_interface": "repeated_bounded_edge_slot",
+                        "target_interface": "carrier_parallel_surface",
+                        "carrier_thin_axis_index": edge_side["thin_axis_index"],
+                        "carrier_thin_axis_world": edge_side["thin_axis_world"],
+                        "reference_side_sign": edge_side["side_sign"],
+                        "target_side_sign": footprint_side["side_sign"],
+                        "reference_channel_mouth_alignment": edge_side[
+                            "thin_axis_alignment"
+                        ],
+                        "target_offset_mm": footprint_side["offset_mm"],
+                        "minimum_margin_mm": float(
+                            footprint_side["minimum_margin_mm"]
+                        ),
+                        "supported": True,
+                        "proposal_only": True,
+                        "review_required": True,
+                        "can_auto_accept": False,
+                        "preserved_component_placements": [edge_moving],
+                        "reason": (
+                            "A bounded edge-slot placement and a planar "
+                            "footprint placement occupy the same unambiguous "
+                            "side of their shared thin carrier."
+                        ),
+                    }
+                    refined_edge_ids = list(dict.fromkeys(
+                        str(row.get("connection_id")) for row in edge_history
+                        if row.get("connection_id") is not None
+                    ))
+                    refined_footprint_ids = list(dict.fromkeys(
+                        str(row.get("connection_id"))
+                        for row in footprint_history
+                        if row.get("connection_id") is not None
+                    ))
+                    candidate = _candidate_from_placements(
+                        features,
+                        placements,
+                        edge_candidate,
+                        origin="carrier_open_side_composition",
+                        score_penalty=0.0,
+                        extra={
+                            "proposal_only": True,
+                            "review_required": True,
+                            "can_auto_accept": False,
+                            "edge_slot_interface": edge_detail,
+                            "edge_slot_history": edge_history,
+                            "edge_slot_refined_connection_ids": refined_edge_ids,
+                            "planar_footprint": footprint_detail,
+                            "planar_footprint_history": footprint_history,
+                            "planar_footprint_refined_connection_ids": (
+                                refined_footprint_ids
+                            ),
+                            "carrier_open_side_consistency": detail,
+                            "carrier_open_side_consistency_history": [detail],
+                        },
+                    )
+                    # The composition has all evidence retained by either
+                    # source candidate, so it should not be artificially
+                    # disadvantaged in the bounded exact-validation frontier.
+                    candidate["total_score"] = max(
+                        float(edge_candidate.get("total_score", 0.0)),
+                        float(footprint_candidate.get("total_score", 0.0)),
+                    )
+                    jobs.append((
+                        (
+                            -abs(float(footprint_side["offset_mm"])),
+                            str(edge_detail.get("connection_id") or ""),
+                            str(footprint_detail.get("connection_id") or ""),
+                            int(footprint_detail.get("support_polarity", 0)),
+                            int(footprint_detail.get("normal_sign", 0)),
+                        ),
+                        candidate,
+                    ))
+    jobs.sort(key=lambda item: item[0])
+    return [candidate for _, candidate in jobs[:max_candidates]]
+
+
+def _cached_enclosure_bay_recall(
+    stationary_features: dict[str, Any],
+    moving_features: dict[str, Any],
+) -> dict[str, Any]:
+    """Cache pair-invariant, review-only repeated-bay proposals."""
+
+    key = (id(stationary_features), id(moving_features))
+    cached = _ENCLOSURE_BAY_RECALL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    # The enclosure provider cross-compares walls and rails.  Feeding every
+    # cosmetic face of a vendor chassis into that combinatorial stage is both
+    # unnecessary and unsafe.  Retain a deterministic, permissive geometry
+    # ROI: a potential wall/rail needs at least one footprint extent plausibly
+    # related to a moving OBB extent.  This is recall-only; the provider still
+    # requires opposing walls, paired rails, and a functional-body fit.
+    moving_obb = moving_features.get("obb") or {}
+    moving_dimensions = [
+        abs(float(value)) for value in moving_obb.get("dimensions") or []
+        if abs(float(value)) > 1e-9
+    ]
+    raw_planes = list(stationary_features.get("planes") or [])
+    roi_rows: list[tuple[tuple[float, int], dict[str, Any]]] = []
+    if len(moving_dimensions) == 3:
+        for raw_index, plane in enumerate(raw_planes):
+            dimensions = plane.get("footprint_dimensions") or []
+            if len(dimensions) < 2:
+                continue
+            try:
+                extents = [abs(float(value)) for value in dimensions[:2]]
+            except (TypeError, ValueError):
+                continue
+            if min(extents) <= 1e-9:
+                continue
+            relative_errors = [
+                abs(math.log(extent / moving_extent))
+                for extent in extents
+                for moving_extent in moving_dimensions
+                if moving_extent > 1e-9
+            ]
+            if not relative_errors:
+                continue
+            nearest = min(relative_errors)
+            # A rail can be thin in one direction, but its long direction must
+            # remain within this deliberately broad 5x scale band.  Full-size
+            # chassis skins and tiny cosmetic details then stay out.
+            if nearest > math.log(5.0):
+                continue
+            roi_rows.append(((nearest, raw_index), plane))
+    # Bound the caller-side geometric frontier before the provider's pairwise
+    # wall search.  Tie breaking by original index makes this reproducible.
+    roi_rows.sort(key=lambda item: item[0])
+    # 240 yields at most a modest pairwise wall frontier while still retaining
+    # many more geometric alternatives than the downstream proposal budget.
+    filtered_planes = [row for _, row in roi_rows[:240]]
+    stationary_roi = {
+        **stationary_features,
+        "planes": filtered_planes,
+    }
+    try:
+        result = propose_enclosure_bay_placements(
+            stationary_roi,
+            moving_features,
+            maximum=16,
+        )
+    except Exception as exc:
+        result = {
+            "status": "abstain",
+            "reason": f"enclosure bay recall failed: {exc}",
+            "proposals": [],
+            "audit": {"exception_type": type(exc).__name__},
+            "proposal_only": True,
+            "review_required": True,
+            "can_auto_accept": False,
+        }
+    result.setdefault("audit", {}).update({
+        "caller_plane_size_roi_enabled": True,
+        "caller_raw_plane_count": len(raw_planes),
+        "caller_roi_plane_count": len(filtered_planes),
+        "caller_roi_maximum_plane_count": 240,
+    })
+    _ENCLOSURE_BAY_RECALL_CACHE[key] = result
+    return result
+
+
+def _enclosure_bay_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Materialise repeated-bay transforms for exactly one selected edge."""
+
+    if max_candidates <= 0:
+        return []
+    parts = list(connection.get("parts") or [])
+    if len(parts) != 2:
+        return []
+    relation_types = set(connection.get("relation_types") or [])
+    if not relation_types & {PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE}:
+        return []
+    diagonals = {
+        part: _bbox_diagonal_from_features(features.get(part, {}))
+        for part in parts
+    }
+    stationary = max(parts, key=lambda part: diagonals[part])
+    movable = parts[1] if parts[0] == stationary else parts[0]
+    recall = _cached_enclosure_bay_recall(
+        features.get(stationary, {}),
+        features.get(movable, {}),
+    )
+    proposals = [
+        row for row in recall.get("proposals") or []
+        if int(row.get("independent_evidence_count", 0)) >= 4
+        and row.get("proposal_only") is True
+        and row.get("review_required") is True
+        and row.get("can_auto_accept") is False
+        and row.get("transform_4x4") is not None
+    ]
+    if not proposals:
+        return []
+
+    generated = []
+    for source_candidate in source_candidates[:1]:
+        placements = source_candidate.get("placements") or {}
+        if stationary not in placements or movable not in placements:
+            continue
+        stationary_world = placement_to_matrix(placements[stationary])
+        for proposal in proposals[:max_candidates]:
+            relative = np.asarray(proposal["transform_4x4"], dtype=float)
+            if relative.shape != (4, 4):
+                continue
+            moving_world = stationary_world @ relative
+            new_placements = json.loads(json.dumps(placements))
+            new_placements[movable] = matrix_to_placement(moving_world)
+            detail = {
+                **proposal,
+                "connection_id": connection.get("connection_id"),
+                "stationary_part": stationary,
+                "movable_part": movable,
+                "refinement_phase": refinement_phase,
+                "recall_status": recall.get("status"),
+                "recall_reason": recall.get("reason"),
+                "functional_body_envelope_audit": recall.get(
+                    "functional_body_envelope_audit"
+                ) or {},
+                "proposal_only": True,
+                "review_required": True,
+                "can_auto_accept": False,
+            }
+            history = list(
+                source_candidate.get("enclosure_bay_history") or []
+            ) + [detail]
+            refined_ids = list(dict.fromkeys(
+                str(row.get("connection_id")) for row in history
+                if row.get("connection_id") is not None
+            ))
+            generated.append(_candidate_from_placements(
+                features,
+                new_placements,
+                source_candidate,
+                origin="repeated_enclosure_bay_recall",
+                score_penalty=(
+                    0.10
+                    + 0.05 * max(
+                        0.0,
+                        1.0 - float(proposal.get("proposal_score", 0.0)),
+                    )
+                ),
+                extra={
+                    "proposal_only": True,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                    "enclosure_bay": detail,
+                    "enclosure_bay_history": history,
+                    "enclosure_bay_refined_connection_ids": refined_ids,
+                },
+            ))
+            if len(generated) >= max_candidates:
+                break
+    return generated[:max_candidates]
+
+
+def _enclosure_bay_pose_candidates(
+    source_candidates: list[dict[str, Any]],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int = 8,
+) -> list[dict[str, Any]]:
+    """Allocate one fixed review-only repeated-bay frontier."""
+
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & {
+            PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+        })
+    ]
+    generated = []
+    for connection, quota in zip(
+        connections, _fair_quotas(max_candidates, len(connections))
+    ):
+        generated.extend(_enclosure_bay_candidates_for_connection(
+            source_candidates,
+            connection,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        ))
+    return generated[:max_candidates]
+
+
+def _cached_edge_slot_recall(
+    stationary_features: dict[str, Any],
+    moving_features: dict[str, Any],
+) -> dict[str, Any]:
+    """Cache pair-invariant repeated bounded edge-slot proposals."""
+
+    key = (id(stationary_features), id(moving_features))
+    cached = _EDGE_SLOT_RECALL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    try:
+        result = recall_edge_slot_interface_proposals(
+            stationary_features,
+            moving_features,
+            maximum_proposals=16,
+        )
+    except Exception as exc:
+        result = {
+            "status": "abstain",
+            "reason": f"edge-slot recall failed: {exc}",
+            "proposals": [],
+            "audit": {"exception_type": type(exc).__name__},
+            "proposal_only": True,
+            "review_required": True,
+            "can_auto_accept": False,
+        }
+    _EDGE_SLOT_RECALL_CACHE[key] = result
+    return result
+
+
+def _edge_slot_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Materialise repeated edge-slot transforms for one selected edge."""
+
+    if max_candidates <= 0:
+        return []
+    parts = list(connection.get("parts") or [])
+    if len(parts) != 2:
+        return []
+    if not set(connection.get("relation_types") or []) & {
+        PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+    }:
+        return []
+    diagonals = {
+        part: _bbox_diagonal_from_features(features.get(part, {}))
+        for part in parts
+    }
+    stationary = max(parts, key=lambda part: diagonals[part])
+    movable = parts[1] if parts[0] == stationary else parts[0]
+    recall = _cached_edge_slot_recall(
+        features.get(stationary, {}),
+        features.get(movable, {}),
+    )
+    proposals = [
+        row for row in recall.get("proposals") or []
+        if int(row.get("independent_evidence_count", 0)) >= 4
+        and row.get("has_multi_evidence_support") is True
+        and row.get("proposal_only") is True
+        and row.get("review_required") is True
+        and row.get("can_auto_accept") is False
+        and row.get("transform_matrix") is not None
+    ]
+    if not proposals:
+        return []
+
+    generated = []
+    for source_candidate in source_candidates[:1]:
+        placements = source_candidate.get("placements") or {}
+        if stationary not in placements or movable not in placements:
+            continue
+        stationary_world = placement_to_matrix(placements[stationary])
+        for proposal in proposals[:max_candidates]:
+            relative = np.asarray(proposal["transform_matrix"], dtype=float)
+            if relative.shape != (4, 4):
+                continue
+            moving_world = stationary_world @ relative
+            new_placements = json.loads(json.dumps(placements))
+            new_placements[movable] = matrix_to_placement(moving_world)
+            detail = {
+                **proposal,
+                "connection_id": connection.get("connection_id"),
+                "stationary_part": stationary,
+                "movable_part": movable,
+                "refinement_phase": refinement_phase,
+                "recall_status": recall.get("status"),
+                "recall_reason": recall.get("reason"),
+                "recall_audit": recall.get("audit") or {},
+                "proposal_only": True,
+                "review_required": True,
+                "can_auto_accept": False,
+            }
+            history = list(
+                source_candidate.get("edge_slot_history") or []
+            ) + [detail]
+            refined_ids = list(dict.fromkeys(
+                str(row.get("connection_id")) for row in history
+                if row.get("connection_id") is not None
+            ))
+            generated.append(_candidate_from_placements(
+                features,
+                new_placements,
+                source_candidate,
+                origin="repeated_bounded_edge_slot_recall",
+                score_penalty=(
+                    0.06
+                    + 0.04 * float(proposal.get("length_relative_error", 0.0))
+                    + 0.01 * float(
+                        (proposal.get("floor_evidence") or {}).get(
+                            "mirror_score", 0.0
+                        )
+                    )
+                ),
+                extra={
+                    "proposal_only": True,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                    "edge_slot_interface": detail,
+                    "edge_slot_history": history,
+                    "edge_slot_refined_connection_ids": refined_ids,
+                },
+            ))
+            if len(generated) >= max_candidates:
+                break
+    return generated[:max_candidates]
+
+
+def _edge_slot_pose_candidates(
+    source_candidates: list[dict[str, Any]],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int = 8,
+) -> list[dict[str, Any]]:
+    """Allocate a fixed review-only repeated edge-slot frontier."""
+
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & {
+            PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+        })
+    ]
+    generated = []
+    for connection, quota in zip(
+        connections, _fair_quotas(max_candidates, len(connections))
+    ):
+        generated.extend(_edge_slot_candidates_for_connection(
+            source_candidates,
+            connection,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        ))
+    return generated[:max_candidates]
+
+
+def _cached_planar_footprint_recall(
+    stationary_features: dict[str, Any],
+    moving_features: dict[str, Any],
+) -> dict[str, Any]:
+    key = (id(stationary_features), id(moving_features))
+    cached = _PLANAR_FOOTPRINT_RECALL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    # The downstream gate can only accept planes whose two extents match the
+    # two non-thin moving OBB axes.  Apply that exact size ROI before NumPy
+    # normalisation; a vendor board may contain >100k planar faces but only a
+    # handful can possibly be a 72x75 socket or 31x133 slot.
+    moving_obb = moving_features.get("obb") or {}
+    moving_dimensions = list(moving_obb.get("dimensions") or [])
+    target_footprint: list[float] = []
+    if len(moving_dimensions) == 3:
+        target_footprint = sorted(
+            abs(float(value)) for value in moving_dimensions
+        )[1:]
+    raw_planes = list(stationary_features.get("planes") or [])
+    filtered_planes = []
+    if len(target_footprint) == 2:
+        for plane in raw_planes:
+            dimensions = plane.get("footprint_dimensions") or []
+            if len(dimensions) < 2:
+                continue
+            candidate = sorted(abs(float(value)) for value in dimensions[:2])
+            maximum_error = max(
+                abs(candidate[index] - target_footprint[index])
+                / max(candidate[index], target_footprint[index], 1e-9)
+                for index in range(2)
+            )
+            if maximum_error <= 0.18:
+                filtered_planes.append(plane)
+    stationary_roi = {
+        **stationary_features,
+        "planes": filtered_planes,
+    }
+    try:
+        result = recall_planar_footprint_proposals(
+            stationary_roi,
+            moving_features,
+            maximum=64,
+            # Radius/polarity/layer evidence remains supported by the reusable
+            # module.  It is disabled in this large-case caller until a local
+            # cylinder ROI is available; the all-pairs board×CPU loop is both
+            # expensive and already proved to create no strict case4 match.
+            enable_cylinder_layout_evidence=False,
+        )
+    except Exception as exc:
+        result = {
+            "schema_version": "planar_footprint.v1",
+            "status": "unavailable",
+            "reason": f"planar footprint recall failed: {exc}",
+            "proposals": [],
+            "audit": {"exception_type": type(exc).__name__},
+            "proposal_only": True,
+            "review_required": True,
+            "can_auto_accept": False,
+        }
+    result.setdefault("audit", {}).update({
+        "caller_plane_size_roi_enabled": True,
+        "caller_raw_plane_count": len(raw_planes),
+        "caller_roi_plane_count": len(filtered_planes),
+        "caller_cylinder_layout_disabled_without_local_roi": True,
+    })
+    _PLANAR_FOOTPRINT_RECALL_CACHE[key] = result
+    return result
+
+
+def _planar_footprint_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Materialise bounded multi-evidence footprint proposals for one edge."""
+
+    if max_candidates <= 0:
+        return []
+    parts = list(connection.get("parts") or [])
+    if len(parts) != 2:
+        return []
+    diagonals = {
+        part: _bbox_diagonal_from_features(features.get(part, {}))
+        for part in parts
+    }
+    stationary = max(parts, key=lambda part: diagonals[part])
+    movable = parts[1] if parts[0] == stationary else parts[0]
+    recall = _cached_planar_footprint_recall(
+        features.get(stationary, {}),
+        features.get(movable, {}),
+    )
+    proposals = [
+        row for row in recall.get("proposals") or []
+        if row.get("has_multi_evidence_support")
+        and int(row.get("independent_evidence_count", 0)) >= 2
+        and row.get("proposal_only") is True
+        and row.get("can_auto_accept") is False
+    ]
+    if not proposals:
+        return []
+
+    generated = []
+    active_sources = source_candidates[:1]
+    for source_candidate, quota in zip(
+        active_sources, _fair_quotas(max_candidates, len(active_sources))
+    ):
+        placements = source_candidate.get("placements") or {}
+        if stationary not in placements or movable not in placements:
+            continue
+        stationary_world = placement_to_matrix(placements[stationary])
+        for proposal in proposals[:quota]:
+            relative = np.asarray(proposal["transform_matrix"], dtype=float)
+            moving_world = stationary_world @ relative
+            new_placements = json.loads(json.dumps(placements))
+            new_placements[movable] = matrix_to_placement(moving_world)
+            detail = {
+                **proposal,
+                "connection_id": connection.get("connection_id"),
+                "stationary_part": stationary,
+                "movable_part": movable,
+                "refinement_phase": refinement_phase,
+                "recall_status": recall.get("status"),
+                "recall_audit": recall.get("audit") or {},
+                "proposal_only": True,
+                "review_required": True,
+                "can_auto_accept": False,
+            }
+            history = list(
+                source_candidate.get("planar_footprint_history") or []
+            ) + [detail]
+            refined_ids = list(dict.fromkeys(
+                str(row.get("connection_id")) for row in history
+                if row.get("connection_id") is not None
+            ))
+            size_error = max(
+                (
+                    float(value)
+                    for evidence in proposal.get("evidence") or []
+                    for value in evidence.get("relative_size_errors") or []
+                ),
+                default=0.0,
+            )
+            score_penalty = (
+                0.08
+                + 0.05 * size_error
+                + (
+                    0.0
+                    if int(proposal.get("support_polarity", 0)) == 1
+                    else 0.02
+                )
+            )
+            generated.append(_candidate_from_placements(
+                features,
+                new_placements,
+                source_candidate,
+                origin="planar_footprint_socket_recall",
+                score_penalty=score_penalty,
+                extra={
+                    "proposal_only": True,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                    "planar_footprint": detail,
+                    "planar_footprint_history": history,
+                    "planar_footprint_refined_connection_ids": refined_ids,
+                },
+            ))
+            if len(generated) >= max_candidates:
+                break
+    return generated[:max_candidates]
+
+
+def _planar_footprint_pose_candidates(
+    source_candidates: list[dict[str, Any]],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int = 24,
+) -> list[dict[str, Any]]:
+    """Allocate a fixed footprint frontier, then compose safe star leaves."""
+
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & {
+            PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+        })
+    ]
+    if not connections or max_candidates <= 0:
+        return []
+    independent_budget = (
+        max_candidates if len(connections) == 1
+        else max(len(connections), (3 * max_candidates) // 4)
+    )
+    generated: list[dict[str, Any]] = []
+    independent: list[list[dict[str, Any]]] = []
+    for connection, quota in zip(
+        connections, _fair_quotas(independent_budget, len(connections))
+    ):
+        rows = _planar_footprint_candidates_for_connection(
+            source_candidates[:1],
+            connection,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        )
+        independent.append(rows)
+        generated.extend(rows)
+
+    remaining = max(0, max_candidates - len(generated))
+    composition_jobs = []
+    for left_index in range(len(connections)):
+        for right_index in range(left_index + 1, len(connections)):
+            for left in independent[left_index]:
+                left_detail = left.get("planar_footprint") or {}
+                for right in independent[right_index]:
+                    right_detail = right.get("planar_footprint") or {}
+                    if (
+                        left_detail.get("stationary_part")
+                        != right_detail.get("stationary_part")
+                        or not left_detail.get("movable_part")
+                        or not right_detail.get("movable_part")
+                        or left_detail.get("movable_part")
+                        == right_detail.get("movable_part")
+                    ):
+                        continue
+                    placements = json.loads(json.dumps(
+                        left.get("placements") or {}
+                    ))
+                    right_movable = str(right_detail["movable_part"])
+                    placements[right_movable] = json.loads(json.dumps(
+                        (right.get("placements") or {})[right_movable]
+                    ))
+                    history = list(
+                        left.get("planar_footprint_history") or []
+                    ) + list(right.get("planar_footprint_history") or [])
+                    refined_ids = list(dict.fromkeys(
+                        str(row.get("connection_id")) for row in history
+                        if row.get("connection_id") is not None
+                    ))
+                    candidate = _candidate_from_placements(
+                        features,
+                        placements,
+                        left,
+                        origin="planar_footprint_star_composition",
+                        score_penalty=0.02,
+                        extra={
+                            "proposal_only": True,
+                            "review_required": True,
+                            "can_auto_accept": False,
+                            "planar_footprint": right_detail,
+                            "planar_footprint_history": history,
+                            "planar_footprint_refined_connection_ids": refined_ids,
+                        },
+                    )
+                    precheck = _pose_precheck(candidate, graph, features)
+                    closure = precheck["constraint_closure"]
+                    overlap = precheck["overlap_objective"]
+                    independent_evidence = sum(
+                        int(row.get("independent_evidence_count", 0))
+                        for row in history
+                    )
+                    composition_jobs.append((
+                        (
+                            -int(closure.get("closed_connection_count", 0)),
+                            -float(closure.get("closure_ratio", 0.0)),
+                            int(overlap.get("severe_non_edge_overlap_count", 0)),
+                            float(overlap.get("bbox_overlap_cost", 0.0)),
+                            -independent_evidence,
+                        ),
+                        candidate,
+                    ))
+    composition_jobs.sort(key=lambda item: item[0])
+    composition_buckets: dict[
+        tuple[tuple[str, int, int], ...],
+        list[tuple[tuple[Any, ...], dict[str, Any]]],
+    ] = defaultdict(list)
+    for item in composition_jobs:
+        history = list(item[1].get("planar_footprint_history") or [])
+        signature = tuple(sorted(
+            (
+                str(row.get("connection_id")),
+                int(row.get("normal_sign", 0)),
+                int(row.get("support_polarity", 0)),
+            )
+            for row in history
+        ))
+        composition_buckets[signature].append(item)
+    bucket_order = sorted(
+        composition_buckets,
+        key=lambda signature: (
+            -sum(row[2] == 1 for row in signature),
+            tuple((row[1], row[2], row[0]) for row in signature),
+        ),
+    )
+    selected_compositions = []
+    cursor = 0
+    while len(selected_compositions) < remaining:
+        progressed = False
+        for signature in bucket_order:
+            rows = composition_buckets[signature]
+            if cursor >= len(rows):
+                continue
+            selected_compositions.append(rows[cursor][1])
+            progressed = True
+            if len(selected_compositions) >= remaining:
+                break
+        if not progressed:
+            break
+        cursor += 1
+    generated.extend(selected_compositions)
+    return generated[:max_candidates]
+
+
+def _obb_insertion_candidates_for_connection(
+    source_candidates: list[dict[str, Any]],
+    connection: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int,
+    refinement_phase: str,
+) -> list[dict[str, Any]]:
+    """Generate role-stratified OBB insertion proposals for one edge."""
+
+    if max_candidates <= 0:
+        return []
+    parts = list(connection.get("parts") or [])
+    if len(parts) != 2:
+        return []
+    diagonals = {
+        part: _bbox_diagonal_from_features(features.get(part, {}))
+        for part in parts
+    }
+    stationary = max(parts, key=lambda part: diagonals[part])
+    movable = parts[1] if parts[0] == stationary else parts[0]
+    fixed_obb_local = features.get(stationary, {}).get("obb")
+    moving_obb = features.get(movable, {}).get("obb")
+    if not fixed_obb_local or not moving_obb:
+        return []
+    moving_dimensions = [
+        float(value) for value in moving_obb.get("dimensions") or []
+    ]
+    moving_axes = moving_obb.get("axes") or []
+    moving_center = moving_obb.get("center")
+    if len(moving_dimensions) != 3 or len(moving_axes) != 3 or not moving_center:
+        return []
+    ordered_axes = sorted(range(3), key=lambda axis: moving_dimensions[axis])
+    role_by_axis = {
+        ordered_axes[0]: "shortest",
+        ordered_axes[1]: "middle",
+        ordered_axes[2]: "longest",
+    }
+    relation_priority = [PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE]
+    matches = []
+    for relation in relation_priority:
+        matches.extend([
+            row for row in connection.get("matches") or []
+            if row.get("type") == relation
+        ])
+    if not matches:
+        return []
+
+    generated = []
+    active_sources = source_candidates[:2]
+    source_quotas = _fair_quotas(max_candidates, len(active_sources))
+    for source_candidate, source_quota in zip(active_sources, source_quotas):
+        if source_quota <= 0:
+            continue
+        placements = source_candidate.get("placements") or {}
+        if stationary not in placements or movable not in placements:
+            continue
+        fixed_obb = _placed_obb(
+            fixed_obb_local, placements.get(stationary, {})
+        )
+        try:
+            frames = enumerate_axis_role_frames(
+                fixed_obb, moving_obb, maximum=24
+            )
+        except ValueError:
+            continue
+        fixed_dimensions = [
+            float(value) for value in fixed_obb.get("dimensions") or []
+        ]
+        jobs_by_role: dict[int, list[tuple[Any, ...]]] = {
+            axis: [] for axis in ordered_axes
+        }
+        for match_rank, match in enumerate(matches[:2]):
+            axis_data = _joinable_axis_data_for_match(
+                match, stationary, movable, features, placements
+            )
+            if axis_data is None:
+                continue
+            (
+                movable_feature_axis_local,
+                movable_feature_anchor_local,
+                anchor_axis,
+                anchor_origin,
+                _,
+            ) = axis_data
+            anchor_axis = _unit(anchor_axis)
+            stationary_feature = None
+            if match.get("type") in {PLANAR_MATE, PLANAR_ALIGN}:
+                stationary_feature = _feature_for_match(
+                    match, stationary, features, "planes"
+                )
+            anchor_kind = (
+                "face_centroid"
+                if stationary_feature and stationary_feature.get("centroid")
+                else "weak_pocket"
+                if match.get("type") == POCKET_MATE
+                else "support_plane_origin"
+            )
+            for frame_rank, frame in enumerate(frames):
+                rotation_axis_angle = frame.get("rotation_axis_angle")
+                rotation_placement = {
+                    "rotate_sequence": (
+                        [{"axis_angle": rotation_axis_angle}]
+                        if rotation_axis_angle else []
+                    )
+                }
+                mapping = list(frame["axis_mapping"])
+                for moving_axis in ordered_axes:
+                    fixed_axis = int(mapping[moving_axis])
+                    if fixed_axis >= len(fixed_dimensions):
+                        continue
+                    rotated_axis = _unit(transform_vector(
+                        moving_axes[moving_axis], rotation_placement
+                    ))
+                    axis_compatibility = abs(_dot(rotated_axis, anchor_axis))
+                    if axis_compatibility < 0.90:
+                        # An axis-role proposal must materially align that OBB
+                        # axis with the interface direction.  Merely relabeling
+                        # the same rotation as short/middle/long would create
+                        # fake diversity and starve real orientation variants.
+                        continue
+                    rotated_feature_axis = _unit(transform_vector(
+                        movable_feature_axis_local, rotation_placement
+                    ))
+                    feature_axis_signed_dot = _dot(
+                        rotated_feature_axis, anchor_axis
+                    )
+                    rotated_feature_anchor = transform_vector(
+                        movable_feature_anchor_local, rotation_placement
+                    )
+                    depth_cap = min(
+                        moving_dimensions[moving_axis],
+                        fixed_dimensions[fixed_axis],
+                    )
+                    for support_polarity in (-1.0, 1.0):
+                        insertion_axis = [
+                            support_polarity * value for value in rotated_axis
+                        ]
+                        leading_local = [
+                            float(moving_center[index])
+                            + support_polarity
+                            * 0.5
+                            * moving_dimensions[moving_axis]
+                            * float(moving_axes[moving_axis][index])
+                            for index in range(3)
+                        ]
+                        rotated_leading = transform_vector(
+                            leading_local, rotation_placement
+                        )
+                        for depth_index, depth_fraction in enumerate(
+                            (0.0, 0.25, 0.5, 0.75, 1.0)
+                        ):
+                            sampled_depth = depth_fraction * depth_cap
+                            for anchor_strategy_rank, (
+                                anchor_strategy,
+                                rotated_moving_anchor,
+                            ) in enumerate((
+                                (
+                                    "matched_feature_centroid",
+                                    rotated_feature_anchor,
+                                ),
+                                ("obb_leading_support", rotated_leading),
+                            )):
+                                translation = [
+                                    float(anchor_origin[index])
+                                    - rotated_moving_anchor[index]
+                                    + sampled_depth * insertion_axis[index]
+                                    for index in range(3)
+                                ]
+                                if (
+                                    anchor_strategy
+                                    == "matched_feature_centroid"
+                                ):
+                                    phase_priority = (
+                                        0 if depth_index == 0
+                                        else 10 + depth_index
+                                    )
+                                else:
+                                    support_depth_priority = {
+                                        1.0: 1,
+                                        0.5: 2,
+                                        0.0: 3,
+                                        0.75: 4,
+                                        0.25: 5,
+                                    }
+                                    phase_priority = support_depth_priority[
+                                        float(depth_fraction)
+                                    ]
+                                priority = (
+                                    phase_priority,
+                                    match_rank,
+                                    -feature_axis_signed_dot,
+                                    -axis_compatibility,
+                                    -float(frame.get(
+                                        "dimension_order_score", 0.0
+                                    )),
+                                    depth_index,
+                                    anchor_strategy_rank,
+                                    int(support_polarity < 0.0),
+                                    frame_rank,
                                 )
-                            )
-                            if len(generated) >= max_candidates:
-                                return generated
-    return generated
+                                jobs_by_role[moving_axis].append((
+                                    priority,
+                                    frame,
+                                    rotation_placement,
+                                    translation,
+                                    insertion_axis,
+                                    fixed_axis,
+                                    sampled_depth,
+                                    depth_fraction,
+                                    anchor_kind,
+                                    anchor_strategy,
+                                    match,
+                                    support_polarity,
+                                    axis_compatibility,
+                                    feature_axis_signed_dot,
+                                ))
+        for rows in jobs_by_role.values():
+            rows.sort(key=lambda item: item[0])
+
+        # Recall must cover insertion depth before repeatedly spending the
+        # frontier on a zero-depth face-centroid contact.  The latter is a
+        # useful seed, but it cannot assemble a slide-in module by itself.
+        # Within each depth layer, retain the existing short/middle/long role
+        # diversity; every generated row remains review-only.
+        # Keep the zero-depth anchor as one of the early strata for ordinary
+        # flush mates, but never let it consume the whole frontier.
+        depth_layers = (1.0, 0.0, 0.5, 0.75, 0.25)
+        rows_by_role_and_depth: dict[
+            int, dict[float, list[tuple[Any, ...]]]
+        ] = {
+            axis: {depth: [] for depth in depth_layers}
+            for axis in ordered_axes
+        }
+        for moving_axis, rows in jobs_by_role.items():
+            for row in rows:
+                depth_fraction = float(row[7])
+                if depth_fraction in rows_by_role_and_depth[moving_axis]:
+                    rows_by_role_and_depth[moving_axis][depth_fraction].append(
+                        row
+                    )
+        for per_depth in rows_by_role_and_depth.values():
+            for rows in per_depth.values():
+                rows.sort(key=lambda item: item[0])
+        cursor = 0
+        generated_for_source = 0
+        while (
+            len(generated) < max_candidates
+            and generated_for_source < source_quota
+        ):
+            progressed = False
+            for depth_fraction in depth_layers:
+                for moving_axis in ordered_axes:
+                    rows = rows_by_role_and_depth[moving_axis][depth_fraction]
+                    if cursor >= len(rows):
+                        continue
+                    progressed = True
+                    (
+                        _, frame, rotation_placement, translation,
+                        insertion_axis, fixed_axis, sampled_depth,
+                        _depth_fraction, anchor_kind, anchor_strategy, match,
+                        support_polarity, axis_compatibility,
+                        feature_axis_signed_dot,
+                    ) = rows[cursor]
+                    placement = dict(rotation_placement)
+                    placement["translate"] = translation
+                    new_placements = json.loads(json.dumps(placements))
+                    new_placements[movable] = placement
+                    detail = {
+                    "connection_id": connection["connection_id"],
+                    "stationary_part": stationary,
+                    "movable_part": movable,
+                    "moving_insertion_axis": moving_axis,
+                    "moving_axis_role": role_by_axis[moving_axis],
+                    "fixed_target_axis": fixed_axis,
+                    "axis_mapping": frame["axis_mapping"],
+                    "axis_signs": frame["axis_signs"],
+                    "support_polarity": int(support_polarity),
+                    "insertion_axis_world": insertion_axis,
+                    "anchor_kind": anchor_kind,
+                    "anchor_strategy": anchor_strategy,
+                    "anchor_origin_world": anchor_origin,
+                    "anchor_axis_world": anchor_axis,
+                    "movable_feature_anchor_local": (
+                        movable_feature_anchor_local
+                    ),
+                    "match_type": match.get("type"),
+                    "match_feat_a_idx": match.get("feat_a_idx"),
+                    "match_feat_b_idx": match.get("feat_b_idx"),
+                    "sampled_depth_mm": sampled_depth,
+                    "sampled_depth_fraction": depth_fraction,
+                    "depth_verified": False,
+                    "axis_compatibility": axis_compatibility,
+                    "obb_axis_alignment_threshold": 0.90,
+                    "obb_axis_aligned_interface_only": True,
+                    "feature_axis_signed_dot": feature_axis_signed_dot,
+                    "frame_dimension_order_score": frame.get(
+                        "dimension_order_score"
+                    ),
+                    "rotation_axis_angle": frame.get(
+                        "rotation_axis_angle"
+                    ),
+                    "translation": translation,
+                    "source_candidate_origin": source_candidate.get(
+                        "candidate_origin", "solver_primary"
+                    ),
+                    "refinement_phase": refinement_phase,
+                    "review_required": True,
+                    "can_auto_accept": False,
+                }
+                    history = list(
+                        source_candidate.get("obb_insertion_history") or []
+                    ) + [detail]
+                    refined_ids = list(dict.fromkeys(
+                        str(row.get("connection_id")) for row in history
+                        if row.get("connection_id") is not None
+                    ))
+                    generated.append(_candidate_from_placements(
+                    features,
+                    new_placements,
+                    source_candidate,
+                    origin=(
+                        "obb_two_edge_insertion_composition"
+                        if len(refined_ids) >= 2
+                        else "obb_insertion_axis_role_search"
+                    ),
+                    score_penalty=(
+                        0.16
+                        + 0.04 * (sampled_depth / max(depth_cap, 1.0))
+                        + 0.03 * (1.0 - axis_compatibility)
+                        + (0.02 if anchor_kind != "face_centroid" else 0.0)
+                    ),
+                    extra={
+                        "proposal_only": True,
+                        "review_required": True,
+                        "can_auto_accept": False,
+                        "obb_insertion": detail,
+                        "obb_insertion_history": history,
+                        "obb_refined_connection_ids": refined_ids,
+                    },
+                    ))
+                    generated_for_source += 1
+                    if (
+                        len(generated) >= max_candidates
+                        or generated_for_source >= source_quota
+                    ):
+                        break
+                if (
+                    len(generated) >= max_candidates
+                    or generated_for_source >= source_quota
+                ):
+                    break
+            if not progressed:
+                break
+            cursor += 1
+        if len(generated) >= max_candidates:
+            break
+    return generated[:max_candidates]
+
+
+def _obb_insertion_pose_candidates(
+    source_candidates: list[dict[str, Any]],
+    graph: dict[str, Any],
+    features: dict[str, Any],
+    *,
+    max_candidates: int = 24,
+) -> list[dict[str, Any]]:
+    """Allocate OBB role proposals per edge, then compose two leaf moves."""
+
+    connections = [
+        row for row in graph.get("selected") or []
+        if len(row.get("parts") or []) == 2
+        and all(features.get(part, {}).get("obb") for part in row["parts"])
+        and bool(set(row.get("relation_types") or []) & {
+            PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+        })
+    ]
+    if not connections or max_candidates <= 0:
+        return []
+    independent_budget = (
+        max_candidates if len(connections) == 1
+        else max(len(connections), (3 * max_candidates) // 4)
+    )
+    generated = []
+    independent = []
+    for connection, quota in zip(
+        connections, _fair_quotas(independent_budget, len(connections))
+    ):
+        rows = _obb_insertion_candidates_for_connection(
+            source_candidates[:1],
+            connection,
+            features,
+            max_candidates=quota,
+            refinement_phase="independent_edge_quota",
+        )
+        independent.append(rows)
+        generated.extend(rows)
+    remaining = max(0, max_candidates - len(generated))
+    # A star assembly's leaf placements are independent in the carrier frame.
+    # Compose the already-stratified single-edge proposals directly, then use
+    # algebraic group closure only to rank this fixed Cartesian frontier.  No
+    # additional solver beam or exact-collision work is introduced.
+    composition_jobs = []
+    for left_index in range(len(connections)):
+        for right_index in range(left_index + 1, len(connections)):
+            for left in independent[left_index]:
+                left_detail = left.get("obb_insertion") or {}
+                for right in independent[right_index]:
+                    right_detail = right.get("obb_insertion") or {}
+                    if (
+                        left_detail.get("stationary_part")
+                        != right_detail.get("stationary_part")
+                        or not left_detail.get("movable_part")
+                        or not right_detail.get("movable_part")
+                        or left_detail.get("movable_part")
+                        == right_detail.get("movable_part")
+                    ):
+                        continue
+                    placements = json.loads(json.dumps(
+                        left.get("placements") or {}
+                    ))
+                    right_movable = str(right_detail["movable_part"])
+                    placements[right_movable] = json.loads(json.dumps(
+                        (right.get("placements") or {})[right_movable]
+                    ))
+                    history = list(
+                        left.get("obb_insertion_history") or []
+                    ) + list(right.get("obb_insertion_history") or [])
+                    refined_ids = list(dict.fromkeys(
+                        str(row.get("connection_id")) for row in history
+                        if row.get("connection_id") is not None
+                    ))
+                    candidate = _candidate_from_placements(
+                        features,
+                        placements,
+                        left,
+                        origin="obb_two_edge_insertion_composition",
+                        score_penalty=0.02,
+                        extra={
+                            "proposal_only": True,
+                            "review_required": True,
+                            "can_auto_accept": False,
+                            "obb_insertion": right_detail,
+                            "obb_insertion_history": history,
+                            "obb_refined_connection_ids": refined_ids,
+                        },
+                    )
+                    precheck = _pose_precheck(candidate, graph, features)
+                    closure = precheck["constraint_closure"]
+                    overlap = precheck["overlap_objective"]
+                    satisfied_count = sum(
+                        len(row.get("satisfied_relation_types") or [])
+                        for row in closure.get("connections") or []
+                    )
+                    candidate["obb_composition_precheck"] = {
+                        "closed_connection_count": closure.get(
+                            "closed_connection_count", 0
+                        ),
+                        "connection_count": closure.get(
+                            "connection_count", 0
+                        ),
+                        "closure_ratio": closure.get("closure_ratio", 0.0),
+                        "satisfied_relation_type_count": satisfied_count,
+                        "severe_non_edge_overlap_count": overlap.get(
+                            "severe_non_edge_overlap_count", 0
+                        ),
+                    }
+                    composition_jobs.append((
+                        (
+                            -int(closure.get("closed_connection_count", 0)),
+                            -float(closure.get("closure_ratio", 0.0)),
+                            -int(satisfied_count),
+                            int(overlap.get(
+                                "severe_non_edge_overlap_count", 0
+                            )),
+                            float(overlap.get("bbox_overlap_cost", 0.0)),
+                            -sum(
+                                float(row.get("axis_compatibility", 0.0))
+                                for row in history
+                            ),
+                        ),
+                        candidate,
+                    ))
+    composition_jobs.sort(key=lambda item: item[0])
+    for _, candidate in composition_jobs[:remaining]:
+        generated.append(candidate)
+
+    # Non-star chains cannot safely merge leaf transforms.  Retain the old
+    # bounded coordinate fallback only when no common-carrier composition was
+    # possible.
+    remaining = max(0, max_candidates - len(generated))
+    if remaining and not composition_jobs:
+        directions = [
+            (source_index, target_index)
+            for source_index, rows in enumerate(independent) if rows
+            for target_index in range(len(connections))
+            if target_index != source_index
+        ]
+        for (source_index, target_index), quota in zip(
+            directions, _fair_quotas(remaining, len(directions))
+        ):
+            if quota <= 0:
+                continue
+            rows = _obb_insertion_candidates_for_connection(
+                independent[source_index][:2],
+                connections[target_index],
+                features,
+                max_candidates=min(
+                    quota, max_candidates - len(generated)
+                ),
+                refinement_phase="two_edge_coordinate_composition",
+            )
+            generated.extend(rows)
+            if len(generated) >= max_candidates:
+                break
+    return generated[:max_candidates]
 
 
 def _joinable_multi_axial_pose_candidates(
@@ -1859,12 +5594,62 @@ def _augment_pose_candidates(
         for row in features.values()
     )
     large_step_case = total_surface_count > 3000
+    joinable_parameter_candidates: list[dict[str, Any]] = []
+    obb_insertion_candidates: list[dict[str, Any]] = []
+    planar_footprint_candidates: list[dict[str, Any]] = []
+    axial_compound_candidates: list[dict[str, Any]] = []
+    enclosure_bay_candidates: list[dict[str, Any]] = []
+    edge_slot_candidates: list[dict[str, Any]] = []
+    carrier_open_side_candidates: list[dict[str, Any]] = []
+    axial_compound_budget = 8 if large_step_case else 24
+    joinable_parameter_budget = 24 if large_step_case else 200
+    socket_budget = 0
+    enclosure_bay_budget = 0
+    edge_slot_budget = 0
+    planar_footprint_budget = 0
+    carrier_open_side_budget = 0
+    obb_budget = 0
     if not large_step_case:
         candidates.extend(
             _axial_slide_pose_candidates(
                 search, graph, features, max_candidates=160
             )
         )
+        # Pair-wise SDF optima often place several satellites at the same
+        # high-contact location on a central shaft.  Relax a bounded number of
+        # composed group seeds along the shared axial DOF before exact group
+        # collision validation.
+        composed_sources = [
+            row for row in candidates
+            if row.get("candidate_origin")
+            == "joinable_pair_pose_composition"
+        ][:8]
+        composed_relaxation_count = 0
+        for source_candidate in composed_sources:
+            local_search = {
+                **search,
+                **source_candidate,
+                "placements": source_candidate["placements"],
+            }
+            generated = _axial_slide_pose_candidates(
+                local_search, graph, features, max_candidates=24
+            )
+            for row in generated:
+                row["candidate_origin"] = (
+                    "joinable_group_axial_relaxation"
+                )
+                row["joinable_group_pose"] = source_candidate.get(
+                    "joinable_group_pose"
+                )
+            candidates.extend(generated)
+            composed_relaxation_count += len(generated)
+        axial_compound_candidates = _axial_compound_pose_candidates(
+            candidates,
+            graph,
+            features,
+            max_candidates=axial_compound_budget,
+        )
+        candidates.extend(axial_compound_candidates)
         # Run planar/pocket DOF search over the already bounded candidate
         # frontier, including identity and axial candidates.
         candidates.extend(
@@ -1882,11 +5667,19 @@ def _augment_pose_candidates(
                 search, graph, features, max_candidates=80
             )
         )
-        candidates.extend(
-            _joinable_pose_parameter_candidates(
-                candidates, graph, features, max_candidates=200
-            )
+        # Compound proposals share the pre-existing 200-row structured budget
+        # with residual parameter search; enabling the provider cannot expand
+        # the fixed frontier.
+        joinable_parameter_budget = max(
+            0, 200 - len(axial_compound_candidates)
         )
+        joinable_parameter_candidates = _joinable_pose_parameter_candidates(
+            axial_compound_candidates + candidates,
+            graph,
+            features,
+            max_candidates=joinable_parameter_budget,
+        )
+        candidates.extend(joinable_parameter_candidates)
     else:
         # Large STEP cases can have tens of thousands of surfaces, so broad
         # planar expansion is still disabled.  Pocket depth search, however,
@@ -1897,11 +5690,95 @@ def _augment_pose_candidates(
                 candidates, graph, features, max_candidates=2
             )
         )
-        candidates.extend(
-            _joinable_pose_parameter_candidates(
-                candidates, graph, features, max_candidates=48
+        # Keep the large-case structured frontier fixed at 48 candidates:
+        # 24 proposals are shared by compound axial, repeated enclosure bays,
+        # multi-plane footprint, and residual OBB recall; 24 retain parameter
+        # search.  Adding a provider never expands this fixed frontier.
+        pre_obb_candidates = list(candidates)
+        axial_compound_candidates = _axial_compound_pose_candidates(
+            pre_obb_candidates,
+            graph,
+            features,
+            max_candidates=axial_compound_budget,
+        )
+        candidates.extend(axial_compound_candidates)
+        socket_budget = max(0, 24 - len(axial_compound_candidates))
+        edge_slot_budget = min(8, socket_budget)
+        edge_slot_candidates = _edge_slot_pose_candidates(
+            pre_obb_candidates,
+            graph,
+            features,
+            max_candidates=edge_slot_budget,
+        )
+        candidates.extend(edge_slot_candidates)
+        remaining_socket_budget = max(
+            0, socket_budget - len(edge_slot_candidates)
+        )
+        enclosure_bay_budget = min(8, remaining_socket_budget)
+        enclosure_bay_candidates = _enclosure_bay_pose_candidates(
+            pre_obb_candidates,
+            graph,
+            features,
+            max_candidates=enclosure_bay_budget,
+        )
+        candidates.extend(enclosure_bay_candidates)
+        structured_remaining_budget = max(
+            0,
+            remaining_socket_budget - len(enclosure_bay_candidates),
+        )
+        # Reserve at most two of the pre-existing structured slots for a
+        # group-level same-carrier composition.  If no such pairing is
+        # supported, the unused slots return to the OBB fallback below; this
+        # never expands the fixed large-STEP frontier.
+        carrier_open_side_budget = min(2, structured_remaining_budget)
+        planar_footprint_budget = max(
+            0,
+            structured_remaining_budget - carrier_open_side_budget,
+        )
+        structured_sources = (
+            edge_slot_candidates
+            + enclosure_bay_candidates
+            + pre_obb_candidates
+        )
+        planar_footprint_candidates = _planar_footprint_pose_candidates(
+            structured_sources,
+            graph,
+            features,
+            max_candidates=planar_footprint_budget,
+        )
+        candidates.extend(planar_footprint_candidates)
+        carrier_open_side_candidates = (
+            _carrier_open_side_consistent_candidates(
+                edge_slot_candidates,
+                planar_footprint_candidates,
+                features,
+                max_candidates=carrier_open_side_budget,
             )
         )
+        candidates.extend(carrier_open_side_candidates)
+        obb_budget = max(
+            0,
+            structured_remaining_budget
+            - len(planar_footprint_candidates)
+            - len(carrier_open_side_candidates),
+        )
+        obb_insertion_candidates = _obb_insertion_pose_candidates(
+            structured_sources, graph, features, max_candidates=obb_budget
+        )
+        candidates.extend(obb_insertion_candidates)
+        joinable_parameter_candidates = _joinable_pose_parameter_candidates(
+            axial_compound_candidates
+            + edge_slot_candidates
+            + enclosure_bay_candidates
+            + planar_footprint_candidates
+            + carrier_open_side_candidates
+            + obb_insertion_candidates
+            + pre_obb_candidates,
+            graph,
+            features,
+            max_candidates=24,
+        )
+        candidates.extend(joinable_parameter_candidates)
     # Deduplicate by coarse translations and rotations.
     seen = set()
     unique = []
@@ -1919,17 +5796,673 @@ def _augment_pose_candidates(
         unique.append(candidate)
     augmented["pose_candidates"] = unique
     augmented["complete_pose_candidate_count"] = len(unique)
+    selected_connection_ids = [
+        str(row.get("connection_id"))
+        for row in graph.get("selected") or []
+        if row.get("connection_id") is not None
+    ]
+    obb_eligible_connection_ids = {
+        str(row.get("connection_id"))
+        for row in graph.get("selected") or []
+        if row.get("connection_id") is not None
+        and len(row.get("parts") or []) == 2
+        and all(
+            features.get(part, {}).get("obb")
+            for part in row.get("parts") or []
+        )
+        and bool(set(row.get("relation_types") or []) & {
+            PLANAR_MATE, PLANAR_ALIGN, POCKET_MATE
+        })
+    }
+    edge_coverage = []
+    obb_edge_coverage = []
+    footprint_edge_coverage = []
+    compound_edge_coverage = []
+    compound_eligible_connection_ids = {
+        str(row.get("connection_id"))
+        for row in graph.get("selected") or []
+        if row.get("connection_id") is not None
+        and len(row.get("parts") or []) == 2
+        and bool(set(row.get("relation_types") or []) & {COAXIAL, CLEARANCE})
+    }
+    for connection_id in selected_connection_ids:
+        independent_count = sum(
+            row.get("joinable_pose_search", {}).get("connection_id")
+            == connection_id
+            and row.get("joinable_pose_search", {}).get("refinement_phase")
+            == "independent_edge_quota"
+            for row in joinable_parameter_candidates
+        )
+        composed_count = sum(
+            connection_id
+            in set(row.get("joinable_pose_refined_connection_ids") or [])
+            and len(set(row.get("joinable_pose_refined_connection_ids") or [])) >= 2
+            for row in joinable_parameter_candidates
+        )
+        edge_coverage.append({
+            "connection_id": connection_id,
+            "independent_candidate_count": int(independent_count),
+            "two_edge_composed_candidate_count": int(composed_count),
+            "received_independent_quota": bool(independent_count),
+        })
+        footprint_independent_count = sum(
+            row.get("planar_footprint", {}).get("connection_id")
+            == connection_id
+            and row.get("planar_footprint", {}).get("refinement_phase")
+            == "independent_edge_quota"
+            for row in planar_footprint_candidates
+        )
+        footprint_composed_count = sum(
+            connection_id
+            in set(row.get(
+                "planar_footprint_refined_connection_ids"
+            ) or [])
+            and len(set(row.get(
+                "planar_footprint_refined_connection_ids"
+            ) or [])) >= 2
+            for row in planar_footprint_candidates
+        )
+        footprint_edge_coverage.append({
+            "connection_id": connection_id,
+            "independent_candidate_count": int(
+                footprint_independent_count
+            ),
+            "two_edge_composed_candidate_count": int(
+                footprint_composed_count
+            ),
+            "received_independent_quota": bool(
+                footprint_independent_count
+            ),
+        })
+        if connection_id in compound_eligible_connection_ids:
+            compound_rows = [
+                row for row in axial_compound_candidates
+                if row.get("axial_compound_interface", {}).get(
+                    "connection_id"
+                ) == connection_id
+            ]
+            compound_edge_coverage.append({
+                "connection_id": connection_id,
+                "candidate_count": len(compound_rows),
+                "received_independent_quota": bool(compound_rows),
+                "review_only_count": sum(
+                    bool(row.get("proposal_only")) for row in compound_rows
+                ),
+                "phase_orbits": [
+                    row.get("axial_compound_interface", {}).get(
+                        "phase_orbit_degrees"
+                    )
+                    for row in compound_rows
+                ],
+            })
+        if connection_id in obb_eligible_connection_ids:
+            obb_independent_count = sum(
+                row.get("obb_insertion", {}).get("connection_id")
+                == connection_id
+                and row.get("obb_insertion", {}).get("refinement_phase")
+                == "independent_edge_quota"
+                for row in obb_insertion_candidates
+            )
+            obb_composed_count = sum(
+                connection_id
+                in set(row.get("obb_refined_connection_ids") or [])
+                and len(set(row.get("obb_refined_connection_ids") or [])) >= 2
+                for row in obb_insertion_candidates
+            )
+            obb_edge_coverage.append({
+                "connection_id": connection_id,
+                "independent_candidate_count": int(obb_independent_count),
+                "two_edge_composed_candidate_count": int(obb_composed_count),
+                "received_independent_quota": bool(obb_independent_count),
+            })
     augmented["candidate_augmentation"] = {
         "identity_candidate_added": True,
         "planar_slide_search_enabled": True,
         "pocket_depth_search_enabled": True,
         "joinable_multi_axial_pose_search_enabled": True,
         "joinable_pose_parameter_search_enabled": True,
+        "joinable_pose_parameter_budget": joinable_parameter_budget,
+        "joinable_pose_parameter_generated_count": len(
+            joinable_parameter_candidates
+        ),
+        "joinable_two_edge_composition_count": sum(
+            row.get("candidate_origin") == "joinable_two_edge_pose_composition"
+            for row in joinable_parameter_candidates
+        ),
+        "joinable_edge_quota_coverage": edge_coverage,
+        "all_selected_edges_received_independent_quota": bool(edge_coverage)
+        and all(row["received_independent_quota"] for row in edge_coverage),
+        "obb_insertion_axis_role_search_enabled": bool(large_step_case),
+        "obb_insertion_axis_role_budget": (
+            obb_budget if large_step_case else 0
+        ),
+        "obb_insertion_axis_role_generated_count": len(
+            obb_insertion_candidates
+        ),
+        "obb_two_edge_composition_count": sum(
+            row.get("candidate_origin") == "obb_two_edge_insertion_composition"
+            for row in obb_insertion_candidates
+        ),
+        "obb_edge_quota_coverage": obb_edge_coverage,
+        "all_obb_eligible_edges_received_independent_quota": (
+            bool(obb_edge_coverage)
+            and all(
+                row["received_independent_quota"]
+                for row in obb_edge_coverage
+            )
+        ),
+        "planar_footprint_search_enabled": bool(large_step_case),
+        "planar_footprint_budget": (
+            planar_footprint_budget if large_step_case else 0
+        ),
+        "carrier_open_side_composition_budget": (
+            carrier_open_side_budget if large_step_case else 0
+        ),
+        "carrier_open_side_composition_generated_count": len(
+            carrier_open_side_candidates
+        ),
+        "planar_footprint_generated_count": len(
+            planar_footprint_candidates
+        ),
+        "planar_footprint_star_composition_count": sum(
+            row.get("candidate_origin")
+            == "planar_footprint_star_composition"
+            for row in planar_footprint_candidates
+        ),
+        "planar_footprint_edge_coverage": footprint_edge_coverage,
+        "enclosure_bay_search_enabled": bool(large_step_case),
+        "enclosure_bay_budget": (
+            enclosure_bay_budget if large_step_case else 0
+        ),
+        "enclosure_bay_generated_count": len(enclosure_bay_candidates),
+        "enclosure_bay_review_only_count": sum(
+            bool(row.get("proposal_only")) for row in enclosure_bay_candidates
+        ),
+        "enclosure_bay_connection_ids": sorted({
+            str(row.get("enclosure_bay", {}).get("connection_id"))
+            for row in enclosure_bay_candidates
+            if row.get("enclosure_bay", {}).get("connection_id") is not None
+        }),
+        "edge_slot_search_enabled": bool(large_step_case),
+        "edge_slot_budget": edge_slot_budget if large_step_case else 0,
+        "edge_slot_generated_count": len(edge_slot_candidates),
+        "edge_slot_review_only_count": sum(
+            bool(row.get("proposal_only")) for row in edge_slot_candidates
+        ),
+        "edge_slot_connection_ids": sorted({
+            str(row.get("edge_slot_interface", {}).get("connection_id"))
+            for row in edge_slot_candidates
+            if row.get("edge_slot_interface", {}).get("connection_id")
+            is not None
+        }),
+        "axial_compound_interface_search_enabled": True,
+        "axial_compound_interface_budget": axial_compound_budget,
+        "axial_compound_interface_generated_count": len(
+            axial_compound_candidates
+        ),
+        "axial_compound_star_composition_count": sum(
+            row.get("candidate_origin")
+            == "axial_compound_star_composition"
+            for row in axial_compound_candidates
+        ),
+        "axial_group_symmetric_centering_count": sum(
+            row.get("candidate_origin")
+            == "axial_group_symmetric_centering"
+            for row in axial_compound_candidates
+        ),
+        "axial_compound_review_only_count": sum(
+            bool(row.get("proposal_only"))
+            for row in axial_compound_candidates
+        ),
+        "axial_compound_edge_coverage": compound_edge_coverage,
+        "all_axial_compound_eligible_edges_received_quota": (
+            bool(compound_edge_coverage)
+            and all(
+                row["received_independent_quota"]
+                for row in compound_edge_coverage
+            )
+        ),
+        "large_step_structured_candidate_budget": (
+            48 if large_step_case else None
+        ),
         "large_step_case": large_step_case,
         "total_surface_count": total_surface_count,
         "total_pose_candidates_after_augmentation": len(unique),
+        "joinable_group_axial_relaxation_count": (
+            composed_relaxation_count if not large_step_case else 0
+        ),
     }
     return augmented
+
+
+def _topology_graph(
+    graph: dict[str, Any],
+    topology: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Return a graph view for one retained topology frontier row."""
+
+    if not topology:
+        return graph
+    selected = [
+        # The public contract distinguishes skeleton/support roles only.  The
+        # active topology id/rank is audited separately on the pose candidate.
+        {**row, "selection_role": "connected_skeleton"}
+        for row in topology.get("rows") or []
+    ]
+    if not selected:
+        return graph
+    touched = {
+        str(part)
+        for row in selected
+        for part in row.get("parts") or []
+    }
+    output = dict(graph)
+    output["selected"] = selected
+    output["connected"] = bool(topology.get("connected"))
+    output["unresolved_parts"] = sorted(
+        set(str(part) for part in graph.get("part_ids") or []) - touched
+    )
+    output["active_topology_id"] = topology.get("topology_id")
+    output["active_topology_rank"] = topology.get("rank")
+    return output
+
+
+def _candidate_topology_graph(
+    candidate: dict[str, Any],
+    fallback: dict[str, Any],
+) -> dict[str, Any]:
+    rows = candidate.get("_topology_selected")
+    if not rows:
+        return fallback
+    output = dict(fallback)
+    output["selected"] = rows
+    output["connected"] = True
+    output["unresolved_parts"] = []
+    output["active_topology_id"] = candidate.get("topology_id")
+    output["active_topology_rank"] = candidate.get("topology_rank")
+    return output
+
+
+def _solve_topology_pose_frontier(
+    features: dict[str, Any],
+    scored: list[dict[str, Any]],
+    graph: dict[str, Any],
+    *,
+    beam_width: int,
+    joinable_pose_dir: str | Path | None,
+) -> dict[str, Any]:
+    """Run bounded pose search for each retained graph topology.
+
+    The pair-score rank orders work only.  Every retained topology reaches the
+    same closure and exact-validation stages, so a rank-1 accidental edge
+    cannot make a lower-ranked but physically coherent topology unreachable.
+    """
+
+    topologies = list(graph.get("topology_frontier") or [])
+    if not topologies:
+        topologies = [{
+            "topology_id": "topology:legacy_selected",
+            "rank": 1,
+            "connected": bool(graph.get("connected")),
+            "rows": list(graph.get("selected") or []),
+        }]
+    combined_candidates: list[dict[str, Any]] = []
+    audits = []
+    primary_search: dict[str, Any] | None = None
+    for topology in topologies:
+        local_graph = _topology_graph(graph, topology)
+        selected_pairs = {
+            canonical_pair(row["parts"]) for row in local_graph.get("selected") or []
+        }
+        solver_matches = [
+            row for row in scored if canonical_pair(row["parts"]) in selected_pairs
+        ]
+        local_search = solve_small_assembly(
+            features,
+            solver_matches,
+            beam_width=beam_width,
+            target_branching=min(3, max(1, len(features) - 1)),
+        )
+        local_search = _inject_joinable_group_pose_seed(
+            local_search, features, joinable_pose_dir
+        )
+        local_search = _augment_pose_candidates(
+            local_search, local_graph, features
+        )
+        if primary_search is None:
+            primary_search = local_search
+        before = len(combined_candidates)
+        for candidate in local_search.get("pose_candidates") or []:
+            row = dict(candidate)
+            row["topology_id"] = topology.get("topology_id")
+            row["topology_rank"] = topology.get("rank")
+            row["_topology_selected"] = list(local_graph.get("selected") or [])
+            combined_candidates.append(row)
+        audits.append({
+            "topology_id": topology.get("topology_id"),
+            "topology_rank": topology.get("rank"),
+            "parts": [row.get("parts") for row in local_graph.get("selected") or []],
+            "solver_match_count": len(solver_matches),
+            "pose_candidate_count": len(combined_candidates) - before,
+            "search_status": local_search.get("status"),
+        })
+    assert primary_search is not None
+    combined = dict(primary_search)
+    combined["pose_candidates"] = combined_candidates
+    combined["complete_pose_candidate_count"] = len(combined_candidates)
+    combined["topology_search_audit"] = {
+        "schema_version": "known_group_topology_pose_frontier.v1",
+        "topology_count": len(audits),
+        "rows": audits,
+        "selection_boundary": (
+            "Pair scores order a bounded topology frontier; closure and exact "
+            "validation select a pose, and no topology score can auto-accept."
+        ),
+    }
+    augmentation = dict(combined.get("candidate_augmentation") or {})
+    augmentation["topology_frontier_count"] = len(audits)
+    augmentation["total_pose_candidates_after_topology_union"] = len(combined_candidates)
+    combined["candidate_augmentation"] = augmentation
+    return combined
+
+
+def _exact_candidate_has_containment(
+    precheck: dict[str, Any],
+) -> bool:
+    return any(
+        row.get("pair_kind") == "selected_pair_containment"
+        for row in precheck.get("overlap_objective", {}).get(
+            "bbox_overlap_items", []
+        )
+    )
+
+
+def _exact_candidate_quality(
+    item: tuple[int, dict[str, Any], dict[str, Any]],
+) -> tuple[float, float, float, int]:
+    rank, candidate, precheck = item
+    closure = precheck.get("constraint_closure") or {}
+    return (
+        float(closure.get("closure_ratio", 0.0)),
+        float(precheck.get("group_pose_precheck_score", 0.0)),
+        float(candidate.get("total_score", 0.0)),
+        -int(rank),
+    )
+
+
+def _exact_candidate_topology_key(
+    candidate: dict[str, Any],
+) -> tuple[int, str]:
+    raw_rank = candidate.get("topology_rank")
+    try:
+        topology_rank = int(raw_rank)
+    except (TypeError, ValueError):
+        topology_rank = 1_000_000_000
+    return (
+        topology_rank,
+        str(candidate.get("topology_id") or "legacy"),
+    )
+
+
+def _obb_role_signature(candidate: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+    history = list(candidate.get("obb_insertion_history") or [])
+    if not history and candidate.get("obb_insertion"):
+        history = [candidate["obb_insertion"]]
+    rows = {
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            str(row.get("moving_axis_role") or "unknown_role"),
+        )
+        for row in history
+    }
+    footprint_history = list(
+        candidate.get("planar_footprint_history") or []
+    )
+    if not footprint_history and candidate.get("planar_footprint"):
+        footprint_history = [candidate["planar_footprint"]]
+    rows.update({
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            "footprint:"
+            + str(row.get("equivalence_class_id") or "unknown_anchor")
+            + ":phase=" + str(row.get("phase_degrees"))
+            + ":support=" + str(row.get("support_polarity"))
+            + ":normal=" + str(row.get("normal_sign")),
+            # Normal sign is a distinct proper orientation for an asymmetric
+            # thin component and must reach the bounded exact frontier.
+        )
+        for row in footprint_history
+    })
+    enclosure_history = list(candidate.get("enclosure_bay_history") or [])
+    if not enclosure_history and candidate.get("enclosure_bay"):
+        enclosure_history = [candidate["enclosure_bay"]]
+    rows.update({
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            "enclosure_bay:slot=" + str(row.get("slot_index"))
+            + ":polarity=" + str(row.get("depth_polarity"))
+            + ":opening=" + str(row.get("opening_polarity")),
+        )
+        for row in enclosure_history
+    })
+    edge_slot_history = list(candidate.get("edge_slot_history") or [])
+    if not edge_slot_history and candidate.get("edge_slot_interface"):
+        edge_slot_history = [candidate["edge_slot_interface"]]
+    rows.update({
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            "edge_slot:family=" + str(row.get("slot_family_id"))
+            + ":slot=" + str(row.get("slot_rank"))
+            + ":long_sign=" + str(row.get("long_axis_sign")),
+        )
+        for row in edge_slot_history
+    })
+    compound_history = list(candidate.get("axial_compound_history") or [])
+    if not compound_history and candidate.get("axial_compound_interface"):
+        compound_history = [candidate["axial_compound_interface"]]
+    rows.update({
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            "axial_compound:polarity=" + str(row.get("axis_polarity"))
+            + ":phase=" + str(row.get("phase_degrees"))
+            + ":symmetry=" + str(row.get("whole_part_symmetry_order")),
+        )
+        for row in compound_history
+    })
+    centering_history = list(
+        candidate.get("axial_group_centering_history") or []
+    )
+    if not centering_history and candidate.get("axial_group_centering"):
+        centering_history = [candidate["axial_group_centering"]]
+    rows.update({
+        (
+            str(row.get("connection_id") or "unknown_connection"),
+            "axial_group_centering:support="
+            + str(row.get("support_connection_id"))
+            + ":shaft=" + str(row.get("shaft_part")),
+        )
+        for row in centering_history
+    })
+    ordered = sorted(rows)
+    return tuple(ordered) if ordered else (("baseline", "baseline"),)
+
+
+def _plan_exact_rank_budget(
+    prechecked: list[tuple[int, dict[str, Any], dict[str, Any]]],
+    *,
+    budget: int,
+    large_step_case: bool,
+) -> dict[str, Any]:
+    """Plan a bounded exact frontier with topology and OBB-role coverage."""
+
+    limit = max(0, int(budget))
+    ranked = sorted(
+        prechecked,
+        key=lambda item: (
+            bool(item[2]["constraint_closure"].get("fully_closed")),
+            *_exact_candidate_quality(item),
+        ),
+        reverse=True,
+    )
+    if limit == 0:
+        return {
+            "selected_ranks": [],
+            "selection_reason_by_rank": {},
+            "summary": {
+                "budget": limit,
+                "eligible_candidate_count": 0,
+                "eligible_topologies": [],
+                "covered_topologies": [],
+                "uncovered_topologies": [],
+                "covered_obb_role_signatures": [],
+            },
+        }
+    if not large_step_case:
+        selected = [int(rank) for rank, _, _ in ranked[:limit]]
+        return {
+            "selected_ranks": selected,
+            "selection_reason_by_rank": {
+                rank: "bounded_quality_frontier" for rank in selected
+            },
+            "summary": {
+                "budget": limit,
+                "eligible_candidate_count": len(ranked),
+                "eligible_topologies": [],
+                "covered_topologies": [],
+                "uncovered_topologies": [],
+                "covered_obb_role_signatures": [],
+            },
+        }
+
+    # Non-closed poses are short-circuited before exact validation and must
+    # not consume one of the three large-STEP Boolean slots.
+    eligible = [
+        item for item in ranked
+        if item[2].get("constraint_closure", {}).get("fully_closed")
+    ]
+    buckets: dict[
+        tuple[int, str],
+        list[tuple[int, dict[str, Any], dict[str, Any]]],
+    ] = defaultdict(list)
+    for item in eligible:
+        buckets[_exact_candidate_topology_key(item[1])].append(item)
+    topology_keys = sorted(buckets)
+    selected: list[int] = []
+    selected_set: set[int] = set()
+    reason_by_rank: dict[int, str] = {}
+    covered_roles: dict[
+        tuple[int, str], set[tuple[tuple[str, str], ...]]
+    ] = defaultdict(set)
+
+    def add(
+        item: tuple[int, dict[str, Any], dict[str, Any]],
+        reason: str,
+    ) -> bool:
+        rank = int(item[0])
+        if rank in selected_set or len(selected) >= limit:
+            return False
+        selected.append(rank)
+        selected_set.add(rank)
+        reason_by_rank[rank] = reason
+        covered_roles[_exact_candidate_topology_key(item[1])].add(
+            _obb_role_signature(item[1])
+        )
+        return True
+
+    # Phase A: one fully-closed representative per retained topology, ordered
+    # by topology rank.  Containment is preferred within each topology.
+    for topology_key in topology_keys:
+        if len(selected) >= limit:
+            break
+        representative = max(
+            buckets[topology_key],
+            key=lambda item: (
+                _exact_candidate_has_containment(item[2]),
+                *_exact_candidate_quality(item),
+            ),
+        )
+        add(representative, "topology_coverage")
+
+    # Phase B: if topology coverage leaves slots, cover an unseen OBB role in
+    # round-robin order before spending exact work on another depth/sign
+    # variant of a role already checked for that topology.
+    progressed = True
+    while len(selected) < limit and progressed:
+        progressed = False
+        for topology_key in topology_keys:
+            if len(selected) >= limit:
+                break
+            unseen = [
+                item for item in buckets[topology_key]
+                if int(item[0]) not in selected_set
+                and _obb_role_signature(item[1])
+                not in covered_roles[topology_key]
+                and _obb_role_signature(item[1])
+                != (("baseline", "baseline"),)
+            ]
+            if unseen:
+                add(
+                    max(unseen, key=_exact_candidate_quality),
+                    "obb_role_diversity",
+                )
+                progressed = True
+
+    # Phase C: fill any remaining slots by the existing quality ordering.
+    for item in eligible:
+        if len(selected) >= limit:
+            break
+        add(item, "quality_fill")
+
+    eligible_topologies = [
+        {"topology_rank": key[0], "topology_id": key[1]}
+        for key in topology_keys
+    ]
+    covered_topology_keys = {
+        _exact_candidate_topology_key(item[1])
+        for item in eligible
+        if int(item[0]) in selected_set
+    }
+    return {
+        "selected_ranks": selected,
+        "selection_reason_by_rank": reason_by_rank,
+        "summary": {
+            "budget": limit,
+            "eligible_candidate_count": len(eligible),
+            "eligible_topologies": eligible_topologies,
+            "covered_topologies": [
+                row for row in eligible_topologies
+                if (row["topology_rank"], row["topology_id"])
+                in covered_topology_keys
+            ],
+            "uncovered_topologies": [
+                row for row in eligible_topologies
+                if (row["topology_rank"], row["topology_id"])
+                not in covered_topology_keys
+            ],
+            "covered_obb_role_signatures": [
+                [list(pair) for pair in signature]
+                for signatures in covered_roles.values()
+                for signature in sorted(signatures)
+                if signature != (("baseline", "baseline"),)
+            ],
+        },
+    }
+
+
+def _select_exact_rank_budget(
+    prechecked: list[tuple[int, dict[str, Any], dict[str, Any]]],
+    *,
+    budget: int,
+    large_step_case: bool,
+) -> set[int]:
+    """Compatibility wrapper returning the selected exact-check ranks."""
+
+    plan = _plan_exact_rank_budget(
+        prechecked,
+        budget=budget,
+        large_step_case=large_step_case,
+    )
+    return {int(rank) for rank in plan["selected_ranks"]}
 
 
 def _evaluate_pose_candidates(
@@ -1938,6 +6471,8 @@ def _evaluate_pose_candidates(
     search: dict[str, Any],
     graph: dict[str, Any],
     features: dict[str, Any],
+    *,
+    enable_exact_collision: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], bool, int]:
     candidates = list(search.get("pose_candidates") or [])
     if not candidates:
@@ -1954,30 +6489,83 @@ def _evaluate_pose_candidates(
     large_step_case = bool(
         (search.get("candidate_augmentation") or {}).get("large_step_case")
     )
-    exact_check_budget = max(1, len(candidates))  # always check all known-group candidates
+    # OCCT Boolean Common is the final validator, not an inner-loop objective.
+    # Large vendor STEP files use a much smaller, fully-closed frontier and a
+    # per-solid AABB broad phase; whole-compound Boolean checks previously
+    # stalled or exhausted memory on these models.
+    exact_check_budget = (
+        (
+            min(len(candidates), 3)
+            if large_step_case
+            else min(len(candidates), 180)
+        )
+        if enable_exact_collision
+        else 0
+    )
     prechecked = []
     for rank, candidate in enumerate(candidates, 1):
-        precheck = _pose_precheck(candidate, graph, features)
+        try:
+            precheck = _pose_precheck(
+                candidate, _candidate_topology_graph(candidate, graph), features
+            )
+        except Exception as exc:
+            audit_by_rank[rank] = {
+                "rank": rank,
+                "candidate_origin": candidate.get(
+                    "candidate_origin", "solver_beam"
+                ),
+                "proposal_only": candidate.get("proposal_only", False),
+                "review_required": True,
+                "can_auto_accept": False,
+                "precheck_status": "invalid_candidate",
+                "precheck_error": f"{type(exc).__name__}: {exc}",
+                "collision_status": "skipped_invalid_candidate",
+                "collision_count": 0,
+                "collisions": [],
+                "errors": [f"pose precheck failed: {type(exc).__name__}: {exc}"],
+                "constraint_closure": {
+                    "fully_closed": False,
+                    "closed_connection_count": 0,
+                    "connection_count": len(graph.get("selected") or []),
+                    "closure_ratio": 0.0,
+                    "connections": [],
+                    "review_required": True,
+                },
+                "contact_objective": {},
+                "overlap_objective": {},
+                "bbox_overlap_items": [],
+                "group_pose_precheck_score": None,
+                "group_pose_final_score": None,
+            }
+            continue
         prechecked.append((rank, candidate, precheck))
 
+    if not prechecked:
+        raise RuntimeError("all pose candidates failed numerical precheck")
+
+    exact_budget_plan = _plan_exact_rank_budget(
+        prechecked,
+        budget=exact_check_budget,
+        large_step_case=large_step_case,
+    )
     exact_rank_budget = {
-        rank
-        for rank, _, _ in sorted(
-            prechecked,
-            key=lambda item: (
-                bool(item[2]["constraint_closure"].get("fully_closed")),
-                float(item[2]["constraint_closure"].get("closure_ratio", 0.0)),
-                float(item[2].get("group_pose_precheck_score", 0.0)),
-                float(item[1].get("total_score", 0.0)),
-            ),
-            reverse=True,
-        )[:exact_check_budget]
+        int(rank) for rank in exact_budget_plan["selected_ranks"]
     }
+    search["exact_budget_audit"] = exact_budget_plan["summary"]
 
     for rank, candidate, precheck in prechecked:
-        components = _portable_components(candidate["components"])
+        components = _portable_components(
+            candidate["components"], case_dir, output_dir
+        )
         closure = precheck["constraint_closure"]
-        if large_step_case and not closure["fully_closed"]:
+        if not enable_exact_collision:
+            exact = {
+                "status": "skipped_deferred_visual_rerank",
+                "method": "deferred_visual_topk_exact_gate",
+                "collisions": [],
+                "errors": [],
+            }
+        elif large_step_case and not closure["fully_closed"]:
             exact = {
                 "status": "skipped_constraint_not_closed",
                 "method": "closure_short_circuit",
@@ -1998,16 +6586,91 @@ def _evaluate_pose_candidates(
                 "errors": [],
             }
         else:
-            exact = exact_shape_collisions(output_dir, components)
+            exact = (
+                exact_shape_collisions_solid_broadphase(
+                    output_dir,
+                    components,
+                    maximum_solid_pair_checks=512,
+                )
+                if large_step_case
+                else exact_shape_collisions(output_dir, components)
+            )
         final_score = _group_pose_final_score(candidate, exact, precheck)
         row = {
             "rank": rank,
+            "precheck_status": "success",
             "candidate_origin": candidate.get("candidate_origin", "solver_beam"),
+            "proposal_only": candidate.get("proposal_only", False),
+            "review_required": candidate.get("review_required", False),
+            "can_auto_accept": candidate.get("can_auto_accept"),
+            "topology_id": candidate.get("topology_id"),
+            "topology_rank": candidate.get("topology_rank"),
+            "exact_budget_selected": rank in exact_rank_budget,
+            "exact_budget_selection_reason": exact_budget_plan[
+                "selection_reason_by_rank"
+            ].get(rank),
+            "exact_budget_obb_role_signature": [
+                list(pair) for pair in _obb_role_signature(candidate)
+            ],
             "axial_slide": candidate.get("axial_slide"),
             "planar_slide": candidate.get("planar_slide"),
             "pocket_depth": candidate.get("pocket_depth"),
             "joinable_pose_search": candidate.get("joinable_pose_search"),
+            "joinable_pose_refinement_history": candidate.get(
+                "joinable_pose_refinement_history"
+            ),
+            "joinable_pose_refined_connection_ids": candidate.get(
+                "joinable_pose_refined_connection_ids"
+            ),
             "joinable_multi_axial_search": candidate.get("joinable_multi_axial_search"),
+            "obb_insertion": candidate.get("obb_insertion"),
+            "obb_insertion_history": candidate.get("obb_insertion_history"),
+            "obb_refined_connection_ids": candidate.get(
+                "obb_refined_connection_ids"
+            ),
+            "planar_footprint": candidate.get("planar_footprint"),
+            "planar_footprint_history": candidate.get(
+                "planar_footprint_history"
+            ),
+            "planar_footprint_refined_connection_ids": candidate.get(
+                "planar_footprint_refined_connection_ids"
+            ),
+            "axial_compound_interface": candidate.get(
+                "axial_compound_interface"
+            ),
+            "axial_compound_history": candidate.get(
+                "axial_compound_history"
+            ),
+            "axial_compound_refined_connection_ids": candidate.get(
+                "axial_compound_refined_connection_ids"
+            ),
+            "axial_group_centering": candidate.get(
+                "axial_group_centering"
+            ),
+            "axial_group_centering_history": candidate.get(
+                "axial_group_centering_history"
+            ),
+            "axial_group_centering_required_connection_ids": candidate.get(
+                "axial_group_centering_required_connection_ids"
+            ),
+            "enclosure_bay": candidate.get("enclosure_bay"),
+            "enclosure_bay_history": candidate.get(
+                "enclosure_bay_history"
+            ),
+            "enclosure_bay_refined_connection_ids": candidate.get(
+                "enclosure_bay_refined_connection_ids"
+            ),
+            "edge_slot_interface": candidate.get("edge_slot_interface"),
+            "edge_slot_history": candidate.get("edge_slot_history"),
+            "edge_slot_refined_connection_ids": candidate.get(
+                "edge_slot_refined_connection_ids"
+            ),
+            "carrier_open_side_consistency": candidate.get(
+                "carrier_open_side_consistency"
+            ),
+            "carrier_open_side_consistency_history": candidate.get(
+                "carrier_open_side_consistency_history"
+            ),
             "total_score": candidate.get("total_score"),
             "collision_status": exact["status"],
             "collision_count": len(exact["collisions"]),
@@ -2051,6 +6714,9 @@ def _evaluate_pose_candidates(
             evaluated,
             key=lambda item: (
                 _exact_status_rank(item[1]),
+                -_exact_collision_risk(item[1])[0],
+                -_exact_collision_risk(item[1])[1],
+                -_exact_collision_risk(item[1])[2],
                 item[2]["closure_ratio"],
                 float(item[4]),
             ),
@@ -2065,6 +6731,180 @@ def _evaluate_pose_candidates(
         bool(selected_closure["fully_closed"]),
         int(selected_rank),
     )
+
+
+def _export_pose_candidate_frontier(
+    case_dir: Path,
+    output_dir: Path,
+    search: dict[str, Any],
+    pose_audit: list[dict[str, Any]],
+    *,
+    maximum_candidates: int,
+) -> dict[str, Any]:
+    """Export a bounded, origin-diverse pose frontier for visual review.
+
+    The export is deliberately downstream of geometric candidate generation
+    and upstream of any semantic decision.  It always protects the identity
+    input, the geometry-selected result, and group-level centering candidates,
+    then allocates one representative to every remaining candidate origin
+    before filling by physical/closure quality.  No visual model receives the
+    geometry score, so semantic review cannot simply echo it.
+    """
+
+    limit = max(0, int(maximum_candidates))
+    candidates = list(search.get("pose_candidates") or [])
+    if limit <= 0 or not candidates:
+        return {
+            "schema_version": "pose_candidate_frontier.v1",
+            "candidate_count": 0,
+            "candidates": [],
+        }
+
+    audit_by_rank = {
+        int(row["rank"]): row
+        for row in pose_audit
+        if row.get("rank") is not None
+        and row.get("precheck_status") != "invalid_candidate"
+    }
+
+    def quality(rank: int) -> tuple[Any, ...]:
+        row = audit_by_rank.get(rank, {})
+        collision_status = str(row.get("collision_status", ""))
+        collision_count = int(row.get("collision_count", 0) or 0)
+        physical_rank = (
+            0 if collision_status == "success" and collision_count == 0
+            else 1 if collision_status.startswith("skipped_")
+            else 2 if collision_status == "success"
+            else 3
+        )
+        closure = row.get("constraint_closure") or {}
+        return (
+            physical_rank,
+            -int(closure.get("closed_connection_count", 0) or 0),
+            -float(closure.get("closure_ratio", 0.0) or 0.0),
+            -float(row.get("group_pose_final_score", -1e12) or -1e12),
+            rank,
+        )
+
+    protected_origins = {"axial_group_symmetric_centering"}
+    selected: list[int] = []
+    reasons: dict[int, list[str]] = {}
+
+    def add(rank: int, reason: str) -> None:
+        if rank < 1 or rank > len(candidates):
+            return
+        if rank not in selected:
+            selected.append(rank)
+        reasons.setdefault(rank, [])
+        if reason not in reasons[rank]:
+            reasons[rank].append(reason)
+
+    for rank, row in sorted(audit_by_rank.items()):
+        origin = str(row.get("candidate_origin", "solver_beam"))
+        if origin in protected_origins:
+            add(rank, f"protected_origin:{origin}")
+        if row.get("selected_by_group_pose_optimizer"):
+            add(rank, "geometry_selected")
+
+    by_origin: dict[str, list[int]] = defaultdict(list)
+    for rank, row in audit_by_rank.items():
+        by_origin[str(row.get("candidate_origin", "solver_beam"))].append(rank)
+    for origin in sorted(by_origin):
+        representative = min(by_origin[origin], key=quality)
+        add(representative, f"origin_representative:{origin}")
+        if origin == "identity_input_pose":
+            reasons.setdefault(representative, []).append(
+                "protected_origin:identity_input_pose"
+            )
+
+    for rank in sorted(audit_by_rank, key=quality):
+        if len(selected) >= limit:
+            break
+        add(rank, "quality_fill")
+
+    # Protected rows may exceed the requested soft limit; never delete them.
+    selected = sorted(selected, key=quality)
+    if len(selected) > limit:
+        protected = [
+            rank for rank in selected
+            if any(
+                reason.startswith("protected_origin:")
+                or reason == "geometry_selected"
+                for reason in reasons.get(rank, [])
+            )
+        ]
+        optional = [rank for rank in selected if rank not in protected]
+        selected = protected + optional[: max(0, limit - len(protected))]
+        selected = sorted(dict.fromkeys(selected), key=quality)
+
+    frontier_dir = output_dir / "pose_candidate_frontier"
+    manifest_dir = frontier_dir / "manifests"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for export_index, rank in enumerate(selected, start=1):
+        candidate = candidates[rank - 1]
+        audit = audit_by_rank.get(rank, {})
+        candidate_id = f"POSE_RANK_{rank:04d}"
+        manifest_path = manifest_dir / f"{export_index:02d}_{candidate_id}.json"
+        manifest = {
+            "schema_version": "2.0.0",
+            "assembly_name": candidate_id,
+            "global_units": "mm",
+            "review_required": True,
+            "can_auto_accept": False,
+            "components": _portable_components(
+                candidate["components"], case_dir, manifest_dir
+            ),
+        }
+        _write(manifest_path, manifest)
+        closure = audit.get("constraint_closure") or {}
+        rows.append({
+            "candidate_id": candidate_id,
+            "source_pose_rank": rank,
+            "candidate_origin": audit.get(
+                "candidate_origin", candidate.get("candidate_origin", "solver_beam")
+            ),
+            "protected": any(
+                reason.startswith("protected_origin:")
+                or reason == "geometry_selected"
+                for reason in reasons.get(rank, [])
+            ),
+            "selection_reasons": reasons.get(rank, []),
+            "manifest": str(manifest_path.resolve()),
+            "machine_evidence": {
+                "collision_status": audit.get("collision_status"),
+                "collision_count": audit.get("collision_count"),
+                "fully_closed": bool(closure.get("fully_closed", False)),
+                "closed_connection_count": int(
+                    closure.get("closed_connection_count", 0) or 0
+                ),
+                "connection_count": int(closure.get("connection_count", 0) or 0),
+                "closure_ratio": float(closure.get("closure_ratio", 0.0) or 0.0),
+                "proposal_only": bool(audit.get("proposal_only", False)),
+                "review_required": bool(audit.get("review_required", False)),
+                "multi_interface_families": [
+                    key for key in (
+                        "axial_group_centering",
+                        "axial_compound_interface",
+                        "enclosure_bay",
+                        "edge_slot_interface",
+                        "planar_footprint",
+                        "pocket_depth",
+                    )
+                    if audit.get(key)
+                ],
+            },
+        })
+    payload = {
+        "schema_version": "pose_candidate_frontier.v1",
+        "assembly_id": case_dir.name,
+        "candidate_count": len(rows),
+        "soft_limit": limit,
+        "visual_input_excludes_geometry_scores": True,
+        "candidates": rows,
+    }
+    _write(frontier_dir / "pose_candidate_frontier.json", payload)
+    return payload
 
 
 def _apply_axial_contact_to_clearance_pairs(
@@ -2173,7 +7013,7 @@ def _refine_with_searchsimplex(
     for part_name in features:
         stl_path = stl_dir / f"{Path(part_name).stem}.stl"
         if not stl_path.exists():
-            _export_part_stl(part_name, stl_path)
+            _export_part_stl(case_dir / part_name, stl_path)
         if stl_path.exists():
             stl_cache[part_name] = stl_path
 
@@ -2280,7 +7120,7 @@ def _export_part_stl(part_name: str, stl_path: Path) -> None:
             pass
         else:
             # part_name is just a filename — look in known locations
-            for search_dir in [Path("sw/1"), Path("sw/2"), Path("sw/3"), Path("sw/4_lightweight"), Path("sw/5_lightweight")]:
+            for search_dir in [Path(part_name).parent]:
                 candidate = search_dir / part_name
                 if candidate.exists():
                     step_path = candidate
@@ -2310,9 +7150,18 @@ def run_known_group_assembly(
     *,
     output_dir: str | Path | None = None,
     joinable_report: str | Path | None = None,
+    joinable_pose_dir: str | Path | None = None,
+    brep_graph_dir: str | Path | None = None,
     beam_width: int = 20,
+    write_assembly_step: bool = True,
+    export_pose_candidates: int = 0,
+    enable_exact_collision: bool = True,
 ) -> dict[str, Any]:
     case_dir = Path(case_dir).resolve()
+    _PLANAR_FOOTPRINT_RECALL_CACHE.clear()
+    _AXIAL_COMPOUND_RECALL_CACHE.clear()
+    _ENCLOSURE_BAY_RECALL_CACHE.clear()
+    _EDGE_SLOT_RECALL_CACHE.clear()
     output_dir = (
         Path(output_dir).resolve()
         if output_dir else case_dir / "known_group_output"
@@ -2328,6 +7177,9 @@ def run_known_group_assembly(
         raise ValueError("known-group entry point supports 1..5 STEP parts")
     parts = [path.name for path in step_files]
     features = {path.name: extract_features(str(path)) for path in step_files}
+    brep_graph_audit = _attach_brep_graph_sidecars(
+        features, step_files, brep_graph_dir
+    )
     raw_matches = match_features(features, {
         "preserve_cylindrical_face_hypotheses": True,
         "maximum_cylindrical_hypotheses_per_radius_bucket": 8,
@@ -2352,60 +7204,35 @@ def run_known_group_assembly(
     # to be the structural center (chassis, baseplate, main housing).
     part_weights = {path.name: float(path.stat().st_size) for path in step_files}
     graph = select_direct_connections(parts, pair_candidates, conservative=True, part_weights=part_weights)
-    selected_pairs = {
-        canonical_pair(row["parts"]) for row in graph["selected"]
-    }
-    solver_matches = [
-        row for row in scored if canonical_pair(row["parts"]) in selected_pairs
-    ]
-    search = solve_small_assembly(
+    search = _solve_topology_pose_frontier(
         features,
-        solver_matches,
+        scored,
+        graph,
         beam_width=beam_width,
-        target_branching=min(3, max(1, len(parts) - 1)),
+        joinable_pose_dir=joinable_pose_dir,
     )
-    search = _augment_pose_candidates(search, graph, features)
     selected_pose, exact, pose_audit, pose_fully_closed, selected_pose_rank = _evaluate_pose_candidates(
-        case_dir, output_dir, search, graph, features
+        case_dir,
+        output_dir,
+        search,
+        graph,
+        features,
+        enable_exact_collision=enable_exact_collision,
     )
-    components = _portable_components(selected_pose["components"])
+    pose_candidate_frontier = _export_pose_candidate_frontier(
+        case_dir,
+        output_dir,
+        search,
+        pose_audit,
+        maximum_candidates=export_pose_candidates,
+    )
+    selected_graph = _candidate_topology_graph(selected_pose, graph)
+    components = _portable_components(
+        selected_pose["components"], case_dir, output_dir
+    )
     placements = selected_pose["placements"]
     # ── Cylinder axial stop ──
-    from coordinate_solver import _cylinder_extent_along_axis, _part_bbox_interval_along_axis, _global_vector, _vec_norm
-    result = dict(placements)
-    for m in solver_matches:
-        if m.get("type") != "clearance": continue
-        if canonical_pair(m["parts"]) not in selected_pairs: continue
-        a, b = m["parts"]
-        pa = result.get(a,{}).get("translate",[0,0,0]); pb = result.get(b,{}).get("translate",[0,0,0])
-        ref = a if sum(v*v for v in pa) <= sum(v*v for v in pb) else b
-        tgt = b if ref == a else a
-        rf = features.get(ref); tf = features.get(tgt)
-        if not rf or not tf or not rf.get("cylinders"): continue
-        rc = rf["cylinders"][0]
-        ax = _global_vector(rc["axis"], result.get(ref,{})); au = _vec_norm(ax)
-        re = _cylinder_extent_along_axis(rf, rc)
-        if not re: continue
-        rmin, rmax = re
-        tp = result.get(tgt,{})
-        ti = _part_bbox_interval_along_axis(tf, tp, ax)
-        if not ti: continue
-        tmin, tmax = ti
-        cur = list(tp.get("translate",[0,0,0])); G = 1.0
-        sl = (rmin - tmax - G) if abs(tmax-rmin) < abs(tmin-rmax) else (rmax - tmin + G)
-        nt = dict(tp); nt["translate"] = [cur[i] + sl*au[i] for i in range(3)]
-        result[tgt] = nt
-    placements = result
     # ──────────────────────────
-    selected_pose["placements"] = placements
-    # Update component placements from the corrected placements dict
-    for comp in selected_pose.get("components", []):
-        label = comp.get("label", "")
-        for part_name, plac in placements.items():
-            if Path(part_name).stem == label or part_name == label:
-                comp["placement"] = plac
-                break
-    components = _portable_components(selected_pose["components"])
     # ─────────────────────────────
     manifest = {
         "schema_version": "2.0.0",
@@ -2414,15 +7241,26 @@ def run_known_group_assembly(
         "components": components,
     }
     _write(output_dir / "assembly_manifest.json", manifest)
-    build_assembly(
-        str(output_dir / "assembly_manifest.json"),
-        str(output_dir / "assembly.step"),
-    )
 
     used = _selected_evidence_fingerprints(selected_pose)
     constraints = []
     connections = []
-    for selected in graph["selected"]:
+    selected_pose_audit_row = next(
+        (
+            row for row in pose_audit
+            if row.get("rank") == selected_pose_rank
+        ),
+        {},
+    )
+    closure_by_connection = {
+        str(row.get("connection_id")): row
+        for row in (
+            selected_pose_audit_row.get("constraint_closure", {}).get(
+                "connections"
+            ) or []
+        )
+    }
+    for selected in selected_graph["selected"]:
         a, b = selected["parts"]
         constraint_ids = []
         selected_rows = []
@@ -2476,7 +7314,13 @@ def run_known_group_assembly(
                     ),
                 },
             })
-        satisfied_types = [row["type"] for row in selected_rows]
+        closure_row = closure_by_connection.get(
+            str(selected.get("connection_id")), {}
+        )
+        satisfied_types = list(dict.fromkeys(
+            [row["type"] for row in selected_rows]
+            + list(closure_row.get("satisfied_relation_types") or [])
+        ))
         method_types, method_reasons = _assembly_method_relation_types(
             selected, features
         )
@@ -2497,8 +7341,26 @@ def run_known_group_assembly(
             "score": selected["score"],
             "confidence": selected["confidence"],
             "selection_role": selected["selection_role"],
-            "constraint_closed_in_selected_pose": bool(selected_rows),
-            "review_required": not bool(selected_rows),
+            "constraint_closed_in_selected_pose": bool(
+                closure_row.get("closed", bool(selected_rows))
+            ),
+            "closure_evidence": closure_row.get("closure_evidence"),
+            "review_required": bool(
+                closure_row.get("review_required")
+                or not closure_row.get("closed", bool(selected_rows))
+            ),
+            "axial_compound_evidence": closure_row.get(
+                "axial_compound_evidence"
+            ) or [],
+            "axial_group_centering_evidence": closure_row.get(
+                "axial_group_centering_evidence"
+            ) or [],
+            "enclosure_bay_evidence": closure_row.get(
+                "enclosure_bay_evidence"
+            ) or [],
+            "edge_slot_evidence": closure_row.get(
+                "edge_slot_evidence"
+            ) or [],
             "providers": selected["providers"],
             "relative_transform_a_to_b": _relative_transform(a, b, placements),
             "joinable_interface_candidates": (
@@ -2506,13 +7368,29 @@ def run_known_group_assembly(
             ),
         })
 
+    localized_interference = _localized_interference_review(
+        exact,
+        next(
+            (
+                row.get("constraint_closure") or {}
+                for row in pose_audit
+                if row.get("rank") == selected_pose_rank
+            ),
+            {},
+        ),
+    )
+    exact["localized_interference_review"] = localized_interference
     if exact["status"] == "success":
         if exact["collisions"]:
-            pose_status = "failed"
+            pose_status = (
+                "uncertain"
+                if localized_interference["eligible_for_review"]
+                else "failed"
+            )
         else:
             pose_status = (
                 "valid"
-                if pose_fully_closed and graph["connected"]
+                if pose_fully_closed and selected_graph["connected"]
                 else "uncertain"
             )
     else:
@@ -2520,7 +7398,7 @@ def run_known_group_assembly(
     limitations = []
     if joinable_audit["status"] != "success":
         limitations.append("JoinABLe缓存未提供；本次仅使用解析几何接口候选。")
-    if not graph["connected"]:
+    if not selected_graph["connected"]:
         limitations.append("候选关系图未连接全部输入零件。")
     if pose_status != "valid":
         limitations.append("未找到经OCCT确认无实体穿透的完整位姿。")
@@ -2531,12 +7409,12 @@ def run_known_group_assembly(
         "input_assumption": "all_parts_belong_to_one_assembly",
         "parts": parts,
         "reference_part": search["reference_part"],
-        "assembly_connected": bool(graph["connected"]),
+        "assembly_connected": bool(selected_graph["connected"]),
         "pose_status": pose_status,
         "direct_connections": connections,
         "assembly_relations": constraints,
         "components": components,
-        "unresolved_parts": graph["unresolved_parts"],
+        "unresolved_parts": selected_graph["unresolved_parts"],
         "collision_validation": {
             **exact,
             "checked_pose_count": len(pose_audit),
@@ -2548,7 +7426,20 @@ def run_known_group_assembly(
             "candidate_pair_count": len(pair_candidates),
             "selected_connection_count": len(connections),
             "selection_method": graph["selection_method"],
+            "topology_frontier_count": graph.get("topology_frontier_count", 0),
+            "selected_topology_id": selected_pose.get("topology_id"),
+            "selected_topology_rank": selected_pose.get("topology_rank"),
             "joinable": joinable_audit,
+            "brep_graph_sidecars": brep_graph_audit,
+            "visual_pose_candidate_frontier": {
+                "enabled": bool(export_pose_candidates),
+                "candidate_count": pose_candidate_frontier["candidate_count"],
+                "path": str(
+                    output_dir
+                    / "pose_candidate_frontier"
+                    / "pose_candidate_frontier.json"
+                ),
+            },
         },
         "limitations": limitations,
     }
@@ -2559,6 +7450,10 @@ def run_known_group_assembly(
         "pair_candidates": [
             {key: value for key, value in row.items() if key != "matches"}
             for row in pair_candidates
+        ],
+        "topology_frontier": [
+            {key: value for key, value in row.items() if key != "rows"}
+            for row in graph.get("topology_frontier") or []
         ],
         "top_k_joint_proposals": top_k_joint_proposals,
         "scored_constraints": scored,
@@ -2577,12 +7472,18 @@ def run_known_group_assembly(
         "expanded_states": search["expanded_states"],
         "complete_pose_candidate_count": search["complete_pose_candidate_count"],
         "candidate_augmentation": search.get("candidate_augmentation", {}),
+        "topology_search_audit": search.get("topology_search_audit"),
+        "joinable_group_pose_composition": search.get(
+            "joinable_group_pose_composition"
+        ),
         "group_pose_optimizer": {
             "enabled": True,
             "exact_check_policy": (
-                "bounded_top_precheck_candidates; large STEP exact disabled by default"
+                "bounded_top_precheck_candidates; large STEP uses a three-pose "
+                "fully-closed frontier with per-solid AABB broad phase"
             ),
             "selected_pose_rank": selected_pose_rank,
+            "exact_budget_audit": search.get("exact_budget_audit"),
         },
         "pose_audit": pose_audit,
         "selected_exact_collision": exact,
@@ -2592,6 +7493,14 @@ def run_known_group_assembly(
         output_dir / "conservative_pose_output.json",
         _conservative_pose_output(validated, pose_audit),
     )
+    # Persist all audit artefacts before invoking the large native STEP writer.
+    # If an OCCT vendor model exhausts memory or crashes during export, the
+    # candidate/pose diagnostics remain available for review and reproduction.
+    if write_assembly_step:
+        build_assembly(
+            str(output_dir / "assembly_manifest.json"),
+            str(output_dir / "assembly.step"),
+        )
     return validated
 
 
@@ -2600,13 +7509,49 @@ def main() -> int:
     parser.add_argument("case_dir")
     parser.add_argument("--output-dir")
     parser.add_argument("--joinable-report")
+    parser.add_argument("--joinable-pose-dir")
+    parser.add_argument(
+        "--brep-graph-dir",
+        help=(
+            "optional directory of hash-verified enriched *.brep_graph.json "
+            "sidecars used only for local topological interface evidence"
+        ),
+    )
     parser.add_argument("--beam-width", type=int, default=20)
+    parser.add_argument(
+        "--skip-assembly-step",
+        action="store_true",
+        help="write all pose/audit JSON but skip the final native STEP export",
+    )
+    parser.add_argument(
+        "--export-pose-candidates",
+        type=int,
+        default=0,
+        metavar="N",
+        help=(
+            "export an origin-diverse, protected frontier of at most N pose "
+            "manifests for downstream visual-semantic review"
+        ),
+    )
+    parser.add_argument(
+        "--defer-exact-collision",
+        action="store_true",
+        help=(
+            "defer OCCT Boolean validation until a downstream visual-semantic "
+            "Top-K stage has reduced the pose frontier"
+        ),
+    )
     args = parser.parse_args()
     result = run_known_group_assembly(
         args.case_dir,
         output_dir=args.output_dir,
         joinable_report=args.joinable_report,
+        joinable_pose_dir=args.joinable_pose_dir,
+        brep_graph_dir=args.brep_graph_dir,
         beam_width=args.beam_width,
+        write_assembly_step=not args.skip_assembly_step,
+        export_pose_candidates=args.export_pose_candidates,
+        enable_exact_collision=not args.defer_exact_collision,
     )
     print(json.dumps({
         "assembly_id": result["assembly_id"],

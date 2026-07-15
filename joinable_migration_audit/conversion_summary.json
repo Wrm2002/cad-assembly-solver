@@ -1,0 +1,199 @@
+{
+  "schema_version": "1.0.0",
+  "data_root": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint",
+  "joint_set_file_count": 20,
+  "requested_sample_count": 20,
+  "attempted_count": 20,
+  "success_count": 20,
+  "failure_count": 0,
+  "converted": [
+    {
+      "sample_id": "joint_set_00000:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00000_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00000:joint:1",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00000_joint_1.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00001:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00001_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00001:joint:1",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00001_joint_1.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00001:joint:2",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00001_joint_2.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00001:joint:3",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00001_joint_3.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00002:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00002_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00003:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00003_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00004:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00004_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00005:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00005_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00006:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00006_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00007:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00007_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "holes",
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00008:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00008_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00009:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00009_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00009:joint:1",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00009_joint_1.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00010:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00010_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "contacts",
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00010:joint:1",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00010_joint_1.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00010:joint:2",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00010_joint_2.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "contacts",
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00010:joint:3",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00010_joint_3.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "source_explicit_assembly_id"
+      ]
+    },
+    {
+      "sample_id": "joint_set_00011:joint:0",
+      "output": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\converted_joint_samples\\joint_set_00011_joint_0.json",
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "holes",
+        "source_explicit_assembly_id"
+      ]
+    }
+  ],
+  "missing_field_counts": {
+    "contacts": 2,
+    "holes": 2,
+    "source_explicit_assembly_id": 20
+  },
+  "joint_type_distribution": {
+    "CylindricalJointType": 2,
+    "PlanarJointType": 2,
+    "RevoluteJointType": 11,
+    "RigidJointType": 4,
+    "SliderJointType": 1
+  },
+  "samples_with_interface_entity_ids": 20,
+  "samples_with_contact_face_labels": 18,
+  "samples_with_holes_labels": 18,
+  "samples_with_transform": 20,
+  "samples_with_axis_origin_direction": 20,
+  "acceptance_met": true,
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "contacts",
+    "holes",
+    "source_explicit_assembly_id"
+  ]
+}

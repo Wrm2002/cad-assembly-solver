@@ -1,0 +1,106 @@
+{
+  "schema_version": "case345_generalization_exam.v1",
+  "frozen_policy": {
+    "beam_width": 20,
+    "case_specific_threshold_tuning": false,
+    "raw_inputs_are_authoritative": true,
+    "lightweight_inputs_are_smoke_only": true
+  },
+  "raw_cases": {
+    "case3": {
+      "part_count": 2,
+      "expected_edge_count": 1,
+      "predicted_edge_count": 1,
+      "edge_true_positive_count": 1,
+      "edge_false_positive_count": 0,
+      "edge_false_negative_count": 0,
+      "pose_candidate_count": 55,
+      "selected_candidate_origin": "joinable_pose_parameter_search",
+      "constraint_closure": "1/1",
+      "collision_status": "skipped_large_step_exact_budget",
+      "precision_status": "not_checked",
+      "final_pose_status": "uncertain",
+      "final_tier": "review",
+      "engineering_pose_correct": false,
+      "engineering_review": "Fan was not recovered into the real fan-cage slot with the required orientation and stop position.",
+      "run_seconds": 53.7,
+      "render": "case3_raw_known_group/case3_raw_review.png"
+    },
+    "case4": {
+      "part_count": 3,
+      "expected_edge_count": 2,
+      "predicted_edge_count": 2,
+      "edge_true_positive_count": 1,
+      "edge_false_positive_count": 1,
+      "edge_false_negative_count": 1,
+      "false_edge": [
+        "5-rd_rc_a_2rx4_1_ddrv.stp",
+        "Hygon-7400-3D.stp"
+      ],
+      "missing_edge": [
+        "01-62DC24-MLB-PCBA.stp",
+        "Hygon-7400-3D.stp"
+      ],
+      "pose_candidate_count": 67,
+      "selected_candidate_origin": "solver_beam",
+      "constraint_closure": "0/2",
+      "collision_status": "skipped_constraint_not_closed",
+      "precision_status": "not_checked",
+      "final_pose_status": "uncertain",
+      "final_tier": "review",
+      "engineering_pose_correct": false,
+      "engineering_review": "DIMM and CPU were not both seated in their real PCB sockets with the required insertion directions and depths.",
+      "run_seconds": 165.7,
+      "render": "case4_raw_known_group/case4_raw_review.png"
+    },
+    "case5": {
+      "part_count": 3,
+      "expected_edge_count": 2,
+      "predicted_edge_count": 2,
+      "edge_true_positive_count": 2,
+      "edge_false_positive_count": 0,
+      "edge_false_negative_count": 0,
+      "pose_candidate_count": 65,
+      "selected_candidate_origin": "solver_beam",
+      "constraint_closure": "0/2",
+      "collision_status": "skipped_constraint_not_closed",
+      "precision_status": "not_checked",
+      "final_pose_status": "uncertain",
+      "final_tier": "review",
+      "engineering_pose_correct": false,
+      "engineering_review": "PSU was not inserted into the chassis bay and the chassis ear was not seated against the side wall.",
+      "run_seconds": 148.5,
+      "render": "case5_raw_known_group/case5_raw_review.png",
+      "exact_authority_limitation": "PSU contains open shells, so solid common-volume validation is incomplete."
+    }
+  },
+  "raw_aggregate": {
+    "edge_true_positive_count": 4,
+    "edge_false_positive_count": 1,
+    "edge_false_negative_count": 1,
+    "edge_precision": 0.8,
+    "edge_recall": 0.8,
+    "accepted_pose_count": 0,
+    "review_pose_count": 3,
+    "false_auto_accept_count": 0,
+    "engineering_pose_correct_count": 0,
+    "engineering_pose_exam_pass_rate": 0.0
+  },
+  "proxy_smoke": {
+    "case4": {
+      "edge_topology_correct": true,
+      "constraint_closure": "0/2",
+      "collision_status": "success",
+      "final_tier": "review",
+      "render": "case4_proxy_known_group/case4_proxy_review.png"
+    },
+    "case5": {
+      "edge_topology_correct": true,
+      "constraint_closure": "0/2",
+      "collision_status": "success",
+      "final_tier": "review",
+      "render": "case5_proxy_known_group/case5_proxy_review.png"
+    }
+  },
+  "conclusion": "User engineering review found all raw case3/4/5 rendered poses wrong (0/3). The conservative gate avoided unsafe auto-accept, but relation-edge hits and algebraic closure did not generalize to correct interface localization, orientation, insertion depth, or stop position."
+}

@@ -1,0 +1,34 @@
+{
+  "before": {
+    "status": "available",
+    "accepted_group_count": 40,
+    "accepted_true_positive_count": 1,
+    "auto_accept_precision": 0.025,
+    "false_positive_count": 39,
+    "review_group_count": 0,
+    "unresolved_parts_count": 6
+  },
+  "after": {
+    "schema_version": "1.0.0",
+    "auto_accept_precision": null,
+    "accepted_group_count": 0,
+    "accepted_true_positive_count": 0,
+    "false_positive_count": 0,
+    "review_group_count": 9162,
+    "review_rate": 0.9476623913942904,
+    "review_frontier_group_count": 288,
+    "deferred_review_group_count": 8874,
+    "operator_queue_rate": 0.029788994621431527,
+    "review_frontier_compression": 0.9702110053785685,
+    "rejected_group_count": 506,
+    "unresolved_parts_count": 110,
+    "workload_reduction": null,
+    "workload_reduction_status": "not_established_deferred_review_candidates_remain",
+    "rejected_reason_coverage": 1.0,
+    "candidate_count": 9668,
+    "semantic_reranking_enabled": false,
+    "precision_target": 0.9,
+    "precision_target_status": "not_estimable_no_auto_accepts"
+  },
+  "false_positive_reduction": 39
+}

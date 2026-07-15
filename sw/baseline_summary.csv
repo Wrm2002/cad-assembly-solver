@@ -1,0 +1,6 @@
+case_id,num_parts,mode,manifest_generated,assembly_generated,num_matches,runtime_sec,error_message,manifest_size_bytes,assembly_size_bytes,compute_returncode,build_returncode
+1,2,bfs,True,True,7,0.827,,838,87306,0,0
+2,4,bfs,True,True,13,0.660,,2157,156106,0,0
+3,2,bfs,True,False,0,12.315,native writer access violation 0xC0000005,695,,0,3221225477
+4,3,bfs,False,False,,,not rerun after BugCheck safety hold,,,,
+5,3,bfs,True,False,0,89.820,TKernel stack cookie failure; output not trusted,950,,0,3221226505

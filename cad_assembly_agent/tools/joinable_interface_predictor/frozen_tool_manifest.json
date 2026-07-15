@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0.0",
+  "tool_id": "joinable_pair_interface_predictor",
+  "tool_version": "1.0.0-frozen",
+  "freeze_status": "frozen",
+  "frozen_at_utc": "2026-07-05T02:35:32.165052+00:00",
+  "purpose": "Rank candidate B-Rep entity pairs for one known pair of parts.",
+  "explicit_non_goals": [
+    "mixed_pool_grouping",
+    "functional_semantic_validation",
+    "collision_free_pose_proof",
+    "automatic_group_acceptance"
+  ],
+  "entrypoint": "cad_assembly_agent\\tools\\joinable_interface_predictor\\pretrained_joinable_predictor.py",
+  "contract": "cad_assembly_agent\\tools\\joinable_interface_predictor\\JOINABLE_TOOL_CONTRACT.md",
+  "checkpoint": {
+    "path": "joinable_migration_audit\\vendor\\JoinABLe\\pretrained\\paper\\last_run_0.ckpt",
+    "exists": true,
+    "sha256": "c2d2eebd8c5a5cea19d8118b12a2e8a5dead84f57f85ba2e1068127cc7dc0bdf",
+    "bytes": 16111213,
+    "epoch": 100,
+    "global_step": 159000,
+    "strict_weight_load": true,
+    "modified": false
+  },
+  "source_files": [
+    {
+      "path": "cad_assembly_agent\\tools\\joinable_interface_predictor\\pretrained_joinable_predictor.py",
+      "sha256": "4d6c94b554d91cb91b85f5f64ae5e402462115fca47caf7148c3a65b520d7202",
+      "bytes": 14189
+    },
+    {
+      "path": "joinable_gpu_reproduction\\joinable_compat.py",
+      "sha256": "e9e8ef10cdd1382e063e2d6f22cefaf6f67dd11bbf07b334005b11ea06c5534c",
+      "bytes": 9896
+    },
+    {
+      "path": "cad_assembly_agent\\tools\\joinable_interface_predictor\\JOINABLE_TOOL_CONTRACT.md",
+      "sha256": "b89c11f28d20be9d806308fa1dc345f73e707c68e1ccba0d2a11403e0f6e7227",
+      "bytes": 1753
+    },
+    {
+      "path": "joinable_migration_audit\\vendor\\JoinABLe\\models\\__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "joinable_migration_audit\\vendor\\JoinABLe\\models\\joinable.py",
+      "sha256": "c1e1252d4c80451c2e1dc1d3f815c8a0a76d27640ffedb50ae5a95570f227318",
+      "bytes": 23152
+    }
+  ],
+  "reference_evaluation": {
+    "report_path": "joinable_gpu_reproduction\\official_inference_full_report.json",
+    "report_sha256": "7f7d01bf35e014b3dcaf46dd1688cc28230480ef0deedf6190157af8cc6971b0",
+    "dataset": "official JoinABLe filtered test split",
+    "sample_count": 1857,
+    "top_1_accuracy": 0.7932148626817448,
+    "top_5_recall": 0.875605815831987,
+    "top_10_recall": 0.9079159935379645,
+    "missing_positive_sample_count": 0,
+    "limitations": [
+      "This evaluates joint-entity ranking on known part pairs; it is not mixed-pool grouping.",
+      "A correct joint entity prediction does not by itself prove a collision-free assembly pose.",
+      "The modern runtime is a compatibility reproduction, not the original CUDA 10.2 environment."
+    ]
+  },
+  "pair_interface_smoke_evidence": {
+    "path": "cad_assembly_agent\\tools\\joinable_interface_predictor\\frozen_tool_smoke_prediction.json",
+    "available": true,
+    "sha256": "902dc8076b90483bdbe6157863d8bdbb0b9052d75db86113eee4cd0088532411",
+    "predictor": "official_pretrained_joinable_modern_runtime",
+    "candidate_count": 10,
+    "failure_count": 0,
+    "top_1_joinable_node_pair": [
+      2,
+      3
+    ],
+    "checkpoint_sha256": "c2d2eebd8c5a5cea19d8118b12a2e8a5dead84f57f85ba2e1068127cc7dc0bdf",
+    "can_change_accepted_groups": false
+  },
+  "input_contract": {
+    "part_a_graph": "audited OCCT B-Rep graph JSON",
+    "part_b_graph": "audited OCCT B-Rep graph JSON",
+    "maximum_combined_node_count": 950,
+    "required_extraction_status": "success"
+  },
+  "output_contract": {
+    "ranked_candidates": true,
+    "required_candidate_fields": [
+      "candidate_id",
+      "rank",
+      "part_a_entity",
+      "part_b_entity",
+      "score",
+      "softmax_probability",
+      "review_required"
+    ],
+    "failure_reasons_always_present": true,
+    "unavailable_fields_always_present": true
+  },
+  "gate_policy": {
+    "shadow_mode": true,
+    "can_change_accepted_groups": false,
+    "requires_pose_and_collision_validation": true,
+    "requires_multi_evidence_gate": true
+  },
+  "promotion_policy": {
+    "official_checkpoint_is_production_baseline": true,
+    "adapted_checkpoints_promoted": false,
+    "reason": "Expanded STEP-domain adaptation did not improve the independent test result consistently."
+  },
+  "failure_reasons": [],
+  "unavailable_fields": []
+}

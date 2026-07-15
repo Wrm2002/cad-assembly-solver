@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "task": "known_group_assembly_relation_recognition_phase_1_4",
+  "ground_truth_evaluation_performed": false,
+  "cases": [
+    {
+      "case_id": "1",
+      "status": "complete",
+      "part_count": 2,
+      "assembly_connected": true,
+      "pose_status": "valid",
+      "direct_connection_count": 1,
+      "relation_count": 2,
+      "relation_types": [
+        "coaxial",
+        "planar_mate"
+      ],
+      "checked_pose_count": 20,
+      "collision_count": 0,
+      "joinable_status": "not_provided",
+      "unresolved_parts": [],
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\1\\known_group_output\\assembly_relations.json"
+    },
+    {
+      "case_id": "2",
+      "status": "complete",
+      "part_count": 4,
+      "assembly_connected": true,
+      "pose_status": "failed",
+      "direct_connection_count": 4,
+      "relation_count": 3,
+      "relation_types": [
+        "clearance",
+        "coaxial",
+        "planar_mate"
+      ],
+      "checked_pose_count": 40,
+      "collision_count": 3,
+      "joinable_status": "not_provided",
+      "unresolved_parts": [],
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\2\\known_group_output\\assembly_relations.json"
+    },
+    {
+      "case_id": "3",
+      "status": "complete",
+      "part_count": 2,
+      "assembly_connected": true,
+      "pose_status": "valid",
+      "direct_connection_count": 1,
+      "relation_count": 1,
+      "relation_types": [
+        "planar_mate"
+      ],
+      "checked_pose_count": 2,
+      "collision_count": 0,
+      "joinable_status": "not_provided",
+      "unresolved_parts": [],
+      "path": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\3\\known_group_output\\assembly_relations.json"
+    }
+  ],
+  "summary": {
+    "requested_case_count": 3,
+    "completed_case_count": 3,
+    "connected_case_count": 3,
+    "pose_valid_case_count": 2,
+    "pose_failed_case_count": 1,
+    "pose_uncertain_case_count": 0
+  },
+  "evaluation_boundary": "This report audits execution and physical validation only. Direct-edge and label accuracy require the user's real labels in phase 5."
+}

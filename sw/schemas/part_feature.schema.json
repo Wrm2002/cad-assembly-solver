@@ -1,0 +1,242 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "minimum": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Minimum",
+          "type": "array"
+        },
+        "maximum": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Maximum",
+          "type": "array"
+        },
+        "size": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Size",
+          "type": "array"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum",
+        "size"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "DetectionStatus": {
+      "enum": [
+        "measured",
+        "heuristic",
+        "unavailable"
+      ],
+      "title": "DetectionStatus",
+      "type": "string"
+    },
+    "FeatureSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "detection_status": {
+          "$ref": "#/$defs/DetectionStatus",
+          "default": "measured"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "feature_id",
+        "kind",
+        "parameters"
+      ],
+      "title": "FeatureSummary",
+      "type": "object"
+    },
+    "Units": {
+      "additionalProperties": false,
+      "properties": {
+        "length": {
+          "const": "mm",
+          "default": "mm",
+          "title": "Length",
+          "type": "string"
+        },
+        "angle": {
+          "const": "degree",
+          "default": "degree",
+          "title": "Angle",
+          "type": "string"
+        }
+      },
+      "title": "Units",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "part_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "title": "Part Id",
+      "type": "string"
+    },
+    "source_file": {
+      "title": "Source File",
+      "type": "string"
+    },
+    "source_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "units": {
+      "$ref": "#/$defs/Units"
+    },
+    "coordinate_frame": {
+      "const": "local_part",
+      "default": "local_part",
+      "title": "Coordinate Frame",
+      "type": "string"
+    },
+    "bbox": {
+      "$ref": "#/$defs/BoundingBox"
+    },
+    "volume": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Volume"
+    },
+    "center_of_mass": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Center Of Mass"
+    },
+    "principal_axes": {
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Principal Axes",
+      "type": "array"
+    },
+    "principal_axes_method": {
+      "title": "Principal Axes Method",
+      "type": "string"
+    },
+    "planar_faces": {
+      "items": {
+        "$ref": "#/$defs/FeatureSummary"
+      },
+      "title": "Planar Faces",
+      "type": "array"
+    },
+    "cylindrical_faces": {
+      "items": {
+        "$ref": "#/$defs/FeatureSummary"
+      },
+      "title": "Cylindrical Faces",
+      "type": "array"
+    },
+    "holes": {
+      "items": {
+        "$ref": "#/$defs/FeatureSummary"
+      },
+      "title": "Holes",
+      "type": "array"
+    },
+    "hole_patterns": {
+      "items": {
+        "$ref": "#/$defs/FeatureSummary"
+      },
+      "title": "Hole Patterns",
+      "type": "array"
+    },
+    "geometric_class": {
+      "title": "Geometric Class",
+      "type": "string"
+    },
+    "functional_semantics": {
+      "additionalProperties": true,
+      "title": "Functional Semantics",
+      "type": "object"
+    },
+    "extraction": {
+      "additionalProperties": true,
+      "title": "Extraction",
+      "type": "object"
+    }
+  },
+  "required": [
+    "part_id",
+    "source_file",
+    "source_sha256",
+    "bbox",
+    "principal_axes_method",
+    "geometric_class",
+    "extraction"
+  ],
+  "title": "PartFeature",
+  "type": "object"
+}

@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "historical_snapshot": true,
+  "superseded_by": "../P0_CONSERVATIVE_FREEZE.json",
+  "superseded_reason": "P0 preserves candidates outside the bounded operator frontier as deferred review and separates evaluation truth from production artifacts.",
+  "frozen_at": "2026-07-02T12:21:31.825087+00:00",
+  "stage": "D3.5_D7_conservative_precision_first",
+  "policy": {
+    "objective": "minimize false automatic accepts",
+    "semantic_mode": "explanation_only",
+    "reinforcement_learning": false,
+    "multi_agent_expansion": false,
+    "max_auto_accept_group_size": 5
+  },
+  "metrics": {
+    "schema_version": "1.0.0",
+    "auto_accept_precision": null,
+    "accepted_group_count": 0,
+    "accepted_true_positive_count": 0,
+    "false_positive_count": 0,
+    "review_group_count": 288,
+    "review_rate": 0.029788994621431527,
+    "rejected_group_count": 9380,
+    "unresolved_parts_count": 110,
+    "workload_reduction": 0.9702110053785685,
+    "rejected_reason_coverage": 1.0,
+    "candidate_count": 9668,
+    "semantic_reranking_enabled": false,
+    "precision_target": 0.9,
+    "precision_target_status": "not_estimable_no_auto_accepts",
+    "baseline_comparison": {
+      "before": {
+        "accepted_group_count": 40,
+        "accepted_true_positive_count": 1,
+        "auto_accept_precision": 0.025,
+        "false_positive_count": 39,
+        "review_group_count": 0,
+        "unresolved_parts_count": 6
+      },
+      "after": {
+        "schema_version": "1.0.0",
+        "auto_accept_precision": null,
+        "accepted_group_count": 0,
+        "accepted_true_positive_count": 0,
+        "false_positive_count": 0,
+        "review_group_count": 288,
+        "review_rate": 0.029788994621431527,
+        "rejected_group_count": 9380,
+        "unresolved_parts_count": 110,
+        "workload_reduction": 0.9702110053785685,
+        "rejected_reason_coverage": 1.0,
+        "candidate_count": 9668,
+        "semantic_reranking_enabled": false,
+        "precision_target": 0.9,
+        "precision_target_status": "not_estimable_no_auto_accepts"
+      },
+      "false_positive_reduction": 39
+    }
+  },
+  "source_sha256": {
+    "candidate_recall_audit.py": "5e33ae93a7b5e85da5ae6638ad4957d49de08a6a61bc43a5de8456b932f4729c",
+    "global_optimizer/group_consistency.py": "14c2c26183071b05592e82d97fb37b9d51b345619716fadd47366ba1edef7d26",
+    "conservative_pipeline.py": "af48b0e93ac976c0b6288c01eb05ab5cbeb37a3dc8cfa8349a2b6d09bec7758e",
+    "semantic_review.py": "773f00b3b4971dd5f2308274387c62286932a4f1500d6de8ae5c1c2093a20cea",
+    "semantic_pool.py": "c6f0e41c0ceb9b7daec120fff1816c9694ca78b47c1ce7d626895c86e03316d4",
+    "semantic_explanation_batch.py": "54938f9bb46ce31b87d76efb9528668d77b7e5499ee7657f1e5a4ee1bfd4f906",
+    "build_human_semantic_review_pack.py": "1b1d7d373da9f95a74b4c9c410683f3f0444a20fa34d947c19546b2bd7448fe1",
+    "run_conservative_delivery.py": "8832f5939788e61a0f99e89d4ef4e00dc3d1fc7c407bfbbd39fa3e2b90d3d05d",
+    "geometry_pipeline.py": "3e946387015ccb888997e00ecd05a044d3871dab70f251eac522656bb2862fa4",
+    "agent_controller.py": "fb9071c719abd21c5114dcdfd83b6483a29290e2e249a8fe22c9197228fa4090",
+    "configs/pool_pipeline.json": "e7db72c6ffcde2d5e5dc6282b36c7269aea04a6b9e0bc084f08edc8db847a13c",
+    "configs/conservative_pipeline.json": "21e4f9fabe77527d6b8741c87ef94fa3937553949493d745b667367107741e25",
+    "configs/semantic_calibration.json": "f4e6c11b1ed3dbb5a55be983eafe7fae8f25b7fee95d6b85353cee94ad9de8a4"
+  },
+  "result_sha256": {
+    "data/results/candidate_recall_by_type.json": "611d6573206ad07b095e6444721501c10e5b2230fa5f1bee3bb0cad3e554baf2",
+    "data/results/candidate_recall_by_group_size.json": "9226852798f87f37955ab90d7fd311620e2e286e670f519d483b89bf9a7f4cdd",
+    "data/results/conservative_metrics.json": "105080e36f46cbb82d27ec664a6cff5680881a5433a9da6380dd05d0526b4f02",
+    "data/results/baseline_comparison.json": "f2693ea90fb3f857f05375c967c031fb59691de73e10d79e20cea185eabf1bf8",
+    "data/results/semantic_calibration_report.json": "acf38d28c8cfa829a5de15b97706f952247f0c68239b0803612dba2d29f9f98e"
+  },
+  "verification": {
+    "core_tests": "42/42 passed",
+    "generator_tests": "3/3 passed",
+    "stl_roundtrip": "OCCT write/read/shape-valid checks passed"
+  },
+  "known_limits": [
+    "No group is currently safe enough for automatic acceptance.",
+    "Auto-accept precision is not statistically estimable at zero accepts.",
+    "Only 6/30 truth groups reach the bounded human review frontier.",
+    "DeepSeek remains unable to affect grouping until human labels and holdout safety pass."
+  ]
+}

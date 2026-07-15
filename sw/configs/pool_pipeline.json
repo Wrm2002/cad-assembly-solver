@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "units": {
+    "length": "mm",
+    "angle": "degree"
+  },
+  "prescreen": {
+    "maximum_bbox_diagonal_ratio": 8.0,
+    "minimum_planar_area_ratio": 0.15,
+    "maximum_coarse_neighbors_per_part": 7,
+    "cylinder_radius_relative_tolerance": 0.08,
+    "cylinder_radius_absolute_tolerance_mm": 1.0,
+    "minimum_structural_cylinder_radius_relative": 0.01,
+    "preserve_if_any_geometric_evidence": true
+  },
+  "candidate_generation": {
+    "detailed_thresholds": {
+      "radius_tolerance_mm": 2.0,
+      "clearance_minimum_mm": 0.1,
+      "minimum_cylinder_radius_mm": 2.0,
+      "minimum_plane_area_mm2": 250.0,
+      "minimum_plane_area_ratio": 0.1,
+      "minimum_local_plane_area_mm2": 20.0,
+      "local_component_diagonal_mm": 40.0,
+      "maximum_local_planar_faces_per_part": 40
+    },
+    "minimum_score": 0.3,
+    "top_k_per_pair": 8,
+    "maximum_neighbors": 11
+  },
+  "joinable_candidate_provider": {
+    "enabled": true,
+    "cached_report_path": null,
+    "maximum_neighbors_per_part": 4,
+    "minimum_uniform_lift": 1.0,
+    "audit_top_candidates": 3,
+    "application_role": "detailed_analytic_candidate_recall",
+    "can_create_physical_evidence": false,
+    "can_auto_accept": false
+  },
+  "pool_builder": {
+    "minimum_parts": 5,
+    "maximum_parts": 12,
+    "minimum_true_groups": 2,
+    "maximum_true_groups": 3,
+    "seed": 20260702
+  },
+  "global_grouping": {
+    "minimum_group_size": 2,
+    "maximum_group_size": 6,
+    "minimum_group_score": 0.72,
+    "mst_weight": 0.7,
+    "internal_edge_weight": 0.2,
+    "density_weight": 0.1,
+    "maximum_proposals": 2000
+  },
+  "placement_validation": {
+    "beam_width": 100,
+    "target_branching": 3,
+        "maximum_exact_pose_candidates": 100,
+        "planar_hypotheses_per_pair": 4,
+        "preserve_planar_face_hypotheses": true,
+        "preserve_cylindrical_face_hypotheses": true,
+        "residual_threshold": 5.0,
+    "maximum_severe_penetrations": 0,
+    "minimum_intersection_volume_mm3": 0.001,
+    "minimum_intersection_part_ratio": 0.0001,
+    "maximum_grouping_retries": 24
+  },
+  "semantic_review": {
+    "provider": "deepseek",
+    "application_mode": "explanation_only",
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-v4-flash",
+    "prompt_version": "cad_group_review_v1",
+    "timeout_seconds": 45,
+    "maximum_attempts": 2,
+    "maximum_output_tokens": 600,
+    "ambiguity_score_margin": 0.04,
+    "maximum_reviews_per_pool": 6
+  },
+  "multimodal_review": {
+    "provider": "qwen-vl",
+    "application_mode": "explanation_only",
+    "allow_evaluation_only_semantics": false,
+    "vision_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "vision_model": "qwen-vl-plus",
+    "vision_timeout_seconds": 45,
+    "vision_max_attempts": 2,
+    "vision_max_tokens": 600,
+    "maximum_reviews_per_pool": 6,
+    "calibration_gate_required": true,
+    "input_policy_version": "production_fields_only_v1"
+  }
+}

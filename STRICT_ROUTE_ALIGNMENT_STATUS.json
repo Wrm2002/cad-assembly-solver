@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_role": "route_alignment_lock",
+  "route_lock_passed": true,
+  "invariants": {
+    "geometry_threshold_is_0_80": true,
+    "group_consistency_threshold_is_0_70": true,
+    "learned_evidence_disabled_for_decisions": true,
+    "semantic_is_explanation_only": true,
+    "evaluation_semantics_excluded_from_multimodal_input": true,
+    "multimodal_calibration_gate_closed": true,
+    "topology_hard_negative_auto_accepts_zero": true,
+    "topology_production_false_positives_zero": true,
+    "functional_true_group_pose_recall_is_complete": true,
+    "main_tests_passed": true,
+    "dataset_tests_passed": true
+  },
+  "tests": {
+    "main": {
+      "passed": true,
+      "count": 71,
+      "log": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\strict_route_full_test.log"
+    },
+    "dataset_generator": {
+      "passed": true,
+      "count": 3,
+      "log": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\strict_route_dataset_test.log"
+    }
+  },
+  "benchmarks": {
+    "deepseek_relaxed_audit": {
+      "accepted": 0,
+      "review": 5990,
+      "rejected": 10,
+      "false_positive_count": 0,
+      "review_frontier_recall": 0.2222222222222222,
+      "true_group_pose_recall": 0.6666666666666666
+    },
+    "aligned_pre_topology": {
+      "accepted": 0,
+      "review": 5616,
+      "rejected": 384,
+      "false_positive_count": 0,
+      "review_frontier_recall": 0.2222222222222222,
+      "true_group_pose_recall": 0.6666666666666666
+    },
+    "topology_route": {
+      "accepted": 0,
+      "review": 5995,
+      "rejected": 5,
+      "false_positive_count": 0,
+      "review_frontier_recall": 0.0,
+      "group_recall_at_2000": 1.0,
+      "true_group_pose_recall": 1.0,
+      "hard_negative_decisions": {
+        "rejected": 12,
+        "review": 15
+      },
+      "hard_negative_auto_accepts": 0
+    },
+    "topology_holdout_pose": {
+      "true_group_count": 4,
+      "pose_valid_count": 2,
+      "true_group_pose_recall": 0.5
+    }
+  },
+  "semantic_gate": {
+    "provider_mode": "off",
+    "verdict_counts": {
+      "abstain": 36
+    },
+    "calibration_gate_passed": false,
+    "semantic_reranking_enabled": false,
+    "gate_failure_reasons": [
+      "test_semantic_auc_below_0.70",
+      "accept_reject_abstain_not_all_observed",
+      "test_auto_accept_precision_not_established"
+    ]
+  },
+  "known_limits": [
+    "No group is auto-accepted, so auto_accept_precision is not estimable.",
+    "Topology benchmark review-frontier recall is 0 despite pose recall 1.0.",
+    "Topology-varied holdout pose recall remains 0.5.",
+    "JoinABLe has not been integrated into the functional pool path.",
+    "No auditable live multimodal calibration has been run.",
+    "External mechanical-engineer signoff is still pending."
+  ],
+  "sha256": {
+    "sw\\configs\\conservative_pipeline.json": "8ecc317c169e2f77f44f158d1f0f55e8847a96702b0182053eae9a9761de77d9",
+    "sw\\configs\\pool_pipeline.json": "3f4e5dcc41f9a7e41ff68dfb2fe8d9c3917acc360fb76d9fdfbc7ba2b8f28e7b",
+    "sw\\features.py": "94628d1c9cbb7681cb0034ef9a76ed88a6f88c70a9fe7fa98e266ce894ddae2d",
+    "sw\\part_index.py": "85bc7269f5a68817abce6e25aa77517cf3c5d77bbfd3e38b4bbf15f3abb0da7d",
+    "sw\\constraints.py": "af7982bb613f2efe5e38a976682db49c8654db4d74e6c0852fa88c976a558356",
+    "sw\\match_pruning.py": "58640f96a5d5fb26e4a146e1ed6634c38185c752ecb1667b22fc3521ce7e8d91",
+    "sw\\small_assembly_solver.py": "7d23baa7a02a6435a0f36ef315c576cd5ceb3a23999a151d8d476e820c4495d8",
+    "sw\\geometry_pipeline.py": "cb8bb5c16334872cbae30ef683a90358dfd1ffd147e856a0b8f657553794d923",
+    "sw\\global_optimizer\\group_consistency.py": "d329d7f148422b498e5b9af01b706770646e295a97dce81e58ed6dec2413a6c0",
+    "sw\\semantic_pool.py": "fadef790b319566278bbdea7e45a5ca02d3d245640800fe7914baacca3428fb0",
+    "sw\\multimodal_reviewer.py": "a5dcb33acb07a507af601e333196587868c7b511db008d9338b483f00595d12b",
+    "sw\\multimodal_calibration.py": "976382e929db521c619434d695315011a7b7c665e882ebf2fba430b2f095c07a",
+    "sw\\pose_topology_regression_audit.py": "623e69e695c7a11a3ea26c361dac02348a955dbdbc55528911448d23cabd834a",
+    "TECHNICAL_REVIEW_AND_MODIFICATIONS.md": "986bd0535a8045f3d772a864bbf1e37b6cdec3b045e5ba36d347b19a63ac2213"
+  }
+}

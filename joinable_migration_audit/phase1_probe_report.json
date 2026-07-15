@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "occt_available": true,
+  "requested_count": 2,
+  "attempted_count": 2,
+  "success_count": 2,
+  "failure_count": 0,
+  "results": [
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\25370_adbde9bf_0025_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_probe\\25370_adbde9bf_0025_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 4,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\25370_adbde9bf_0025_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_probe\\25370_adbde9bf_0025_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 4,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    }
+  ],
+  "entity_id_audit": {
+    "traceable_ids_present": true,
+    "stable_for_unchanged_file_same_environment": true,
+    "stable_across_step_reexport_or_topology_healing": false,
+    "reverse_lookup_to_occt_shape": "Yes inside extraction worker through IndexedMap.FindKey; serialized ids require deterministic re-import."
+  },
+  "joinable_required_fields_not_extracted": [
+    "face UV point/normal/trimming-mask grids",
+    "edge point/tangent grids",
+    "edge convexity and dihedral angle",
+    "designer-selected joint entity labels",
+    "joint equivalence labels",
+    "contact and hole labels",
+    "assembly transform and hierarchy"
+  ],
+  "acceptance_met": true,
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "assembly transforms and hierarchy",
+    "contact labels",
+    "designer-selected joint labels",
+    "dihedral angle",
+    "edge convexity",
+    "edge point/tangent grids",
+    "face UV point/normal/trimming-mask grids",
+    "hole labels"
+  ]
+}

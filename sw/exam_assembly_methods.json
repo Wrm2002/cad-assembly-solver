@@ -1,0 +1,630 @@
+{
+  "schema_version": "short_term_exam_methods.v1",
+  "task": "case12345_direct_assembly_method_export",
+  "scope": "Correct direct assembly edges and relation labels. Pose/collision diagnostics are reported but do not block this short-term target.",
+  "human_labels_used_for_inference": false,
+  "case_specific_label_overrides_used": false,
+  "cases": [
+    {
+      "case_id": "case_1",
+      "source_case_dir": "sw\\1",
+      "description_zh": "两个法兰同轴贴合",
+      "input_assumption": "all_parts_belong_to_one_assembly",
+      "parts": [
+        "flange_part_a.step",
+        "flange_part_b.step"
+      ],
+      "direct_assembly_edges": [
+        {
+          "connection_id": "C_c7a235df13cb",
+          "parts": [
+            "flange_part_a.step",
+            "flange_part_b.step"
+          ],
+          "primary_relation_type": "coaxial",
+          "relation_types": [
+            "coaxial",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "同轴",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "flange_part_a.step 与 flange_part_b.step 通过 同轴 + 平面贴合 形成直接装配关系。",
+          "score": 1.0,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              -1.0,
+              1.2246467991473532e-16,
+              0.0,
+              0.0
+            ],
+            [
+              -1.2246467991473532e-16,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "coaxial",
+          "diagnostic_original_supporting_relation_types": [
+            "coaxial",
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['coaxial', 'planar_align', 'planar_mate']"
+          ]
+        }
+      ],
+      "unresolved_parts": [],
+      "diagnostics": {
+        "assembly_connected": true,
+        "pose_status": "valid",
+        "pose_is_delivery_blocker": false,
+        "collision_status": "success",
+        "collision_count": 0,
+        "checked_pose_count": 220,
+        "selected_pose_rank": 2,
+        "search_status": "success",
+        "complete_pose_candidate_count": 220
+      }
+    },
+    {
+      "case_id": "case_2",
+      "source_case_dir": "sw\\2",
+      "description_zh": "轴、两个法兰和键的装配",
+      "input_assumption": "all_parts_belong_to_one_assembly",
+      "parts": [
+        "flange_a_pipe_X_fan15deg.step",
+        "flange_b_pipe_Y_fan20deg.step",
+        "key.step",
+        "shaft_with_keyway.step"
+      ],
+      "direct_assembly_edges": [
+        {
+          "connection_id": "C_fa0aad6d4fbb",
+          "parts": [
+            "flange_a_pipe_X_fan15deg.step",
+            "shaft_with_keyway.step"
+          ],
+          "primary_relation_type": "clearance",
+          "relation_types": [
+            "clearance"
+          ],
+          "relation_types_zh": [
+            "轴孔间隙配合/插入"
+          ],
+          "assembly_method_zh": "flange_a_pipe_X_fan15deg.step 与 shaft_with_keyway.step 通过 轴孔间隙配合/插入 形成直接装配关系。",
+          "score": 0.886561,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              0.4999999999998437,
+              0.7071067811867735,
+              -0.4999999999998366,
+              36.055642658082576
+            ],
+            [
+              -0.7071067811867735,
+              0.6666666666664156,
+              0.23570226039554143,
+              -50.99037884717592
+            ],
+            [
+              0.4999999999998366,
+              0.23570226039554143,
+              0.833333333333421,
+              36.055642658082576
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "clearance",
+          "diagnostic_original_supporting_relation_types": [
+            "clearance"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['clearance']",
+            "clearance evidence indicates shaft/bore or insert fit"
+          ]
+        },
+        {
+          "connection_id": "C_88ec7209c1ec",
+          "parts": [
+            "flange_b_pipe_Y_fan20deg.step",
+            "shaft_with_keyway.step"
+          ],
+          "primary_relation_type": "clearance",
+          "relation_types": [
+            "clearance"
+          ],
+          "relation_types_zh": [
+            "轴孔间隙配合/插入"
+          ],
+          "assembly_method_zh": "flange_b_pipe_Y_fan20deg.step 与 shaft_with_keyway.step 通过 轴孔间隙配合/插入 形成直接装配关系。",
+          "score": 0.927982,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              -0.1464466094066168,
+              -0.4999999999998366,
+              0.8535533905933903,
+              -60.2778997213163
+            ],
+            [
+              -0.638071187457399,
+              0.7071067811867806,
+              0.3047378541244541,
+              85.24582329730046
+            ],
+            [
+              -0.755922317655731,
+              -0.4999999999998437,
+              -0.4225889843218269,
+              -60.2778997213163
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": false,
+          "diagnostic_original_primary_relation_type": "clearance",
+          "diagnostic_original_supporting_relation_types": [],
+          "method_inference_reason": [
+            "selected_pair_evidence=['clearance']",
+            "clearance evidence indicates shaft/bore or insert fit"
+          ]
+        },
+        {
+          "connection_id": "C_2f5d3ed3a2ed",
+          "parts": [
+            "key.step",
+            "shaft_with_keyway.step"
+          ],
+          "primary_relation_type": "pocket_mate",
+          "relation_types": [
+            "pocket_mate",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "插槽/凹腔配合",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "key.step 与 shaft_with_keyway.step 通过 插槽/凹腔配合 + 平面贴合 形成直接装配关系。",
+          "score": 0.794127,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              2.220446049250313e-16,
+              -8.659560562354934e-17,
+              -1.0000000000000002,
+              0.0
+            ],
+            [
+              8.659560562354934e-17,
+              -1.0,
+              8.659560562354934e-17,
+              0.0
+            ],
+            [
+              -1.0000000000000002,
+              -8.659560562354934e-17,
+              2.220446049250313e-16,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "pocket_mate",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['planar_align', 'planar_mate']",
+            "planar_insert_geometry_gate={'supported': True, 'size_ratio': 0.5473742350488755, 'best_area_ratio': 0.4489688529352582, 'best_plane_distance': 0.0, 'reason': 'weak pocket accepted: small-to-large localized planar insert geometry'}"
+          ]
+        }
+      ],
+      "unresolved_parts": [],
+      "diagnostics": {
+        "assembly_connected": true,
+        "pose_status": "uncertain",
+        "pose_is_delivery_blocker": false,
+        "collision_status": "success",
+        "collision_count": 0,
+        "checked_pose_count": 532,
+        "selected_pose_rank": 145,
+        "search_status": "success",
+        "complete_pose_candidate_count": 532
+      }
+    },
+    {
+      "case_id": "case_3",
+      "source_case_dir": "sw\\3",
+      "description_zh": "风扇模块插入风扇笼",
+      "input_assumption": "all_parts_belong_to_one_assembly",
+      "parts": [
+        "01_FAN-CAGE-MODULE-R620-NH.stp",
+        "01_FAN-MODULE-SUNON-6056(1).stp"
+      ],
+      "direct_assembly_edges": [
+        {
+          "connection_id": "C_bec1c4cb543b",
+          "parts": [
+            "01_FAN-CAGE-MODULE-R620-NH.stp",
+            "01_FAN-MODULE-SUNON-6056(1).stp"
+          ],
+          "primary_relation_type": "pocket_mate",
+          "relation_types": [
+            "pocket_mate",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "插槽/凹腔配合",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "01_FAN-CAGE-MODULE-R620-NH.stp 与 01_FAN-MODULE-SUNON-6056(1).stp 通过 插槽/凹腔配合 + 平面贴合 形成直接装配关系。",
+          "score": 0.917877,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -4.5275125380500185
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              202.04947037889895
+            ],
+            [
+              0.0,
+              -1.0,
+              0.0,
+              -194.3662171081
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "pocket_mate",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_mate",
+            "pocket_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['planar_align', 'planar_mate', 'pocket_mate']",
+            "pocket_geometry_gate={'supported': True, 'size_similarity': 0.4759488261670908, 'direction_compatibility': 1.0, 'wall_normal_compatibility': 1.0, 'orientation_support': 1.0, 'insertion_depth_proxy': 4.502772024800002, 'depth_ratio': 0.1337413315319848, 'reason': 'pocket accepted: fit/orientation/depth/planar gate'}"
+          ]
+        }
+      ],
+      "unresolved_parts": [],
+      "diagnostics": {
+        "assembly_connected": true,
+        "pose_status": "uncertain",
+        "pose_is_delivery_blocker": false,
+        "collision_status": "skipped_large_step_exact_budget",
+        "collision_count": 0,
+        "checked_pose_count": 55,
+        "selected_pose_rank": 46,
+        "search_status": "success",
+        "complete_pose_candidate_count": 55
+      }
+    },
+    {
+      "case_id": "case_4",
+      "source_case_dir": "sw\\4_lightweight",
+      "description_zh": "主板、内存条和 CPU 的装配",
+      "input_assumption": "all_parts_belong_to_one_assembly",
+      "parts": [
+        "01-62DC24-MLB-PCBA.stp",
+        "5-rd_rc_a_2rx4_1_ddrv.stp",
+        "Hygon-7400-3D.stp"
+      ],
+      "direct_assembly_edges": [
+        {
+          "connection_id": "C_512bb09a9c78",
+          "parts": [
+            "01-62DC24-MLB-PCBA.stp",
+            "5-rd_rc_a_2rx4_1_ddrv.stp"
+          ],
+          "primary_relation_type": "pocket_mate",
+          "relation_types": [
+            "pocket_mate",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "插槽/凹腔配合",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "01-62DC24-MLB-PCBA.stp 与 5-rd_rc_a_2rx4_1_ddrv.stp 通过 插槽/凹腔配合 + 平面贴合 形成直接装配关系。",
+          "score": 0.852856,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              7.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -2.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.04999999999999982
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "pocket_mate",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['planar_align', 'planar_mate', 'pocket_mate']",
+            "pocket_geometry_gate={'supported': True, 'size_similarity': 0.43934240362811794, 'direction_compatibility': 0.0, 'wall_normal_compatibility': 1.0, 'orientation_support': 1.0, 'insertion_depth_proxy': 2.0, 'depth_ratio': 0.11904761904761907, 'reason': 'pocket accepted: fit/orientation/depth/planar gate'}"
+          ]
+        },
+        {
+          "connection_id": "C_17d9adc12a80",
+          "parts": [
+            "01-62DC24-MLB-PCBA.stp",
+            "Hygon-7400-3D.stp"
+          ],
+          "primary_relation_type": "pocket_mate",
+          "relation_types": [
+            "pocket_mate",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "插槽/凹腔配合",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "01-62DC24-MLB-PCBA.stp 与 Hygon-7400-3D.stp 通过 插槽/凹腔配合 + 平面贴合 形成直接装配关系。",
+          "score": 0.919878,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              -1.0,
+              0.0,
+              1.249000902703301e-16,
+              -6.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -4.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              -0.04999999999999982
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "pocket_mate",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['planar_align', 'planar_mate', 'pocket_mate']",
+            "pocket_geometry_gate={'supported': True, 'size_similarity': 0.6887755102040817, 'direction_compatibility': 1.0, 'wall_normal_compatibility': 0.0, 'orientation_support': 1.0, 'insertion_depth_proxy': 2.0, 'depth_ratio': 0.4081632653061224, 'reason': 'pocket accepted: fit/orientation/depth/planar gate'}"
+          ]
+        }
+      ],
+      "unresolved_parts": [],
+      "diagnostics": {
+        "assembly_connected": true,
+        "pose_status": "uncertain",
+        "pose_is_delivery_blocker": false,
+        "collision_status": "success",
+        "collision_count": 0,
+        "checked_pose_count": 334,
+        "selected_pose_rank": 91,
+        "search_status": "success",
+        "complete_pose_candidate_count": 334
+      }
+    },
+    {
+      "case_id": "case_5",
+      "source_case_dir": "sw\\5_lightweight",
+      "description_zh": "机箱、挂耳和电源模块的装配",
+      "input_assumption": "all_parts_belong_to_one_assembly",
+      "parts": [
+        "01-ASSY-CHASSIS-EAR-L-R620.stp",
+        "01-ASSY-CHASSIS-MODULE-R6250H0.stp",
+        "5-CRPS1300NC.stp"
+      ],
+      "direct_assembly_edges": [
+        {
+          "connection_id": "C_d780915f4e29",
+          "parts": [
+            "01-ASSY-CHASSIS-EAR-L-R620.stp",
+            "01-ASSY-CHASSIS-MODULE-R6250H0.stp"
+          ],
+          "primary_relation_type": "coaxial",
+          "relation_types": [
+            "coaxial",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "同轴",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "01-ASSY-CHASSIS-EAR-L-R620.stp 与 01-ASSY-CHASSIS-MODULE-R6250H0.stp 通过 同轴 + 平面贴合 形成直接装配关系。",
+          "score": 0.964647,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              8.2
+            ],
+            [
+              0.0,
+              -1.0,
+              0.0,
+              -32.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              -8.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "coaxial",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_align",
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['coaxial', 'planar_align', 'planar_mate', 'pocket_mate']",
+            "pocket evidence suppressed because coaxial fastening evidence is stronger"
+          ]
+        },
+        {
+          "connection_id": "C_86c5ef5c2bbd",
+          "parts": [
+            "01-ASSY-CHASSIS-MODULE-R6250H0.stp",
+            "5-CRPS1300NC.stp"
+          ],
+          "primary_relation_type": "pocket_mate",
+          "relation_types": [
+            "pocket_mate",
+            "planar_mate"
+          ],
+          "relation_types_zh": [
+            "插槽/凹腔配合",
+            "平面贴合"
+          ],
+          "assembly_method_zh": "01-ASSY-CHASSIS-MODULE-R6250H0.stp 与 5-CRPS1300NC.stp 通过 插槽/凹腔配合 + 平面贴合 形成直接装配关系。",
+          "score": 0.922593,
+          "confidence": "high",
+          "selection_role": "connected_skeleton",
+          "relative_transform_a_to_b": [
+            [
+              -1.0,
+              0.0,
+              0.0,
+              -66.0
+            ],
+            [
+              0.0,
+              -1.0,
+              0.0,
+              -36.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.04999999999999982
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "diagnostic_pose_closed": true,
+          "diagnostic_original_primary_relation_type": "pocket_mate",
+          "diagnostic_original_supporting_relation_types": [
+            "planar_align",
+            "planar_mate"
+          ],
+          "method_inference_reason": [
+            "selected_pair_evidence=['planar_align', 'planar_mate', 'pocket_mate']",
+            "pocket_geometry_gate={'supported': True, 'size_similarity': 0.6851851851851851, 'direction_compatibility': 1.0, 'wall_normal_compatibility': 1.0, 'orientation_support': 1.0, 'insertion_depth_proxy': 8.0, 'depth_ratio': 0.4444444444444444, 'reason': 'pocket accepted: fit/orientation/depth/planar gate'}"
+          ]
+        }
+      ],
+      "unresolved_parts": [],
+      "diagnostics": {
+        "assembly_connected": true,
+        "pose_status": "uncertain",
+        "pose_is_delivery_blocker": false,
+        "collision_status": "success",
+        "collision_count": 0,
+        "checked_pose_count": 334,
+        "selected_pose_rank": 5,
+        "search_status": "success",
+        "complete_pose_candidate_count": 334
+      }
+    }
+  ],
+  "summary": {
+    "case_count": 5,
+    "direct_edge_count": 9,
+    "pose_valid_count": 1
+  }
+}

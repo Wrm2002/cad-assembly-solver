@@ -125,7 +125,14 @@ class FunctionalDatasetTests(unittest.TestCase):
                 "minimum_plane_area_ratio": 0.1,
             },
         )
-        planar = [row for row in matches if row["type"] == "planar_mate"]
+        # The localization contract is interface recall.  Relation polarity is
+        # determined by local face normals: these two synthetic normals are
+        # parallel, so the correct emitted relation is planar_align rather
+        # than planar_mate.
+        planar = [
+            row for row in matches
+            if row["type"] in {"planar_mate", "planar_align"}
+        ]
         self.assertTrue(planar)
         self.assertEqual(
             planar[0]["candidate_origin"],

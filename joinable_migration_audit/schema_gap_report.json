@@ -1,0 +1,157 @@
+{
+  "schema_version": "1.0.0",
+  "status": "success",
+  "fusion_joint_label_maps_to_face_or_edge": true,
+  "current_step_has_faces_and_edges": true,
+  "current_step_has_conditionally_stable_entity_ids": true,
+  "current_step_has_edge_curve_type": true,
+  "current_step_has_face_surface_type": true,
+  "current_step_has_face_edge_adjacency": true,
+  "current_step_has_contact_label": false,
+  "current_step_has_joint_label": false,
+  "current_step_has_mate_type_label": false,
+  "current_step_has_assembly_transform": false,
+  "current_step_has_assembly_hierarchy": false,
+  "field_gap_table": [
+    {
+      "field": "face nodes",
+      "fusion_joinable": true,
+      "current_step_occt": true,
+      "missing_impact": "none for coarse topology",
+      "repair": "retain OCCT IndexedMap face id"
+    },
+    {
+      "field": "edge nodes",
+      "fusion_joinable": true,
+      "current_step_occt": true,
+      "missing_impact": "none for coarse topology",
+      "repair": "retain OCCT IndexedMap edge id"
+    },
+    {
+      "field": "stable persistent face/edge id",
+      "fusion_joinable": "source index stable inside released record",
+      "current_step_occt": "conditional: same file/importer only",
+      "missing_impact": "predictions cannot safely survive STEP rewrite/healing",
+      "repair": "hash input, store indexed id and geometry signature; revalidate after every import"
+    },
+    {
+      "field": "surface/curve type",
+      "fusion_joinable": true,
+      "current_step_occt": true,
+      "missing_impact": "minor enum/domain mapping required",
+      "repair": "map OCCT GeomAbs types to JoinABLe vocabulary"
+    },
+    {
+      "field": "face-edge adjacency",
+      "fusion_joinable": true,
+      "current_step_occt": true,
+      "missing_impact": "none",
+      "repair": "preserve heterogeneous incidence links"
+    },
+    {
+      "field": "face 10x10 point/normal/trim grid",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "pretrained JoinABLe feature contract cannot be reproduced",
+      "repair": "sample OCCT parametric faces with trimming mask"
+    },
+    {
+      "field": "edge point/tangent grid",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "pretrained edge encoder input missing",
+      "repair": "sample OCCT curves at normalized parameters"
+    },
+    {
+      "field": "edge convexity/dihedral angle",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "local interface descriptor domain gap",
+      "repair": "estimate from adjacent face normals"
+    },
+    {
+      "field": "designer-selected joint entity label",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "no supervised truth on user STEP",
+      "repair": "prediction only; obtain labels from assembly mates or manual annotation for evaluation"
+    },
+    {
+      "field": "contact label",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "cannot train/evaluate contact localization",
+      "repair": "requires assembled pose and exact proximity/contact query"
+    },
+    {
+      "field": "hole labels",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "JoinABLe hole augmentation unavailable",
+      "repair": "rule-estimate cylindrical loops, mark as inferred"
+    },
+    {
+      "field": "joint/mate type label",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "cannot evaluate mate type on standalone STEP",
+      "repair": "obtain from source CAD assembly or manual ground truth"
+    },
+    {
+      "field": "assembly transform",
+      "fusion_joinable": true,
+      "current_step_occt": false,
+      "missing_impact": "no ground-truth pose reconstruction target",
+      "repair": "requires assembly-level source, not isolated parts"
+    },
+    {
+      "field": "assembly hierarchy",
+      "fusion_joinable": "joint set is a body pair, source has context",
+      "current_step_occt": false,
+      "missing_impact": "cannot infer mixed-pool grouping truth",
+      "repair": "ingest assembly tree/BOM or create separate labels"
+    }
+  ],
+  "domain_gap": [
+    "Fusion graph comes from native Fusion B-Rep; STEP is a neutral exchange import with possible topology splitting/healing.",
+    "JoinABLe uses sampled face/edge grids, convexity and dihedral features not yet emitted by the minimal OCCT probe.",
+    "Units and normalization must be reproduced exactly before pretrained inference.",
+    "Entity ordering and persistent identity differ across Fusion and OCCT.",
+    "Standalone STEP has no designer joint, mate, contact, pose, hierarchy or functional-intent labels."
+  ],
+  "fields_that_must_be_added_for_pretrained_joinable": [
+    "face UV point/normal/trimming-mask grids",
+    "edge point/tangent grids",
+    "edge convexity and dihedral angle",
+    "JoinABLe-compatible normalization and enum mapping",
+    "validated entity-index round trip"
+  ],
+  "fields_rule_estimable": [
+    "surface/curve type",
+    "area/length/radius",
+    "local axis candidates",
+    "face-edge adjacency",
+    "approximate hole candidates",
+    "edge convexity and dihedral angle"
+  ],
+  "fields_unobtainable_from_isolated_step_parts": [
+    "designer-selected joint entities",
+    "ground-truth mate type",
+    "ground-truth assembly transform",
+    "assembly hierarchy and BOM",
+    "true contact pairs before pose is known",
+    "functional compatibility and source grouping"
+  ],
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "assembly hierarchy",
+    "assembly transform",
+    "contact label",
+    "designer-selected joint entity label",
+    "edge convexity/dihedral angle",
+    "edge point/tangent grid",
+    "face 10x10 point/normal/trim grid",
+    "hole labels",
+    "joint/mate type label"
+  ]
+}

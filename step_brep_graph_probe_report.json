@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "success_count": 0,
+  "failure_count": 1,
+  "failure_reasons": [
+    "input_not_found:sw\\2\\orientation_feature_smoke_d_20260710\\flange_a.brep_graph.json"
+  ],
+  "unavailable_fields": [
+    "brep_graph"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "2": {
+    "truth_interfaces": 10,
+    "generated": 10,
+    "kept_after_pruning": 10,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  },
+  "3": {
+    "truth_interfaces": 20,
+    "generated": 20,
+    "kept_after_pruning": 20,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  },
+  "4": {
+    "truth_interfaces": 12,
+    "generated": 12,
+    "kept_after_pruning": 12,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  },
+  "5": {
+    "truth_interfaces": 16,
+    "generated": 16,
+    "kept_after_pruning": 16,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  },
+  "6": {
+    "truth_interfaces": 10,
+    "generated": 10,
+    "kept_after_pruning": 10,
+    "generated_recall": 1.0,
+    "post_pruning_recall": 1.0
+  }
+}

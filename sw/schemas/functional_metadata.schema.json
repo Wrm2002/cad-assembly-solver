@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "functional_metadata.schema.json",
+  "title": "Functional assembly case metadata",
+  "type": "object",
+  "required": [
+    "case_id",
+    "assembly_family",
+    "engineering_name",
+    "truth_basis",
+    "parts",
+    "functional_mates",
+    "valid_groups",
+    "optional_parts",
+    "interchangeable_parts",
+    "invalid_role_combinations",
+    "negative_parts",
+    "negative_groups"
+  ],
+  "properties": {
+    "assembly_family": {
+      "enum": ["cover_base", "shaft_hub_key", "bearing_housing"]
+    },
+    "truth_basis": {
+      "const": "functional_validity"
+    },
+    "source_id_is_production_truth": {
+      "const": false
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "part_id",
+          "file",
+          "part_name",
+          "part_role",
+          "interface_types",
+          "assembly_placement"
+        ]
+      }
+    },
+    "functional_mates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "part_ids",
+          "mate_type",
+          "interface_types",
+          "functional_relation",
+          "independent_evidence"
+        ]
+      }
+    },
+    "negative_groups": {
+      "type": "array",
+      "minItems": 3
+    }
+  },
+  "additionalProperties": true
+}

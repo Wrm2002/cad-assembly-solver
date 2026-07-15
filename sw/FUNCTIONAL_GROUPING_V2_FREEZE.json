@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0.0",
+  "delivery": "functional_grouping_v2",
+  "status": "pass",
+  "checks": {
+    "all_required_files_present": true,
+    "dataset_audit_passed": true,
+    "ordinary_proposal_recall_is_one": true,
+    "ordinary_frontier_recall_is_one": true,
+    "harder_proposal_recall_is_one": true,
+    "harder_frontier_recall_is_one": true,
+    "ordinary_false_auto_accepts_zero": true,
+    "harder_false_auto_accepts_zero": true,
+    "semantic_reranking_disabled": true,
+    "role_template_gate_closed": true
+  },
+  "missing_files": [],
+  "test_command": "conda run -n cad_asm python -m unittest discover -s tests -p test_*.py -v",
+  "test_result": "80 tests passed",
+  "files": [
+    {
+      "path": "contracts.py",
+      "size": 7749,
+      "sha256": "b5ac8b0025abc38c0a665bf8255b4ace10118f98ab15f1f9a3cf2ca61b9e3cc0"
+    },
+    {
+      "path": "pair_edge.py",
+      "size": 5714,
+      "sha256": "83a8ab722fa4ad3ad12a7ee06326b7a8d4596f1163fb59d4db959f45b4a13574"
+    },
+    {
+      "path": "role_estimator.py",
+      "size": 8997,
+      "sha256": "8192210a10e7876ef67efa7c26cb2ca49daa6ba3ed794273c3b7aa07b4e81022"
+    },
+    {
+      "path": "family_templates.py",
+      "size": 3584,
+      "sha256": "6bfe350f0dd024ee71cc6c8c2646e3f6537be1fbccc7034aa7fc0caf7135af16"
+    },
+    {
+      "path": "bounded_expansion.py",
+      "size": 12286,
+      "sha256": "5fb6fdb9654497ef15a7dde154f9c6e6494da20050e8203b0a32e573829d8129"
+    },
+    {
+      "path": "proposal_postprocess.py",
+      "size": 8664,
+      "sha256": "b6cb188feadbfd342fadd153e9ade136e7e960e908d0dc3dbe833ee4299c0564"
+    },
+    {
+      "path": "functional_pose_worker.py",
+      "size": 1389,
+      "sha256": "bd6e05a62a00969838c857c407dc42d16d7ed6c1f2689949b78051cdd960aba3"
+    },
+    {
+      "path": "run_functional_grouping_experiment.py",
+      "size": 16014,
+      "sha256": "64d746066f7f0135f297149056dadc7edae5af45ede19613c8bffd873794e57a"
+    },
+    {
+      "path": "run_frontier_pose_experiment.py",
+      "size": 15292,
+      "sha256": "f959321a248b5d7cd40a29579b77c279d4e5e79fb325210fa44828108ad4ca04"
+    },
+    {
+      "path": "audit_functional_dataset_v2.py",
+      "size": 4177,
+      "sha256": "590dd7080bdd35e5d7b35efbb61554feb05504263676e7120aaf5d19d887717f"
+    },
+    {
+      "path": "build_functional_grouping_v2_report.py",
+      "size": 11869,
+      "sha256": "2573030e6f66c2d1301a3e3348949eaa19312699d9f4a7de9255c3dd04f8dee3"
+    },
+    {
+      "path": "tests/test_functional_grouping_v2.py",
+      "size": 4575,
+      "sha256": "4875e8f1dc987f54ec726e22bfc17ccca4bb5ac4046143c58ac5c93845f76a8f"
+    },
+    {
+      "path": "schemas/pair_edge.schema.json",
+      "size": 3199,
+      "sha256": "235c05bcbdee7f4c81aa56d77bc68614ed41de9f93c00a72720cdf06b758c382"
+    },
+    {
+      "path": "schemas/group_proposal.schema.json",
+      "size": 3749,
+      "sha256": "9064c1ac837a9024973afa766f4a19c0afc7b4091df9a1eabf85e934acec33f9"
+    },
+    {
+      "path": "data/functional_dataset_v1/functional_dataset_audit_v2.json",
+      "size": 5644,
+      "sha256": "6046eddfecf09371d97b919d3cdce243a176056ead4aff8ca2ddaa72dbbc1476"
+    },
+    {
+      "path": "data/functional_grouping_experiment_v2/conservative_metrics.json",
+      "size": 2812,
+      "sha256": "ced10383db02c100c1ab1dbad54c593e040764349734b3331e044ba208c910bd"
+    },
+    {
+      "path": "data/functional_grouping_experiment_v2/failure_diagnosis.json",
+      "size": 7253,
+      "sha256": "693b18e9c8c3c51d946cc80f759856bb4d3bbbf42961e042ed58d8a89f52885a"
+    },
+    {
+      "path": "data/harder_functional_grouping_experiment_v2/conservative_metrics.json",
+      "size": 2835,
+      "sha256": "55411134e3bc43908400b8bf30102c031ec3fe7f9e95ba7a58a152683077b3b4"
+    },
+    {
+      "path": "data/harder_functional_grouping_experiment_v2/failure_diagnosis.json",
+      "size": 3299,
+      "sha256": "a205aa80658a58dde7935f79ba0772ebd3788b7f3fa0c0582d168a66ffc70438"
+    },
+    {
+      "path": "data/functional_frontier_pose_experiment_v2/conservative_metrics.json",
+      "size": 690,
+      "sha256": "f84821b0bd1584ab54c8a58488dc5d61e5897aa9fee76ac421d19d75952b1a6d"
+    },
+    {
+      "path": "data/functional_frontier_pose_experiment_v2/final_accepted_groups.json",
+      "size": 4,
+      "sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f"
+    },
+    {
+      "path": "data/functional_frontier_pose_experiment_v2/final_review_groups.json",
+      "size": 276887,
+      "sha256": "1b26d853f98e7a898913e0014b5f70db78c485e87a56ab14d27387085022de0a"
+    },
+    {
+      "path": "data/functional_frontier_pose_experiment_v2/final_rejected_groups.json",
+      "size": 25415,
+      "sha256": "8659e7bb83881b58538e6c8b49db024ab20463f6d8103067d2e079210d77d759"
+    },
+    {
+      "path": "data/functional_frontier_pose_experiment_v2/unresolved_parts.json",
+      "size": 613,
+      "sha256": "4eebab833ae82e312eacf093b0a5609259efc4e86d52abbef94f14b69197a5eb"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/conservative_metrics.json",
+      "size": 692,
+      "sha256": "d219469601ed52632e5db66cbaa506cb29333b0eae441631cf8d5a4a27c2ae0a"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/final_accepted_groups.json",
+      "size": 4,
+      "sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/final_review_groups.json",
+      "size": 109693,
+      "sha256": "c1c2649821b14ebc27eaf58d2d44f6972da759b03ca5cb3392c081ac3b66a103"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/final_rejected_groups.json",
+      "size": 181307,
+      "sha256": "e0c3b6c71cf29721320f8b26d25aee402e181876eedafcf739db012973f422fe"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/unresolved_parts.json",
+      "size": 303,
+      "sha256": "ecfe9a8c778d32c0e1d22a1b6a6c27f8edaf1438807d2a8f2946d04b4507c62f"
+    },
+    {
+      "path": "data/harder_frontier_pose_experiment_v2/false_positive_audit.csv",
+      "size": 631,
+      "sha256": "1616c274ecb9022fc8c77783658aa02167406fd5ccab544ad7e10a54b937cecb"
+    },
+    {
+      "path": "data/functional_grouping_ablation_v2/ablation_summary.json",
+      "size": 1240,
+      "sha256": "a5758f9e41cf7cd70fd0469889b11d1fc5d6fe7aa5649bc649b61fcc7de8443e"
+    },
+    {
+      "path": "FUNCTIONAL_GROUPING_V2_REPORT.md",
+      "size": 4885,
+      "sha256": "581f2c553a5c1e52e64bb66630f73353fb7baaf73106346e59bc517145d337ba"
+    },
+    {
+      "path": "FUNCTIONAL_GROUPING_V2_STATUS.json",
+      "size": 17425,
+      "sha256": "cf25f66b10a0a58058d007d3987eab781c40d3cf10748969195a131ca4d6c4eb"
+    }
+  ]
+}

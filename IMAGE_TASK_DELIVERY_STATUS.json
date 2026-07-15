@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0.0",
+  "audited_at": "2026-07-06T07:16:28.945009+00:00",
+  "objective": "complete_the_six_image_specified_tasks",
+  "status": "pending_external_mechanical_engineer_signoff",
+  "implementation_checks": {
+    "task_1_nine_true_groups_pose_audited": true,
+    "task_2_structural_review_ranking_applied": true,
+    "task_2_accepted_gate_not_relaxed": true,
+    "task_3_all_27_exact_hard_negatives_entered_d4": true,
+    "task_3_d5_executed_when_d4_did_not_reject": true,
+    "task_3_hard_negative_false_positive_zero": true,
+    "task_4_required_group_metrics_present": true,
+    "task_5_locked_modeled_cad_holdout_created": true,
+    "task_5_locked_holdout_baseline_run_without_tuning": true,
+    "task_6_deepseek_remains_disabled": true
+  },
+  "external_completion_check": {
+    "task_5_qualified_mechanical_engineer_signoff": false
+  },
+  "metrics": {
+    "true_group_pose_recall": 0.6666666666666666,
+    "true_group_pose_valid_count": 6,
+    "review_frontier_recall": 0.2222222222222222,
+    "review_frontier_precision": 0.027777777777777776,
+    "group_recall_at_k": {
+      "24": {
+        "recalled_true_groups": 2,
+        "true_group_count": 9,
+        "group_recall": 0.2222222222222222,
+        "cutoff_is_per_pool": true
+      },
+      "50": {
+        "recalled_true_groups": 2,
+        "true_group_count": 9,
+        "group_recall": 0.2222222222222222,
+        "cutoff_is_per_pool": true
+      },
+      "100": {
+        "recalled_true_groups": 2,
+        "true_group_count": 9,
+        "group_recall": 0.2222222222222222,
+        "cutoff_is_per_pool": true
+      },
+      "500": {
+        "recalled_true_groups": 2,
+        "true_group_count": 9,
+        "group_recall": 0.2222222222222222,
+        "cutoff_is_per_pool": true
+      },
+      "2000": {
+        "recalled_true_groups": 8,
+        "true_group_count": 9,
+        "group_recall": 0.8888888888888888,
+        "cutoff_is_per_pool": true
+      }
+    },
+    "hard_negative_false_positives_before_binary_guard": 5,
+    "hard_negative_false_positives_after_binary_guard": 0,
+    "hard_negative_final_decisions": {
+      "rejected": 18,
+      "review": 9
+    },
+    "deepseek_provider_calls": 0,
+    "locked_holdout_provisional_metrics": {
+      "candidate_generated_recall": 1.0,
+      "candidate_post_pruning_recall": 1.0,
+      "review_frontier_recall": 0.25,
+      "true_group_pose_recall": 0.5,
+      "hard_negative_false_positive_count": 0
+    }
+  },
+  "holdout": {
+    "manifest": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_cad_holdout_v1\\dataset_manifest.json",
+    "contact_sheet": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_cad_holdout_v1\\holdout_contact_sheet.png",
+    "review_form": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_cad_holdout_v1\\ENGINEERING_REVIEW_FORM.csv",
+    "instructions": "C:\\Users\\11049\\Desktop\\Model_match\\sw\\data\\functional_cad_holdout_v1\\ENGINEERING_REVIEW_INSTRUCTIONS.md",
+    "signoff": {
+      "schema_version": "1.0.0",
+      "status": "pending_or_failed_mechanical_engineer_review",
+      "required_review_rows": 12,
+      "confirmed_rows": 0,
+      "reviewer_count": 0,
+      "gate_passed": false,
+      "failure_reasons": [
+        "row_2_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_3_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_4_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_5_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_6_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_7_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_8_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_9_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_10_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_11_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_12_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature",
+        "row_13_missing:engineer_verdict|functional_validity_confirmed|reviewer_name|mechanical_engineering_qualification|review_date|signature"
+      ]
+    },
+    "step_validation": {
+      "step_count": 24,
+      "valid_step_count": 24,
+      "failed_steps": []
+    }
+  },
+  "verification": {
+    "unit_tests": "56/56 passed",
+    "accepted_gate_change": "stricter only: two-part candidates require review when semantic calibration is unavailable"
+  },
+  "source_sha256": {
+    "audit_true_group_pose.py": "f7700c0be213babfe2b3ccda94f6593580e050974f6b39cd4e051e9a62a2f865",
+    "functional_group_metrics.py": "b94ca3d0f8bcdd8ee6bdcc17f393c4f948ff68a7859193c7194b073a72e41465",
+    "audit_forced_hard_negatives.py": "074a39ddb7ff043a119beeeaa312146f0bd1e5e5d235a6afb842928c3bf66088",
+    "functional_holdout_generator.py": "47fddc8ca17a341e9eae3e0ec064422f0bde1e9d4be0d5962b3b7e5415db7daf",
+    "build_holdout_pools.py": "ecd45ac34c0df8a894cbaa034d1c8e82f9414d5b55ea36beef8c73e26cde0651",
+    "summarize_holdout_baseline.py": "9acedce505f3dfba2a8ecdba6df5ce3d0cf80cbc99d40678148265f6a6d5ad7c",
+    "validate_holdout_engineering_review.py": "8d2999568f7e8ea9063009f8f1c5fb912d5aaade1d2d1f32591363f387daad5c",
+    "freeze_image_task_delivery.py": "ef466bc3e37d5e519c1d544f1e49871e208bd663c36c03b5d1c4868f5f645059",
+    "global_optimizer/group_consistency.py": "e64e48917b374d06cd8b78c0a866181afcc783f1fe29e51831eb15d395103546",
+    "conservative_pipeline.py": "b848ba850abae97825d7e8a37ae56872ffac9709981971f2cf59ff47b4baad66",
+    "configs/conservative_pipeline.json": "ca2256f04b179f6affcf8329d639bb8cf9f8e65bae77460cd004798e76f13487",
+    "configs/conservative_pipeline_pre_binary_guard.json": "f37c958b3c0d3d3cd6c349d91f70ee24b69645930c5d550aa6994ff3d13cd41d",
+    "tests/test_conservative_pipeline.py": "0b151151d8503da7d162e5aae7bb15421dec788e0ca50f840d85723acb8b3793",
+    "tests/test_group_consistency.py": "9cc7eb5a184d56d1fdba7a551ceeaa449a87d945127d3b88f5d2851306da6067"
+  },
+  "result_sha256": {
+    "true_group_pose_audit.json": "c21e6ede705320f056c48a0bb7d7ff015b40422b1bbfb09c7d31cc5082dda302",
+    "true_group_pose_audit.csv": "c5f9dea5b3351c2ea1c3f4d5eee48745dbb5a4262ce04638e29bfea2e93e4b4b",
+    "true_group_pose_audit.md": "53f7d96466b630d99efe3ae55fad51dcb848ff67cf256500e8033efb5e7523ce",
+    "functional_group_metrics.json": "22357d69d2d647f322e328927ceca6beab778002d4bf9c5437d70136f407a693",
+    "functional_group_metrics.csv": "27b48ca4f89e12e57accbff599ac91514909a0508ff7aeb8c1f5c07e64668633",
+    "functional_group_metrics.md": "d3cb3315ae29e73cb076bc17a8b12146a8d763bb04bb13206c2a7e3e91234816",
+    "forced_hard_negative_audit.json": "b6ba02e114e82f4b21265ebe6b8fcfc5b1572857caf227f78c253a6550549137",
+    "forced_hard_negative_audit.csv": "9ef75db8ad77beb5939c7468d23add959f4c9220157f4e9e5ab0ea6f45b3dbb6",
+    "forced_hard_negative_audit.md": "8b7c08962727c1af7beabaa73c3cef41096e25412090f125067a1ec3c9658039",
+    "conservative_metrics.json": "ee20e3fad9a4d623320c8da5fe445b06a883d6014147dd2ce7a78347604f5e29",
+    "semantic_calibration_report.json": "3ecb68ae0472357bee3dd1042f89be37a704f05edd18e20b35be08872305e801",
+    "semantic_gate_decision.md": "b4f563927eb278eac096fc6a189b223e89c3149c576fbeaab783644542979f1f"
+  },
+  "delivery_report_sha256": "7b6f6a83cc6355d99428b2657ef04af5aadaab1b39ec663435f584c9ac6d5c30",
+  "holdout_result_sha256": {
+    "locked_holdout_baseline.json": "a52c17995cf8d72bfabdc4e6f3ef39aa7cc49e6bd0df1e9439e3f6c3814c0722",
+    "locked_holdout_baseline.md": "eb7703361fc44febec4dd334554798f8e3ad15cb2bad9f1fb143c3331a3b66c7",
+    "functional_group_metrics.json": "8c1c6527bb17ecbe7f34ca8075b99f2a87235dd2d236d8917c4691c4ed3f7c9a",
+    "true_group_pose_audit.json": "99e03ea24a7d514ab15526a9cd27472523d386da1b4253bdafbe8fcdcbe061aa",
+    "forced_hard_negative_audit.json": "7f56ac82541d3084df9f1b8dffdf3de7c05ce3f638723c76f558e2bd18b461d3"
+  },
+  "remaining_required_action": "A qualified mechanical engineer must complete and sign all 12 rows in ENGINEERING_REVIEW_FORM.csv, then run validate_holdout_engineering_review.py."
+}

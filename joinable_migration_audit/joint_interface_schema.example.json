@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0.0",
+  "sample_id": "example_positive_001",
+  "source_dataset": "fusion360_joinable_joint",
+  "assembly_id": "joint_set_00001",
+  "part_a": {
+    "part_id": "body_a",
+    "geometry_path": "body_a.obj",
+    "brep_graph_path": "body_a.json",
+    "source_body_role": "body_one",
+    "geometry_format": "obj",
+    "source_occurrence_id": null,
+    "source_geometry_sha256": null
+  },
+  "part_b": {
+    "part_id": "body_b",
+    "geometry_path": "body_b.obj",
+    "brep_graph_path": "body_b.json",
+    "source_body_role": "body_two",
+    "geometry_format": "obj",
+    "source_occurrence_id": null,
+    "source_geometry_sha256": null
+  },
+  "relation": {
+    "has_joint": true,
+    "label_semantics": "designer_selected_joint",
+    "joint_type": "RevoluteJointType",
+    "compatibility_label": "positive",
+    "axis_origin": [0.0, 0.0, 0.0],
+    "axis_direction": [0.0, 0.0, 1.0],
+    "axis_origin_b": [0.0, 0.0, 0.0],
+    "axis_direction_b": [0.0, 0.0, 1.0],
+    "transform_a_to_world": [
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ],
+    "transform_b_to_world": [
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ],
+    "transform_a_to_b": [
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ],
+    "offset": null,
+    "angle": null,
+    "is_flipped": false
+  },
+  "interface_a": {
+    "entity_type": "BRepFace",
+    "entity_ids": [
+      {
+        "source_entity_type": "BRepFace",
+        "source_entity_index": 2,
+        "joinable_node_index": 2,
+        "occt_entity_type": null,
+        "occt_topology_index": null,
+        "geometry_signature": null
+      }
+    ],
+    "surface_or_curve_type": "CylinderSurfaceType",
+    "semantic_role": "designer_selected_joint_origin",
+    "axis_origin": [0.0, 0.0, 0.0],
+    "axis_direction": [0.0, 0.0, 1.0],
+    "brep_graph_path": "body_a.json",
+    "source_node_features": {},
+    "failure_reasons": [],
+    "unavailable_fields": []
+  },
+  "interface_b": {
+    "entity_type": "BRepEdge",
+    "entity_ids": [
+      {
+        "source_entity_type": "BRepEdge",
+        "source_entity_index": 7,
+        "joinable_node_index": 19,
+        "occt_entity_type": null,
+        "occt_topology_index": null,
+        "geometry_signature": null
+      }
+    ],
+    "surface_or_curve_type": "Circle3DCurveType",
+    "semantic_role": "designer_selected_joint_origin",
+    "axis_origin": [0.0, 0.0, 0.0],
+    "axis_direction": [0.0, 0.0, 1.0],
+    "brep_graph_path": "body_b.json",
+    "source_node_features": {},
+    "failure_reasons": [],
+    "unavailable_fields": []
+  },
+  "contacts": [],
+  "holes": [],
+  "metadata": {
+    "unit": "cm",
+    "source_file": "joint_set_00001.json",
+    "source_sha256": null,
+    "source_joint_index": 0,
+    "conversion_status": "success",
+    "failure_reason": null,
+    "failure_reasons": [],
+    "unavailable_fields": [
+      "contacts",
+      "holes"
+    ]
+  },
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "contacts",
+    "holes"
+  ]
+}

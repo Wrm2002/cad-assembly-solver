@@ -1,0 +1,99 @@
+# Local environments and editor state
+.conda/
+.venv/
+.vscode/
+.env
+.env.*
+
+# Python/runtime artifacts
+**/__pycache__/
+*.py[cod]
+*.pid
+*.log
+.pytest_cache/
+.mypy_cache/
+
+# Crash dumps and packaged archives
+incident_dumps/
+*.rar
+*.zip
+*.7z
+*.docx
+~$*
+
+# CAD, mesh, image, and learned-weight artifacts stay outside Git
+*.step
+*.stp
+*.stl
+*.obj
+*.ply
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+
+# Generated CAD datasets and experiment outputs
+sw/data/
+sw/[1-6]/
+sw/synthetic_dataset_*/
+sw/mixed_pools_*/
+sw/pose_audit_*/
+sw/real_validation_*/
+sw/real_feature_proxies_*/
+sw/4_lightweight/
+sw/5_lightweight/
+sw/baseline_results/
+sw/baseline_safe*/
+sw/corrupted_after_bugcheck/
+sw/exam_*/
+sw/geometry_demo_pool_*/
+sw/gt_repair_smoke/
+sw/interrupted_after_reboot_*/
+sw/lightweight_exam/
+sw/phase5_annotation_pack/case_*/
+sw/real_simplified_*/
+sw/semantic_results/
+sw/synthetic_*/
+
+# Local diagnostic search traces and raw B-Rep feature dumps.  The committed
+# freeze reports are the reproducible record; these files are regenerated from
+# the source STEP models and can exceed GitHub's per-file limits.
+sw/generalization_work/
+cad_assembly_agent/datasets/
+joinable_gpu_reproduction/rule_step_baseline/
+joinable_gpu_reproduction/official_step_predictions/
+joinable_migration_audit/converted_joint_samples/
+joinable_migration_audit/step_brep_graph_samples/
+
+# Keep the compact case 3/4/5 audit, not its generated CAD/renders.
+!sw/exam_generalization_20260713/
+sw/exam_generalization_20260713/*
+!sw/exam_generalization_20260713/GENERALIZATION_REPORT.md
+!sw/exam_generalization_20260713/case345_summary.json
+
+# Third-party repositories and downloaded corpora
+**/vendor/
+public_cad_dataset_audit/data/
+public_cad_dataset_audit/outputs/
+.tmp_joinable/
+_audit_sw_origin/
+joinable_source/
+joinable_step4_addon_20260705/
+joinable_step4_bundle_20260705/
+tools/external_audit/
+
+# JoinABLe training and bulk reproduction outputs
+joinable_gpu_reproduction/autodl_*/
+joinable_gpu_reproduction/domain_finetune_*/
+joinable_gpu_reproduction/**/*.pt
+joinable_migration_audit/phase1_sample20_graphs/
+
+# Reproducible release output
+release/
+releases/
+reports/

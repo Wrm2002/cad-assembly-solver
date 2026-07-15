@@ -1,0 +1,797 @@
+{
+  "schema_version": "1.0.0",
+  "occt_available": true,
+  "requested_count": 40,
+  "attempted_count": 40,
+  "success_count": 40,
+  "failure_count": 0,
+  "results": [
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\100622_1c7038f5_0006_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\100622_1c7038f5_0006_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 23,
+      "num_edges": 61,
+      "num_adjacencies": 117,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\100622_1c7038f5_0012_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\100622_1c7038f5_0012_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 37,
+      "num_edges": 96,
+      "num_adjacencies": 180,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\115406_e390205b_0004_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\115406_e390205b_0004_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 61,
+      "num_edges": 149,
+      "num_adjacencies": 292,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\115406_e390205b_0004_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\115406_e390205b_0004_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 43,
+      "num_edges": 124,
+      "num_adjacencies": 239,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\140760_c36e4bec_0024_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\140760_c36e4bec_0024_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 125,
+      "num_edges": 394,
+      "num_adjacencies": 776,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\140760_c36e4bec_0053_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\140760_c36e4bec_0053_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 5,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\143203_02e6089d_0007_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\143203_02e6089d_0007_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 4,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\143203_02e6089d_0007_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\143203_02e6089d_0007_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 97,
+      "num_edges": 258,
+      "num_adjacencies": 514,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\21256_997bab67_0001_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\21256_997bab67_0001_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 23,
+      "num_edges": 63,
+      "num_adjacencies": 125,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\21256_997bab67_0001_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\21256_997bab67_0001_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 124,
+      "num_edges": 356,
+      "num_adjacencies": 690,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\21510_b30d9283_0011_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\21510_b30d9283_0011_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 15,
+      "num_edges": 58,
+      "num_adjacencies": 104,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\21510_b30d9283_0060_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\21510_b30d9283_0060_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 6,
+      "num_edges": 9,
+      "num_adjacencies": 15,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\23054_311abee4_0008_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\23054_311abee4_0008_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 28,
+      "num_edges": 66,
+      "num_adjacencies": 130,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\23054_311abee4_0019_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\23054_311abee4_0019_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 47,
+      "num_edges": 115,
+      "num_adjacencies": 225,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\23321_c9497b79_0000_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\23321_c9497b79_0000_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 28,
+      "num_edges": 56,
+      "num_adjacencies": 93,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\23321_c9497b79_0001_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\23321_c9497b79_0001_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 8,
+      "num_edges": 14,
+      "num_adjacencies": 22,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\24590_415f7013_0004_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\24590_415f7013_0004_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 3,
+      "num_edges": 3,
+      "num_adjacencies": 5,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\24590_415f7013_0004_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\24590_415f7013_0004_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 14,
+      "num_edges": 33,
+      "num_adjacencies": 65,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\25370_adbde9bf_0025_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\25370_adbde9bf_0025_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 4,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\25370_adbde9bf_0025_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\25370_adbde9bf_0025_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 4,
+      "num_edges": 6,
+      "num_adjacencies": 10,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\26766_1aaa348c_0011_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\26766_1aaa348c_0011_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 60,
+      "num_edges": 168,
+      "num_adjacencies": 334,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\26766_1aaa348c_0016_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\26766_1aaa348c_0016_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 24,
+      "num_edges": 50,
+      "num_adjacencies": 97,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\34063_0ca1585e_0075_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\34063_0ca1585e_0075_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 57,
+      "num_edges": 143,
+      "num_adjacencies": 276,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\34063_a7411798_0000_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\34063_a7411798_0000_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 8,
+      "num_edges": 15,
+      "num_adjacencies": 24,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\49703_b92021be_0000_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\49703_b92021be_0000_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 8,
+      "num_edges": 15,
+      "num_adjacencies": 24,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\49703_b92021be_0000_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\49703_b92021be_0000_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 33,
+      "num_edges": 69,
+      "num_adjacencies": 125,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\51345_4b292361_0000_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\51345_4b292361_0000_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 23,
+      "num_edges": 59,
+      "num_adjacencies": 116,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\51345_4b292361_0009_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\51345_4b292361_0009_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 39,
+      "num_edges": 92,
+      "num_adjacencies": 184,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\51862_e5f65013_0010_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\51862_e5f65013_0010_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 28,
+      "num_edges": 54,
+      "num_adjacencies": 102,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\51862_e5f65013_0011_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\51862_e5f65013_0011_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 10,
+      "num_edges": 18,
+      "num_adjacencies": 34,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\53631_95d8fef3_0004_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\53631_95d8fef3_0004_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 49,
+      "num_edges": 149,
+      "num_adjacencies": 285,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\53631_95d8fef3_0005_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\53631_95d8fef3_0005_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 11,
+      "num_edges": 15,
+      "num_adjacencies": 25,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\56486_82b3e23a_0021_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\56486_82b3e23a_0021_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 8,
+      "num_edges": 16,
+      "num_adjacencies": 26,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\56486_82b3e23a_0021_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\56486_82b3e23a_0021_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 28,
+      "num_edges": 62,
+      "num_adjacencies": 122,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\79117_19097e61_0001_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\79117_19097e61_0001_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 642,
+      "num_edges": 1332,
+      "num_adjacencies": 2355,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\79117_19097e61_0001_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\79117_19097e61_0001_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 3,
+      "num_edges": 3,
+      "num_adjacencies": 5,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\87056_323e3f05_0006_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\87056_323e3f05_0006_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 9,
+      "num_edges": 21,
+      "num_adjacencies": 39,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\87056_323e3f05_0007_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\87056_323e3f05_0007_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 3,
+      "num_edges": 3,
+      "num_adjacencies": 5,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\94588_72811adf_0000_1.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\94588_72811adf_0000_1.brep_graph.json",
+      "status": "success",
+      "num_faces": 10,
+      "num_edges": 15,
+      "num_adjacencies": 25,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    },
+    {
+      "source_step_path": "D:\\Model_match_public_data\\fusion360_joint\\sample20\\j1.0.0\\joint\\94588_72811adf_0000_2.step",
+      "output_path": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\phase1_sample20_graphs\\94588_72811adf_0000_2.brep_graph.json",
+      "status": "success",
+      "num_faces": 76,
+      "num_edges": 244,
+      "num_adjacencies": 472,
+      "failure_reasons": [],
+      "unavailable_fields": [
+        "assembly transforms and hierarchy",
+        "contact labels",
+        "designer-selected joint labels",
+        "dihedral angle",
+        "edge convexity",
+        "edge point/tangent grids",
+        "face UV point/normal/trimming-mask grids",
+        "hole labels"
+      ]
+    }
+  ],
+  "entity_id_audit": {
+    "traceable_ids_present": true,
+    "stable_for_unchanged_file_same_environment": true,
+    "stable_across_step_reexport_or_topology_healing": false,
+    "reverse_lookup_to_occt_shape": "Yes inside extraction worker through IndexedMap.FindKey; serialized ids require deterministic re-import."
+  },
+  "joinable_required_fields_not_extracted": [
+    "face UV point/normal/trimming-mask grids",
+    "edge point/tangent grids",
+    "edge convexity and dihedral angle",
+    "designer-selected joint entity labels",
+    "joint equivalence labels",
+    "contact and hole labels",
+    "assembly transform and hierarchy"
+  ],
+  "acceptance_met": true,
+  "failure_reasons": [],
+  "unavailable_fields": [
+    "assembly transforms and hierarchy",
+    "contact labels",
+    "designer-selected joint labels",
+    "dihedral angle",
+    "edge convexity",
+    "edge point/tangent grids",
+    "face UV point/normal/trimming-mask grids",
+    "hole labels"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_role": "evaluation_only_pre_binary_guard_baseline",
+  "geometry_threshold": 0.8,
+  "group_consistency_threshold": 0.7,
+  "semantic_threshold": 0.75,
+  "minimum_independent_evidence": 2,
+  "minimum_auto_accept_group_size": 2,
+  "max_auto_accept_group_size": 5,
+  "conflict_score_margin": 0.04,
+  "maximum_pose_validations_per_pool": 12,
+  "maximum_review_groups_per_pool": 24,
+  "review_groups_per_size": 4,
+  "maximum_semantic_explanations_per_pool": 2,
+  "maximum_visualizations_per_pool": 6,
+  "semantic_application_mode": "explanation_only",
+  "source_template_allowed_for_decision": false
+}

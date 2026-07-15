@@ -1,0 +1,60 @@
+{
+  "schema_version": "three_stage_brep_manifold_exam_summary.v1",
+  "date": "2026-07-11",
+  "stage_1": {
+    "status": "complete",
+    "records": 18002,
+    "joint_supervision": 29560,
+    "split_counts": {"train": 14231, "dev": 2018, "test": 1753},
+    "forbidden_model_key_count": 0,
+    "split_group_overlap_count": 0
+  },
+  "stage_2": {
+    "status": "complete_engineering",
+    "learned_component": "JoinABLe top-k B-Rep entity pair",
+    "analytic_lift": "joint origin/axis/local frame/free-DOF manifold",
+    "fixed_relative_pose_decode": false,
+    "pair_pose_is_initial_only": true,
+    "symmetry_aware": true
+  },
+  "stage_3": {
+    "status": "complete_engineering",
+    "bounded_discrete_search": true,
+    "joint_se3_least_squares": true,
+    "continuous_contact_penetration": true,
+    "consistent_cycles_only": true,
+    "exact_occt_top_n": true,
+    "auto_accept": false
+  },
+  "tests": {
+    "new_and_core": {"passed": 25, "failed": 0},
+    "joinable_compatibility": {"passed": 9, "failed": 0}
+  },
+  "exam": {
+    "case1": {
+      "status": "passed_geometry",
+      "hypotheses": 35,
+      "occt_valid": 10,
+      "selected_hypothesis": "topology_00_choice_000",
+      "closest_distance_mm": 0.001462641984938322
+    },
+    "case2": {
+      "status": "review_partial",
+      "topology": [["part_0", "part_3"], ["part_1", "part_3"], ["part_2", "part_3"]],
+      "occt_collision_free": true,
+      "part_2_part_3_closest_mm": 0.090,
+      "part_0_part_3_closest_mm": 1.195,
+      "part_1_part_3_closest_mm": 1.933,
+      "large_part_cycle_closest_mm": 2.213,
+      "reason": "Correct central topology and near-contact small part, but large parts are not fully seated."
+    },
+    "case3": {
+      "status": "failed_uncertain_timeout",
+      "proxy_hypotheses": 39,
+      "original_occt_batch_timeout_seconds": 604,
+      "original_occt_top1_timeout_seconds": 124,
+      "original_mesh_likely_penetrating": 39,
+      "cannot_auto_accept": true
+    }
+  }
+}

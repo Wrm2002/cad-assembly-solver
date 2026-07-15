@@ -1,0 +1,3197 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Design-disjoint STEP test comparison of graph-derived analytic and official pretrained JoinABLe ranking",
+  "training_performed": false,
+  "manifest": "D:\\Model_match_public_data\\fusion360_joint\\domain_adapt_2600\\domain_adaptation_manifest.json",
+  "manifest_summary": {
+    "requested_counts": {
+      "train": 2000,
+      "validation": 300,
+      "test": 300
+    },
+    "manifest_counts": {
+      "train": 2000,
+      "validation": 300,
+      "test": 300
+    },
+    "training_usable_counts": {
+      "train": 695,
+      "validation": 151,
+      "test": 221
+    },
+    "status_distribution": {
+      "train": {
+        "training_and_evaluation": 695,
+        "unusable_no_mapped_truth": 227,
+        "excluded_source_design_leakage": 998,
+        "evaluation_only_no_exact_mapping": 72,
+        "unsupported_official_node_limit": 8
+      },
+      "validation": {
+        "training_and_evaluation": 151,
+        "excluded_source_design_leakage": 95,
+        "unusable_no_mapped_truth": 41,
+        "evaluation_only_no_exact_mapping": 13
+      },
+      "test": {
+        "unusable_no_mapped_truth": 64,
+        "training_and_evaluation": 221,
+        "evaluation_only_no_exact_mapping": 15
+      }
+    },
+    "split_policy": "test priority, then validation; train excludes any source design present in heldout splits",
+    "source_design_overlap_after_filter": {
+      "train_validation": 0,
+      "train_test": 0,
+      "validation_test": 0
+    },
+    "exact_entity_side_mapping_rate": 0.846100278551532,
+    "exact_entity_side_attempt_count": 5744,
+    "exact_entity_side_mapped_count": 4860,
+    "mapping_status_distribution": {
+      "mapped": 66253,
+      "unmapped": 18859,
+      "ambiguous_equivalent": 10
+    },
+    "external_failure_count": 0
+  },
+  "split": "test",
+  "device": "cuda:0",
+  "eligible_count": 236,
+  "evaluated_count": 236,
+  "exact": {
+    "evaluable_count": 221,
+    "analytic_top_1_recall": 0.06787330316742081,
+    "joinable_top_1_recall": 0.14027149321266968,
+    "union_top_1_plus_1_recall": 0.18552036199095023,
+    "union_rescue_count_at_1": 26,
+    "analytic_only_hit_count_at_1": 10,
+    "analytic_top_5_recall": 0.25339366515837103,
+    "joinable_top_5_recall": 0.38461538461538464,
+    "union_top_5_plus_5_recall": 0.4841628959276018,
+    "union_rescue_count_at_5": 51,
+    "analytic_only_hit_count_at_5": 22,
+    "analytic_top_10_recall": 0.38461538461538464,
+    "joinable_top_10_recall": 0.5610859728506787,
+    "union_top_10_plus_10_recall": 0.6561085972850679,
+    "union_rescue_count_at_10": 60,
+    "analytic_only_hit_count_at_10": 21,
+    "analytic_top_20_recall": 0.49321266968325794,
+    "joinable_top_20_recall": 0.7420814479638009,
+    "union_top_20_plus_20_recall": 0.7873303167420814,
+    "union_rescue_count_at_20": 65,
+    "analytic_only_hit_count_at_20": 10
+  },
+  "equivalent": {
+    "evaluable_count": 236,
+    "analytic_top_1_recall": 0.8813559322033898,
+    "joinable_top_1_recall": 0.9364406779661016,
+    "union_top_1_plus_1_recall": 0.9449152542372882,
+    "union_rescue_count_at_1": 15,
+    "analytic_only_hit_count_at_1": 2,
+    "analytic_top_5_recall": 0.9449152542372882,
+    "joinable_top_5_recall": 0.9745762711864406,
+    "union_top_5_plus_5_recall": 0.9788135593220338,
+    "union_rescue_count_at_5": 8,
+    "analytic_only_hit_count_at_5": 1,
+    "analytic_top_10_recall": 0.9576271186440678,
+    "joinable_top_10_recall": 0.9830508474576272,
+    "union_top_10_plus_10_recall": 0.9830508474576272,
+    "union_rescue_count_at_10": 6,
+    "analytic_only_hit_count_at_10": 0,
+    "analytic_top_20_recall": 0.9788135593220338,
+    "joinable_top_20_recall": 0.9915254237288136,
+    "union_top_20_plus_20_recall": 0.9957627118644068,
+    "union_rescue_count_at_20": 4,
+    "analytic_only_hit_count_at_20": 1
+  },
+  "rows": [
+    {
+      "sample_id": "joint_set_08045",
+      "source_design_ids": [
+        "55717_8ee13ef1"
+      ],
+      "candidate_pair_count": 80,
+      "analytic_ranked_candidate_count": 80,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01324",
+      "source_design_ids": [
+        "56166_003bf479"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 20,
+      "joinable_exact_rank": 24,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10371",
+      "source_design_ids": [
+        "41729_b5092135"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10420",
+      "source_design_ids": [
+        "23552_10239b96"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 11,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07243",
+      "source_design_ids": [
+        "56488_7a606724"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 50,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11051",
+      "source_design_ids": [
+        "41653_71b50655"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03894",
+      "source_design_ids": [
+        "51791_b6580a7f"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 15,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04039",
+      "source_design_ids": [
+        "30297_fd93a92a"
+      ],
+      "candidate_pair_count": 270,
+      "analytic_ranked_candidate_count": 270,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16619",
+      "source_design_ids": [
+        "23775_6d8ee909"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 53,
+      "joinable_exact_rank": 43,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07921",
+      "source_design_ids": [
+        "21822_7d3db422"
+      ],
+      "candidate_pair_count": 552,
+      "analytic_ranked_candidate_count": 552,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 237,
+      "joinable_exact_rank": 34,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07990",
+      "source_design_ids": [
+        "27694_7801dc67"
+      ],
+      "candidate_pair_count": 320,
+      "analytic_ranked_candidate_count": 320,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 106,
+      "joinable_exact_rank": 65,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03306",
+      "source_design_ids": [
+        "27674_f16da168"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_13049",
+      "source_design_ids": [
+        "76879_65a30a82"
+      ],
+      "candidate_pair_count": 170,
+      "analytic_ranked_candidate_count": 170,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 69,
+      "joinable_exact_rank": 30,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07639",
+      "source_design_ids": [
+        "136780_76205168"
+      ],
+      "candidate_pair_count": 5776,
+      "analytic_ranked_candidate_count": 5776,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10095",
+      "source_design_ids": [
+        "53948_9a559d30"
+      ],
+      "candidate_pair_count": 240,
+      "analytic_ranked_candidate_count": 240,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00294",
+      "source_design_ids": [
+        "49503_e42c01c0",
+        "52009_a2b75078"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 14,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 3,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03660",
+      "source_design_ids": [
+        "135790_a27f9deb"
+      ],
+      "candidate_pair_count": 363,
+      "analytic_ranked_candidate_count": 363,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 11,
+      "joinable_equivalent_rank": 6
+    },
+    {
+      "sample_id": "joint_set_07135",
+      "source_design_ids": [
+        "21941_1a683ec2"
+      ],
+      "candidate_pair_count": 320,
+      "analytic_ranked_candidate_count": 320,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00475",
+      "source_design_ids": [
+        "23018_63087a41"
+      ],
+      "candidate_pair_count": 390,
+      "analytic_ranked_candidate_count": 390,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 118,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 9,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02513",
+      "source_design_ids": [
+        "48637_08301aaa"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 50,
+      "joinable_exact_rank": 11,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03744",
+      "source_design_ids": [
+        "41124_a5855c0d"
+      ],
+      "candidate_pair_count": 315,
+      "analytic_ranked_candidate_count": 315,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 9,
+      "joinable_exact_rank": 19,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05173",
+      "source_design_ids": [
+        "31194_1d2d6a39"
+      ],
+      "candidate_pair_count": 220,
+      "analytic_ranked_candidate_count": 220,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 19,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00559",
+      "source_design_ids": [
+        "34913_d23e2a24"
+      ],
+      "candidate_pair_count": 390,
+      "analytic_ranked_candidate_count": 390,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 13,
+      "joinable_equivalent_rank": 103
+    },
+    {
+      "sample_id": "joint_set_06932",
+      "source_design_ids": [
+        "51472_7f3c7384"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03513",
+      "source_design_ids": [
+        "27844_dc659761"
+      ],
+      "candidate_pair_count": 96,
+      "analytic_ranked_candidate_count": 96,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02738",
+      "source_design_ids": [
+        "23539_b3917f22"
+      ],
+      "candidate_pair_count": 480,
+      "analytic_ranked_candidate_count": 480,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 151,
+      "joinable_exact_rank": 72,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02235",
+      "source_design_ids": [
+        "26403_1f4a2618"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10409",
+      "source_design_ids": [
+        "33500_e58e287e"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06201",
+      "source_design_ids": [
+        "40524_7b7ca640"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10611",
+      "source_design_ids": [
+        "55811_bc667b2d"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 40,
+      "joinable_exact_rank": 59,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02050",
+      "source_design_ids": [
+        "41757_c1173a7e"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 9,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16934",
+      "source_design_ids": [
+        "55927_f8b31711"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 26,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04182",
+      "source_design_ids": [
+        "56564_976c253c"
+      ],
+      "candidate_pair_count": 110,
+      "analytic_ranked_candidate_count": 110,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16667",
+      "source_design_ids": [
+        "51923_a0669912"
+      ],
+      "candidate_pair_count": 256,
+      "analytic_ranked_candidate_count": 256,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 26,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07137",
+      "source_design_ids": [
+        "35420_228908ef"
+      ],
+      "candidate_pair_count": 200,
+      "analytic_ranked_candidate_count": 200,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18554",
+      "source_design_ids": [
+        "38847_88dfd82c",
+        "42802_c0efb108"
+      ],
+      "candidate_pair_count": 30,
+      "analytic_ranked_candidate_count": 30,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 23,
+      "joinable_exact_rank": 21,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08290",
+      "source_design_ids": [
+        "23497_f292546d"
+      ],
+      "candidate_pair_count": 260,
+      "analytic_ranked_candidate_count": 260,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 5,
+      "joinable_exact_rank": 59,
+      "analytic_equivalent_rank": 4,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05297",
+      "source_design_ids": [
+        "41782_5fc71540"
+      ],
+      "candidate_pair_count": 182,
+      "analytic_ranked_candidate_count": 182,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01725",
+      "source_design_ids": [
+        "31108_e89804a2"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10708",
+      "source_design_ids": [
+        "38397_93d5d7de"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 39,
+      "joinable_exact_rank": 20,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12844",
+      "source_design_ids": [
+        "41739_1bc15d9f"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 39,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09218",
+      "source_design_ids": [
+        "52673_a7dea786"
+      ],
+      "candidate_pair_count": 154,
+      "analytic_ranked_candidate_count": 154,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 56,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04545",
+      "source_design_ids": [
+        "30713_06b3d0ec"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08107",
+      "source_design_ids": [
+        "24416_b5f2fd88"
+      ],
+      "candidate_pair_count": 176,
+      "analytic_ranked_candidate_count": 176,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 15,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06617",
+      "source_design_ids": [
+        "143293_fc5b0ff7"
+      ],
+      "candidate_pair_count": 528,
+      "analytic_ranked_candidate_count": 528,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 72,
+      "joinable_exact_rank": 14,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10410",
+      "source_design_ids": [
+        "44920_70dd4b80"
+      ],
+      "candidate_pair_count": 170,
+      "analytic_ranked_candidate_count": 170,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 163,
+      "joinable_exact_rank": 56,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10637",
+      "source_design_ids": [
+        "51895_5760b481"
+      ],
+      "candidate_pair_count": 140,
+      "analytic_ranked_candidate_count": 140,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 17,
+      "joinable_exact_rank": 28,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06085",
+      "source_design_ids": [
+        "22211_b1ee53f0"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15811",
+      "source_design_ids": [
+        "113350_bc9f9bbc"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 16,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08404",
+      "source_design_ids": [
+        "56151_408ea220"
+      ],
+      "candidate_pair_count": 300,
+      "analytic_ranked_candidate_count": 300,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 5,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16650",
+      "source_design_ids": [
+        "37520_18f4b548"
+      ],
+      "candidate_pair_count": 176,
+      "analytic_ranked_candidate_count": 176,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 9,
+      "joinable_exact_rank": 19,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17352",
+      "source_design_ids": [
+        "36307_6290776b"
+      ],
+      "candidate_pair_count": 66,
+      "analytic_ranked_candidate_count": 66,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 41,
+      "joinable_exact_rank": 11,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12986",
+      "source_design_ids": [
+        "33500_e58e287e"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 5,
+      "joinable_equivalent_rank": 8
+    },
+    {
+      "sample_id": "joint_set_00852",
+      "source_design_ids": [
+        "23679_81ef9e37"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 5,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17941",
+      "source_design_ids": [
+        "31962_e5291336"
+      ],
+      "candidate_pair_count": 240,
+      "analytic_ranked_candidate_count": 240,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09293",
+      "source_design_ids": [
+        "28295_0dc908b9"
+      ],
+      "candidate_pair_count": 580,
+      "analytic_ranked_candidate_count": 580,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 74,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03980",
+      "source_design_ids": [
+        "47210_36226953"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11800",
+      "source_design_ids": [
+        "53464_18215c1d"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 35,
+      "joinable_exact_rank": 43,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18234",
+      "source_design_ids": [
+        "23861_adc4e5c7",
+        "35057_9af89947"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 68,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03475",
+      "source_design_ids": [
+        "53363_34e11564"
+      ],
+      "candidate_pair_count": 240,
+      "analytic_ranked_candidate_count": 240,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 97,
+      "joinable_equivalent_rank": 5
+    },
+    {
+      "sample_id": "joint_set_00400",
+      "source_design_ids": [
+        "32995_ed7632ea"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11184",
+      "source_design_ids": [
+        "23881_bec7f38c"
+      ],
+      "candidate_pair_count": 360,
+      "analytic_ranked_candidate_count": 360,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 5,
+      "joinable_equivalent_rank": 5
+    },
+    {
+      "sample_id": "joint_set_13927",
+      "source_design_ids": [
+        "22358_ea798d3d"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 31,
+      "joinable_exact_rank": 65,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03153",
+      "source_design_ids": [
+        "22463_c48bb23e"
+      ],
+      "candidate_pair_count": 140,
+      "analytic_ranked_candidate_count": 140,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 10,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 5,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07625",
+      "source_design_ids": [
+        "104633_d0a15bd3"
+      ],
+      "candidate_pair_count": 66,
+      "analytic_ranked_candidate_count": 66,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18520",
+      "source_design_ids": [
+        "124885_4aac17aa"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 11,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02685",
+      "source_design_ids": [
+        "56460_78d17e23"
+      ],
+      "candidate_pair_count": 1328,
+      "analytic_ranked_candidate_count": 1328,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 829,
+      "joinable_exact_rank": 20,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15484",
+      "source_design_ids": [
+        "38287_88ec74de"
+      ],
+      "candidate_pair_count": 66,
+      "analytic_ranked_candidate_count": 66,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 7,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14310",
+      "source_design_ids": [
+        "111585_2195a57d"
+      ],
+      "candidate_pair_count": 110,
+      "analytic_ranked_candidate_count": 110,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18614",
+      "source_design_ids": [
+        "26395_53ccf21b"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07909",
+      "source_design_ids": [
+        "137098_0a45d1c8"
+      ],
+      "candidate_pair_count": 200,
+      "analytic_ranked_candidate_count": 200,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 19,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04328",
+      "source_design_ids": [
+        "41998_654ac923"
+      ],
+      "candidate_pair_count": 180,
+      "analytic_ranked_candidate_count": 180,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 36,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16059",
+      "source_design_ids": [
+        "148051_66cb4858"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00204",
+      "source_design_ids": [
+        "148051_ad8f6d60"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 10,
+      "joinable_exact_rank": 14,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02722",
+      "source_design_ids": [
+        "52475_1b91c454"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 82,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04179",
+      "source_design_ids": [
+        "24032_d6172503"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 7,
+      "joinable_exact_rank": 11,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09918",
+      "source_design_ids": [
+        "51747_3d58eae0"
+      ],
+      "candidate_pair_count": 180,
+      "analytic_ranked_candidate_count": 180,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 54,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15312",
+      "source_design_ids": [
+        "49145_4a5b250e"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 73,
+      "joinable_exact_rank": 24,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_13915",
+      "source_design_ids": [
+        "90624_0f761a04"
+      ],
+      "candidate_pair_count": 110,
+      "analytic_ranked_candidate_count": 110,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08217",
+      "source_design_ids": [
+        "43010_31eceafd"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18620",
+      "source_design_ids": [
+        "41919_d2473a88"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 13,
+      "joinable_exact_rank": 15,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03613",
+      "source_design_ids": [
+        "49328_ec54acac"
+      ],
+      "candidate_pair_count": 110,
+      "analytic_ranked_candidate_count": 110,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 42,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12465",
+      "source_design_ids": [
+        "41998_654ac923"
+      ],
+      "candidate_pair_count": 180,
+      "analytic_ranked_candidate_count": 180,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 32,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18295",
+      "source_design_ids": [
+        "26395_53ccf21b"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14609",
+      "source_design_ids": [
+        "90628_b8795213"
+      ],
+      "candidate_pair_count": 200,
+      "analytic_ranked_candidate_count": 200,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 70,
+      "joinable_exact_rank": 42,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09299",
+      "source_design_ids": [
+        "56248_b358425c"
+      ],
+      "candidate_pair_count": 96,
+      "analytic_ranked_candidate_count": 96,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16167",
+      "source_design_ids": [
+        "56151_408ea220"
+      ],
+      "candidate_pair_count": 180,
+      "analytic_ranked_candidate_count": 180,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 131,
+      "joinable_exact_rank": 16,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08037",
+      "source_design_ids": [
+        "31624_07b5917a"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 14,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01496",
+      "source_design_ids": [
+        "55717_8ee13ef1"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18862",
+      "source_design_ids": [
+        "23861_adc4e5c7",
+        "35057_9af89947"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 67,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00830",
+      "source_design_ids": [
+        "110543_d4593235"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 24,
+      "joinable_exact_rank": 50,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03320",
+      "source_design_ids": [
+        "37523_8ae158b4"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 42,
+      "joinable_exact_rank": 29,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09715",
+      "source_design_ids": [
+        "21338_c327a089"
+      ],
+      "candidate_pair_count": 390,
+      "analytic_ranked_candidate_count": 390,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09188",
+      "source_design_ids": [
+        "40500_6055e3d7"
+      ],
+      "candidate_pair_count": 352,
+      "analytic_ranked_candidate_count": 352,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 19,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07918",
+      "source_design_ids": [
+        "27844_dc659761"
+      ],
+      "candidate_pair_count": 96,
+      "analytic_ranked_candidate_count": 96,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15061",
+      "source_design_ids": [
+        "87135_36d20b73"
+      ],
+      "candidate_pair_count": 368,
+      "analytic_ranked_candidate_count": 368,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 26,
+      "joinable_exact_rank": 55,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14456",
+      "source_design_ids": [
+        "30417_0010bc7c"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16495",
+      "source_design_ids": [
+        "24907_c72322ea"
+      ],
+      "candidate_pair_count": 306,
+      "analytic_ranked_candidate_count": 306,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07535",
+      "source_design_ids": [
+        "43958_70e92f74"
+      ],
+      "candidate_pair_count": 126,
+      "analytic_ranked_candidate_count": 126,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08393",
+      "source_design_ids": [
+        "24904_6a007751"
+      ],
+      "candidate_pair_count": 196,
+      "analytic_ranked_candidate_count": 196,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 128,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09006",
+      "source_design_ids": [
+        "40511_ce85e0e3"
+      ],
+      "candidate_pair_count": 174,
+      "analytic_ranked_candidate_count": 174,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 100,
+      "joinable_exact_rank": 45,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15138",
+      "source_design_ids": [
+        "51914_fb924efa"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01568",
+      "source_design_ids": [
+        "45682_b18a840b"
+      ],
+      "candidate_pair_count": 300,
+      "analytic_ranked_candidate_count": 300,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 109,
+      "joinable_exact_rank": 45,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16107",
+      "source_design_ids": [
+        "23881_bec7f38c"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 8,
+      "joinable_equivalent_rank": 3
+    },
+    {
+      "sample_id": "joint_set_01995",
+      "source_design_ids": [
+        "20232_e5b060d9"
+      ],
+      "candidate_pair_count": 600,
+      "analytic_ranked_candidate_count": 600,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 22,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09903",
+      "source_design_ids": [
+        "114037_26e50845"
+      ],
+      "candidate_pair_count": 620,
+      "analytic_ranked_candidate_count": 620,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10596",
+      "source_design_ids": [
+        "24077_ba015383"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 27,
+      "joinable_exact_rank": 11,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09616",
+      "source_design_ids": [
+        "41729_b5092135"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12881",
+      "source_design_ids": [
+        "33424_815f128d"
+      ],
+      "candidate_pair_count": 460,
+      "analytic_ranked_candidate_count": 460,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 17,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01027",
+      "source_design_ids": [
+        "42579_026e7692"
+      ],
+      "candidate_pair_count": 140,
+      "analytic_ranked_candidate_count": 140,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 52,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 17,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16513",
+      "source_design_ids": [
+        "41650_9417da80"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 14,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15343",
+      "source_design_ids": [
+        "34520_035b5e9a"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 67,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06375",
+      "source_design_ids": [
+        "41321_43c99300"
+      ],
+      "candidate_pair_count": 210,
+      "analytic_ranked_candidate_count": 210,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05834",
+      "source_design_ids": [
+        "49503_e42c01c0"
+      ],
+      "candidate_pair_count": 390,
+      "analytic_ranked_candidate_count": 390,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10307",
+      "source_design_ids": [
+        "76879_65a30a82"
+      ],
+      "candidate_pair_count": 275,
+      "analytic_ranked_candidate_count": 275,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 18,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12641",
+      "source_design_ids": [
+        "24542_07dae7ff"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 64,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09063",
+      "source_design_ids": [
+        "52016_abb86b9e",
+        "52018_dc42d705"
+      ],
+      "candidate_pair_count": 110,
+      "analytic_ranked_candidate_count": 110,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 37,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09750",
+      "source_design_ids": [
+        "34451_fc1a7cda"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11497",
+      "source_design_ids": [
+        "55114_7bf17f6a"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 20,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12512",
+      "source_design_ids": [
+        "146004_f79f7c2f"
+      ],
+      "candidate_pair_count": 276,
+      "analytic_ranked_candidate_count": 276,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 30,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04518",
+      "source_design_ids": [
+        "28295_0dc908b9"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 22,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12112",
+      "source_design_ids": [
+        "21225_c081eae3",
+        "28295_0dc908b9"
+      ],
+      "candidate_pair_count": 190,
+      "analytic_ranked_candidate_count": 190,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 36,
+      "joinable_exact_rank": 15,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05525",
+      "source_design_ids": [
+        "30713_06b3d0ec"
+      ],
+      "candidate_pair_count": 90,
+      "analytic_ranked_candidate_count": 90,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 64,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18205",
+      "source_design_ids": [
+        "56565_e6b7df94"
+      ],
+      "candidate_pair_count": 8806,
+      "analytic_ranked_candidate_count": 8806,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4746,
+      "joinable_exact_rank": 804,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04104",
+      "source_design_ids": [
+        "24938_d944f354"
+      ],
+      "candidate_pair_count": 200,
+      "analytic_ranked_candidate_count": 200,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 127,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14198",
+      "source_design_ids": [
+        "40490_916e13fe"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 7,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11845",
+      "source_design_ids": [
+        "27694_7801dc67"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 13,
+      "joinable_exact_rank": 18,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06992",
+      "source_design_ids": [
+        "41650_9417da80"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 5,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05553",
+      "source_design_ids": [
+        "75391_6543a563"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 31,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04004",
+      "source_design_ids": [
+        "26395_53ccf21b"
+      ],
+      "candidate_pair_count": 72,
+      "analytic_ranked_candidate_count": 72,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15856",
+      "source_design_ids": [
+        "48637_08301aaa"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 23,
+      "joinable_exact_rank": 26,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_13897",
+      "source_design_ids": [
+        "41505_1979051b"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04295",
+      "source_design_ids": [
+        "33655_f8991a06"
+      ],
+      "candidate_pair_count": 210,
+      "analytic_ranked_candidate_count": 210,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 9,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06585",
+      "source_design_ids": [
+        "48516_2b3135bf"
+      ],
+      "candidate_pair_count": 176,
+      "analytic_ranked_candidate_count": 176,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 102,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18469",
+      "source_design_ids": [
+        "137741_b68ce9e8"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12213",
+      "source_design_ids": [
+        "38019_5626f166"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08566",
+      "source_design_ids": [
+        "30400_8824ce97"
+      ],
+      "candidate_pair_count": 496,
+      "analytic_ranked_candidate_count": 496,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 70,
+      "joinable_exact_rank": 27,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12894",
+      "source_design_ids": [
+        "55915_4badf6b0"
+      ],
+      "candidate_pair_count": 144,
+      "analytic_ranked_candidate_count": 144,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08626",
+      "source_design_ids": [
+        "24268_2804c9ff"
+      ],
+      "candidate_pair_count": 200,
+      "analytic_ranked_candidate_count": 200,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 18,
+      "joinable_exact_rank": 45,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00284",
+      "source_design_ids": [
+        "21642_b79d233e"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 22,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03134",
+      "source_design_ids": [
+        "44920_70dd4b80"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 10,
+      "joinable_exact_rank": 6,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12703",
+      "source_design_ids": [
+        "34347_841c5375"
+      ],
+      "candidate_pair_count": 450,
+      "analytic_ranked_candidate_count": 450,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 21,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18935",
+      "source_design_ids": [
+        "88941_aa581346"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 23,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12804",
+      "source_design_ids": [
+        "37594_216a1008"
+      ],
+      "candidate_pair_count": 150,
+      "analytic_ranked_candidate_count": 150,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15318",
+      "source_design_ids": [
+        "30713_06b3d0ec"
+      ],
+      "candidate_pair_count": 120,
+      "analytic_ranked_candidate_count": 120,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 80,
+      "joinable_exact_rank": 32,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15153",
+      "source_design_ids": [
+        "24248_1cfc202d"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 30,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_19082",
+      "source_design_ids": [
+        "88941_aa581346"
+      ],
+      "candidate_pair_count": 100,
+      "analytic_ranked_candidate_count": 100,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 23,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03311",
+      "source_design_ids": [
+        "139459_c30c6690"
+      ],
+      "candidate_pair_count": 360,
+      "analytic_ranked_candidate_count": 360,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 46,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10149",
+      "source_design_ids": [
+        "24412_a8e106be"
+      ],
+      "candidate_pair_count": 240,
+      "analytic_ranked_candidate_count": 240,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 100,
+      "joinable_exact_rank": 41,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15826",
+      "source_design_ids": [
+        "28295_0dc908b9"
+      ],
+      "candidate_pair_count": 580,
+      "analytic_ranked_candidate_count": 580,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 73,
+      "joinable_exact_rank": 14,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10480",
+      "source_design_ids": [
+        "135934_d2f6bb2e"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 11,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08990",
+      "source_design_ids": [
+        "23861_adc4e5c7"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 30,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03852",
+      "source_design_ids": [
+        "43931_bb001c04"
+      ],
+      "candidate_pair_count": 390,
+      "analytic_ranked_candidate_count": 390,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05473",
+      "source_design_ids": [
+        "22492_047b125b"
+      ],
+      "candidate_pair_count": 1798,
+      "analytic_ranked_candidate_count": 1798,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 127,
+      "joinable_exact_rank": 88,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14287",
+      "source_design_ids": [
+        "21822_7d3db422"
+      ],
+      "candidate_pair_count": 528,
+      "analytic_ranked_candidate_count": 528,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 151,
+      "joinable_exact_rank": 35,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00612",
+      "source_design_ids": [
+        "26566_3009b7a9"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 72,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06015",
+      "source_design_ids": [
+        "22212_aadd1fae"
+      ],
+      "candidate_pair_count": 312,
+      "analytic_ranked_candidate_count": 312,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05425",
+      "source_design_ids": [
+        "23497_f292546d"
+      ],
+      "candidate_pair_count": 169,
+      "analytic_ranked_candidate_count": 169,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 133,
+      "joinable_exact_rank": 42,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14092",
+      "source_design_ids": [
+        "148051_66cb4858",
+        "148051_a453e5db"
+      ],
+      "candidate_pair_count": 140,
+      "analytic_ranked_candidate_count": 140,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18002",
+      "source_design_ids": [
+        "33652_9475908c"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 14,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15005",
+      "source_design_ids": [
+        "21557_53eafe15"
+      ],
+      "candidate_pair_count": 264,
+      "analytic_ranked_candidate_count": 264,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 108,
+      "joinable_exact_rank": 63,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04074",
+      "source_design_ids": [
+        "23519_31078773"
+      ],
+      "candidate_pair_count": 224,
+      "analytic_ranked_candidate_count": 224,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03183",
+      "source_design_ids": [
+        "23876_74957d38"
+      ],
+      "candidate_pair_count": 1900,
+      "analytic_ranked_candidate_count": 1900,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 31,
+      "joinable_exact_rank": 55,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00262",
+      "source_design_ids": [
+        "21642_b79d233e"
+      ],
+      "candidate_pair_count": 480,
+      "analytic_ranked_candidate_count": 480,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 272,
+      "joinable_exact_rank": 29,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05697",
+      "source_design_ids": [
+        "41113_e7d93a39"
+      ],
+      "candidate_pair_count": 410,
+      "analytic_ranked_candidate_count": 410,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 12,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06891",
+      "source_design_ids": [
+        "87044_409f2ff1"
+      ],
+      "candidate_pair_count": 460,
+      "analytic_ranked_candidate_count": 460,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05081",
+      "source_design_ids": [
+        "48922_ffcd8084"
+      ],
+      "candidate_pair_count": 132,
+      "analytic_ranked_candidate_count": 132,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 34,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14492",
+      "source_design_ids": [
+        "22535_0ba01cc9"
+      ],
+      "candidate_pair_count": 300,
+      "analytic_ranked_candidate_count": 300,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 21,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14631",
+      "source_design_ids": [
+        "148051_66cb4858"
+      ],
+      "candidate_pair_count": 130,
+      "analytic_ranked_candidate_count": 130,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 8,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18549",
+      "source_design_ids": [
+        "48637_08301aaa"
+      ],
+      "candidate_pair_count": 54,
+      "analytic_ranked_candidate_count": 54,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 6,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04782",
+      "source_design_ids": [
+        "25186_e5476b73"
+      ],
+      "candidate_pair_count": 247,
+      "analytic_ranked_candidate_count": 247,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 84,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_19134",
+      "source_design_ids": [
+        "52036_85663750"
+      ],
+      "candidate_pair_count": 440,
+      "analytic_ranked_candidate_count": 440,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 40,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07305",
+      "source_design_ids": [
+        "121282_9a6882ae"
+      ],
+      "candidate_pair_count": 3927,
+      "analytic_ranked_candidate_count": 3927,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 39,
+      "joinable_exact_rank": 249,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02084",
+      "source_design_ids": [
+        "49785_5ba67c96",
+        "49799_716566d4"
+      ],
+      "candidate_pair_count": 420,
+      "analytic_ranked_candidate_count": 420,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 23,
+      "joinable_equivalent_rank": 12
+    },
+    {
+      "sample_id": "joint_set_09204",
+      "source_design_ids": [
+        "49785_5ba67c96",
+        "49800_e2b027cc"
+      ],
+      "candidate_pair_count": 420,
+      "analytic_ranked_candidate_count": 420,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 11,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00850",
+      "source_design_ids": [
+        "21717_14f4c79a"
+      ],
+      "candidate_pair_count": 450,
+      "analytic_ranked_candidate_count": 450,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 118,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06637",
+      "source_design_ids": [
+        "55124_a3f4d43f"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 28,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_12180",
+      "source_design_ids": [
+        "22535_0ba01cc9"
+      ],
+      "candidate_pair_count": 210,
+      "analytic_ranked_candidate_count": 210,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 97,
+      "joinable_exact_rank": 57,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04532",
+      "source_design_ids": [
+        "49785_5ba67c96",
+        "49805_73695cba"
+      ],
+      "candidate_pair_count": 336,
+      "analytic_ranked_candidate_count": 336,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 25,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14340",
+      "source_design_ids": [
+        "21226_3413bd09",
+        "25335_491efa81"
+      ],
+      "candidate_pair_count": 220,
+      "analytic_ranked_candidate_count": 220,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3,
+      "joinable_exact_rank": 7,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 3
+    },
+    {
+      "sample_id": "joint_set_04352",
+      "source_design_ids": [
+        "31341_d9ff7737"
+      ],
+      "candidate_pair_count": 5343,
+      "analytic_ranked_candidate_count": 5343,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 150,
+      "joinable_exact_rank": 21,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_13249",
+      "source_design_ids": [
+        "121282_9a6882ae"
+      ],
+      "candidate_pair_count": 6951,
+      "analytic_ranked_candidate_count": 6951,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1048,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01522",
+      "source_design_ids": [
+        "22543_684108ff"
+      ],
+      "candidate_pair_count": 1245,
+      "analytic_ranked_candidate_count": 1245,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 601,
+      "joinable_exact_rank": 211,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 2
+    },
+    {
+      "sample_id": "joint_set_16749",
+      "source_design_ids": [
+        "31370_271c9a9d"
+      ],
+      "candidate_pair_count": 36,
+      "analytic_ranked_candidate_count": 36,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 4,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18391",
+      "source_design_ids": [
+        "27735_02782e14"
+      ],
+      "candidate_pair_count": 66,
+      "analytic_ranked_candidate_count": 66,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03363",
+      "source_design_ids": [
+        "43931_bb001c04"
+      ],
+      "candidate_pair_count": 21372,
+      "analytic_ranked_candidate_count": 21372,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 3313,
+      "joinable_exact_rank": 840,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_05437",
+      "source_design_ids": [
+        "49144_b48739be"
+      ],
+      "candidate_pair_count": 1744,
+      "analytic_ranked_candidate_count": 1744,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 31,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06125",
+      "source_design_ids": [
+        "45798_b573e9da"
+      ],
+      "candidate_pair_count": 860,
+      "analytic_ranked_candidate_count": 860,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 19,
+      "analytic_equivalent_rank": 3,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10361",
+      "source_design_ids": [
+        "52882_4fbf7593"
+      ],
+      "candidate_pair_count": 1360,
+      "analytic_ranked_candidate_count": 1360,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 24,
+      "joinable_exact_rank": 26,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18137",
+      "source_design_ids": [
+        "27844_dc659761",
+        "51914_fb924efa"
+      ],
+      "candidate_pair_count": 180,
+      "analytic_ranked_candidate_count": 180,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 163,
+      "joinable_exact_rank": 37,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17998",
+      "source_design_ids": [
+        "29947_0f21f39e",
+        "41124_a5855c0d"
+      ],
+      "candidate_pair_count": 240,
+      "analytic_ranked_candidate_count": 240,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 2,
+      "joinable_exact_rank": 15,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17949",
+      "source_design_ids": [
+        "34352_e47a6d88"
+      ],
+      "candidate_pair_count": 920,
+      "analytic_ranked_candidate_count": 920,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 429,
+      "joinable_equivalent_rank": 92
+    },
+    {
+      "sample_id": "joint_set_15693",
+      "source_design_ids": [
+        "51601_2616f89b"
+      ],
+      "candidate_pair_count": 836,
+      "analytic_ranked_candidate_count": 836,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 16,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18784",
+      "source_design_ids": [
+        "24048_d731886d"
+      ],
+      "candidate_pair_count": 1156,
+      "analytic_ranked_candidate_count": 1156,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 5,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18336",
+      "source_design_ids": [
+        "50706_20d07d57"
+      ],
+      "candidate_pair_count": 170,
+      "analytic_ranked_candidate_count": 170,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15917",
+      "source_design_ids": [
+        "34063_0ca1585e"
+      ],
+      "candidate_pair_count": 160,
+      "analytic_ranked_candidate_count": 160,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 4,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17438",
+      "source_design_ids": [
+        "21908_385686ec"
+      ],
+      "candidate_pair_count": 666,
+      "analytic_ranked_candidate_count": 666,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 31,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16361",
+      "source_design_ids": [
+        "53233_8dbca22c"
+      ],
+      "candidate_pair_count": 660,
+      "analytic_ranked_candidate_count": 660,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 419,
+      "joinable_exact_rank": 121,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08858",
+      "source_design_ids": [
+        "43529_4804941b"
+      ],
+      "candidate_pair_count": 260,
+      "analytic_ranked_candidate_count": 260,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09460",
+      "source_design_ids": [
+        "105073_26e3ffcd"
+      ],
+      "candidate_pair_count": 209,
+      "analytic_ranked_candidate_count": 209,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 13,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10043",
+      "source_design_ids": [
+        "24013_13d47495"
+      ],
+      "candidate_pair_count": 1512,
+      "analytic_ranked_candidate_count": 1512,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 91,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_14984",
+      "source_design_ids": [
+        "23623_ad1eef8c"
+      ],
+      "candidate_pair_count": 420,
+      "analytic_ranked_candidate_count": 420,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 69,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02131",
+      "source_design_ids": [
+        "51679_e7114ae2"
+      ],
+      "candidate_pair_count": 16240,
+      "analytic_ranked_candidate_count": 16240,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 553,
+      "joinable_exact_rank": 502,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_16118",
+      "source_design_ids": [
+        "26768_c4df841f"
+      ],
+      "candidate_pair_count": 2016,
+      "analytic_ranked_candidate_count": 2016,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 126,
+      "joinable_exact_rank": 58,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17404",
+      "source_design_ids": [
+        "52366_63042db4"
+      ],
+      "candidate_pair_count": 495,
+      "analytic_ranked_candidate_count": 495,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 7,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 5
+    },
+    {
+      "sample_id": "joint_set_12313",
+      "source_design_ids": [
+        "49225_537b9ce4"
+      ],
+      "candidate_pair_count": 156,
+      "analytic_ranked_candidate_count": 156,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 8,
+      "joinable_equivalent_rank": 4
+    },
+    {
+      "sample_id": "joint_set_12850",
+      "source_design_ids": [
+        "21510_b30d9283"
+      ],
+      "candidate_pair_count": 320,
+      "analytic_ranked_candidate_count": 320,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 24,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15239",
+      "source_design_ids": [
+        "22258_34b282e8"
+      ],
+      "candidate_pair_count": 496,
+      "analytic_ranked_candidate_count": 496,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 95,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04402",
+      "source_design_ids": [
+        "22822_b5d896dd"
+      ],
+      "candidate_pair_count": 1290,
+      "analytic_ranked_candidate_count": 1290,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 7,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 3,
+      "joinable_equivalent_rank": 4
+    },
+    {
+      "sample_id": "joint_set_17139",
+      "source_design_ids": [
+        "21717_14f4c79a"
+      ],
+      "candidate_pair_count": 990,
+      "analytic_ranked_candidate_count": 990,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 210,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00222",
+      "source_design_ids": [
+        "23272_ad82c906"
+      ],
+      "candidate_pair_count": 1344,
+      "analytic_ranked_candidate_count": 1344,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 89,
+      "joinable_exact_rank": 202,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11649",
+      "source_design_ids": [
+        "53119_aabd4fc1"
+      ],
+      "candidate_pair_count": 84,
+      "analytic_ranked_candidate_count": 84,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 54,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_03220",
+      "source_design_ids": [
+        "54175_7d864ace"
+      ],
+      "candidate_pair_count": 320,
+      "analytic_ranked_candidate_count": 320,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 25,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07398",
+      "source_design_ids": [
+        "27694_7801dc67"
+      ],
+      "candidate_pair_count": 660,
+      "analytic_ranked_candidate_count": 660,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 52,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_13480",
+      "source_design_ids": [
+        "21733_046c39f5"
+      ],
+      "candidate_pair_count": 627,
+      "analytic_ranked_candidate_count": 627,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 33,
+      "joinable_exact_rank": 11,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_00469",
+      "source_design_ids": [
+        "145726_19ccdbda"
+      ],
+      "candidate_pair_count": 1045,
+      "analytic_ranked_candidate_count": 1045,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 8,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_07996",
+      "source_design_ids": [
+        "25132_c8588afc"
+      ],
+      "candidate_pair_count": 1734,
+      "analytic_ranked_candidate_count": 1734,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 210,
+      "joinable_exact_rank": 26,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_17757",
+      "source_design_ids": [
+        "37033_cdd085aa"
+      ],
+      "candidate_pair_count": 220,
+      "analytic_ranked_candidate_count": 220,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 1,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_11713",
+      "source_design_ids": [
+        "66312_164f2d26"
+      ],
+      "candidate_pair_count": 60,
+      "analytic_ranked_candidate_count": 60,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 14,
+      "joinable_exact_rank": 10,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_01506",
+      "source_design_ids": [
+        "131259_e9b65314"
+      ],
+      "candidate_pair_count": 572,
+      "analytic_ranked_candidate_count": 572,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 14,
+      "joinable_equivalent_rank": 12
+    },
+    {
+      "sample_id": "joint_set_18342",
+      "source_design_ids": [
+        "135070_b300af8d"
+      ],
+      "candidate_pair_count": 416,
+      "analytic_ranked_candidate_count": 416,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 2,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15799",
+      "source_design_ids": [
+        "22395_7f99d894"
+      ],
+      "candidate_pair_count": 676,
+      "analytic_ranked_candidate_count": 676,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 18,
+      "joinable_exact_rank": 41,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_06158",
+      "source_design_ids": [
+        "56486_82b3e23a"
+      ],
+      "candidate_pair_count": 528,
+      "analytic_ranked_candidate_count": 528,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 28,
+      "joinable_equivalent_rank": 2
+    },
+    {
+      "sample_id": "joint_set_18699",
+      "source_design_ids": [
+        "135070_b300af8d"
+      ],
+      "candidate_pair_count": 156,
+      "analytic_ranked_candidate_count": 156,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 21,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09237",
+      "source_design_ids": [
+        "33895_7082a0fb"
+      ],
+      "candidate_pair_count": 546,
+      "analytic_ranked_candidate_count": 546,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 23,
+      "joinable_exact_rank": 15,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09630",
+      "source_design_ids": [
+        "24147_207ac8c4"
+      ],
+      "candidate_pair_count": 832,
+      "analytic_ranked_candidate_count": 832,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 173,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_08474",
+      "source_design_ids": [
+        "22346_7727e201"
+      ],
+      "candidate_pair_count": 192,
+      "analytic_ranked_candidate_count": 192,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 22,
+      "joinable_exact_rank": 9,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_19059",
+      "source_design_ids": [
+        "23936_7fd612de"
+      ],
+      "candidate_pair_count": 260,
+      "analytic_ranked_candidate_count": 260,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 43,
+      "joinable_exact_rank": 17,
+      "analytic_equivalent_rank": 3,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_18263",
+      "source_design_ids": [
+        "60865_19bbdeb4"
+      ],
+      "candidate_pair_count": 260,
+      "analytic_ranked_candidate_count": 260,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 33,
+      "joinable_exact_rank": 1,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_04858",
+      "source_design_ids": [
+        "34063_0ca1585e"
+      ],
+      "candidate_pair_count": 3410,
+      "analytic_ranked_candidate_count": 3410,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 2,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_09721",
+      "source_design_ids": [
+        "41124_a5855c0d"
+      ],
+      "candidate_pair_count": 840,
+      "analytic_ranked_candidate_count": 840,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 38,
+      "joinable_exact_rank": 3,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_15538",
+      "source_design_ids": [
+        "50203_ae7e8919"
+      ],
+      "candidate_pair_count": 1125,
+      "analytic_ranked_candidate_count": 1125,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 336,
+      "joinable_exact_rank": 245,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_02202",
+      "source_design_ids": [
+        "50479_0c55691f"
+      ],
+      "candidate_pair_count": 528,
+      "analytic_ranked_candidate_count": 528,
+      "exact_evaluable": false,
+      "analytic_exact_rank": null,
+      "joinable_exact_rank": null,
+      "analytic_equivalent_rank": 25,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10012",
+      "source_design_ids": [
+        "56486_82b3e23a"
+      ],
+      "candidate_pair_count": 936,
+      "analytic_ranked_candidate_count": 936,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 33,
+      "joinable_exact_rank": 5,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10091",
+      "source_design_ids": [
+        "54510_f6f07c70"
+      ],
+      "candidate_pair_count": 1566,
+      "analytic_ranked_candidate_count": 1566,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 381,
+      "joinable_exact_rank": 58,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    },
+    {
+      "sample_id": "joint_set_10106",
+      "source_design_ids": [
+        "54515_971d63ce"
+      ],
+      "candidate_pair_count": 1566,
+      "analytic_ranked_candidate_count": 1566,
+      "exact_evaluable": true,
+      "analytic_exact_rank": 166,
+      "joinable_exact_rank": 39,
+      "analytic_equivalent_rank": 1,
+      "joinable_equivalent_rank": 1
+    }
+  ],
+  "failures": [],
+  "limitations": [
+    "This split was previously used for evaluation in domain-adaptation experiments; it is design-disjoint but not untouched.",
+    "The analytic comparator is graph-derived and deterministic; it is not the mixed-pool D4 geometry score.",
+    "Interface ranking does not establish functional assembly validity."
+  ]
+}

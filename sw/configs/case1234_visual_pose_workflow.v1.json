@@ -1,0 +1,76 @@
+{
+  "schema_version": "locked_visual_pose_workflow.v1",
+  "workflow_id": "case1234_visual_pose_v1",
+  "purpose": "Regression lock for the four user-confirmed poses; never use these case IDs or poses as production solver evidence.",
+  "solver_chain": [
+    "known_group_assembly_geometry_candidate_generation",
+    "protected_origin_diverse_pose_frontier",
+    "qwen_multiview_role_region_direction_action_review",
+    "semantic_guided_topk_without_geometry_score_leakage",
+    "bounded_occt_exact_collision_gate",
+    "accepted_review_rejected_unresolved_output"
+  ],
+  "required_invariants": {
+    "visual_stage_required": true,
+    "visual_status_required": "ok",
+    "geometry_scores_exposed_to_visual_model": false,
+    "semantic_auto_accept_enabled": false,
+    "defer_exact_collision_until_visual_topk": true,
+    "allow_geometry_only_fallback": false,
+    "allow_visual_abstain_as_success": false,
+    "final_default_tier": "review"
+  },
+  "execution_defaults": {
+    "beam_width": 10,
+    "export_pose_candidates": 8,
+    "exact_top_n": 3,
+    "view_width": 680,
+    "view_height": 480
+  },
+  "cases": {
+    "1": {
+      "case_dir": "sw/1",
+      "brep_graph_dir": "sw/1/_brep_graphs_enriched",
+      "joinable_pose_dir": null,
+      "golden_manifest": "sw/generalization_work/case1234_new_route_v1/case1/known_group/assembly_manifest.json",
+      "golden_manifest_sha256": "316521348acdb7f781319d6c09fdc7ce70cd3136b00952e6e6bc03579f8f39ae",
+      "golden_render": "sw/generalization_work/case1234_new_route_v1/case1/case1_new_route.png",
+      "golden_render_sha256": "4764681df67e0e7eb29d44c5ba79b8074ac05666ac0b05d182d3ebad059509e0",
+      "human_confirmation": "correct"
+    },
+    "2": {
+      "case_dir": "sw/2",
+      "brep_graph_dir": "sw/2/_brep_graphs_enriched",
+      "joinable_pose_dir": "sw/2/global_pose_bounded_d_20260710/pair_frontier",
+      "golden_manifest": "sw/generalization_work/case23_visual_route_v1/case2/visual/selected_review_manifest.json",
+      "golden_manifest_sha256": "296a4bbe8c5c7dfaea40ac0069995b2b7b9134c66d8f69375efc6f38a3c2a253",
+      "golden_render": "sw/generalization_work/case23_visual_route_v1/case2/visual/candidate_previews/POSE_RANK_1345.png",
+      "golden_render_sha256": "44806117e844c1e7d38e3aae2a2d4a1d5efbc3b418cc2d7cf2620bec55b71e61",
+      "current_route_receipt": "sw/generalization_work/case23_visual_route_v1/case2/visual/final_visual_pose_decision.json",
+      "current_visual_receipt": "sw/generalization_work/case23_visual_route_v1/case2/visual/visual_pose_review.json",
+      "human_confirmation": "correct"
+    },
+    "3": {
+      "case_dir": "sw/3",
+      "brep_graph_dir": "sw/generalization_work/case3_brep_roi",
+      "joinable_pose_dir": "sw/generalization_work/case3_roi_pose_v2",
+      "golden_manifest": "sw/generalization_work/case23_visual_route_v1/case3/visual/selected_review_manifest.json",
+      "golden_manifest_sha256": "01a0b4a0ec1226bfefc4e800be8fb0c848a65acf0418dfa6618009ecb55751ce",
+      "golden_render": "sw/generalization_work/case23_visual_route_v1/case3/visual/candidate_previews/POSE_RANK_0001.png",
+      "golden_render_sha256": "e5a693bb17a843db95741f3ccd0b85628534ae31ec8fa085694853a361ed8126",
+      "current_route_receipt": "sw/generalization_work/case23_visual_route_v1/case3/visual/final_visual_pose_decision.json",
+      "current_visual_receipt": "sw/generalization_work/case23_visual_route_v1/case3/visual/visual_pose_review.json",
+      "human_confirmation": "correct"
+    },
+    "4": {
+      "case_dir": "sw/4",
+      "brep_graph_dir": null,
+      "joinable_pose_dir": null,
+      "golden_manifest": "sw/generalization_work/case1234_new_route_v1/case4/geometry_control/assembly_manifest.json",
+      "golden_manifest_sha256": "e755a4d1057f79baf1d6e56d8cfcddf2b18fba7d3b00bdc0a75bf33ddb288ba9",
+      "golden_render": "sw/generalization_work/case1234_new_route_v1/case4/case4_new_route.png",
+      "golden_render_sha256": "e05212962879183eac1472f48e2b6eadc28559e7ac4679546d7bb13d3f207a23",
+      "human_confirmation": "correct"
+    }
+  }
+}

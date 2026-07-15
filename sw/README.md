@@ -1,5 +1,10 @@
 # Small STEP Assembly Reconstruction
 
+> 当前已知组装配的唯一主入口是 `known_group_assembly.py`。JoinABLe 的
+> 规范 E2E 入口是 `joinable_e2e.py`，通用 Pose 实现在
+> `pose_search/`。`stop_plane_solver.py`、`sequential_assembly.py` 和旧 BFS
+> 入口仅用于历史对照。完整目录职责见仓库根目录 `PROJECT_STRUCTURE.md`。
+
 This repository preserves the legacy geometry/BFS baseline and adds auditable
 scoring, pruning, validation, reliable search, evaluation, and SolidWorks API
 synthetic-data generation.

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Bounded local JoinABLe CUDA training throughput benchmark",
+  "environment": {
+    "python": "3.10.20",
+    "torch": "2.5.1+cu124",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "torch_cuda_runtime": "12.4",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "gpu_compute_capability": [
+      8,
+      9
+    ],
+    "gpu_vram_gib": 7.996
+  },
+  "checkpoint": "C:\\Users\\11049\\Desktop\\Model_match\\joinable_migration_audit\\vendor\\JoinABLe\\pretrained\\paper\\last_run_0.ckpt",
+  "data_audit": {
+    "pickle_path": "D:\\Model_match_public_data\\fusion360_joint\\benchmark_fresh\\joint\\test.pickle",
+    "total_cached_graphs": 1926,
+    "eligible_graphs": 1857,
+    "converted_graphs": 32,
+    "skipped_over_max_node_count": 69,
+    "max_node_count": 950,
+    "label_scheme": "train",
+    "selection": "uniform",
+    "conversion_failure_count": 0,
+    "conversion_failures": [],
+    "legacy_pickle_modified": false
+  },
+  "benchmark_configuration": {
+    "source_split": "official test cache used as representative graph tensors",
+    "source_sample_count": 32,
+    "batch_size": 2,
+    "max_node_count": 950,
+    "official_train_size_for_estimate": 13234,
+    "reason_train_pickle_not_loaded": "The official train pickle is about 16 GB and unnecessary for a bounded kernel/VRAM throughput measurement."
+  },
+  "results": [
+    {
+      "mode": "fp32",
+      "status": "success",
+      "warmup_steps": 3,
+      "measured_steps": 10,
+      "measured_samples": 20,
+      "total_measured_seconds": 0.20033499999954074,
+      "mean_step_seconds": 0.020033499999954074,
+      "median_step_seconds": 0.019747199999983422,
+      "p95_step_seconds": 0.026543299999957526,
+      "steps_per_second": 49.916390046786255,
+      "samples_per_second": 99.83278009357251,
+      "mean_loss": 3.9792225122451783,
+      "gpu_peak_allocated_mib": 285.58203125,
+      "gpu_peak_reserved_mib": 526.0,
+      "estimated_official_epoch_minutes": 2.2093611583282686,
+      "estimated_100_epochs_hours": 3.6822685972137807
+    }
+  ],
+  "estimate_limitations": [
+    "The estimate excludes full-dataset pickle loading and validation.",
+    "Graph sizes vary, so a complete epoch may differ from this bounded sample.",
+    "Windows display processes consume part of the 8 GB VRAM.",
+    "This is a speed/VRAM test, not a converged retraining experiment.",
+    "The released model creates explicit FP32 buffers, so AMP requires an architecture compatibility change and is not the reference path."
+  ]
+}
